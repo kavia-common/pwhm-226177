@@ -148,3 +148,7 @@ bool wifiGen_wpaSupp_isRunning(T_EndPoint* pEP) {
     return ((pEP != NULL) && (wld_secDmn_isRunning(pEP->wpaSupp)));
 }
 
+bool wifiGen_wpaSupp_isAlive(T_EndPoint* pEP) {
+    return ((pEP != NULL) && (wld_secDmn_isAlive(pEP->wpaSupp)));
+}
+

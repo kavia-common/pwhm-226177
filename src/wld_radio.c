@@ -4007,7 +4007,10 @@ T_EndPoint* wld_rad_getRunningEndpoint(T_Radio* pRad) {
            ((pEP->wpsSessionInfo.WPS_PairingInProgress) ||
             (pEP->connectionStatus == EPCS_DISCOVERING) ||
             (pEP->connectionStatus == EPCS_CONNECTING) ||
-            (pEP->connectionStatus == EPCS_CONNECTED))) {
+            (pEP->connectionStatus == EPCS_CONNECTED) ||
+            (wld_endpoint_isReady(pEP) &&
+             ((pEP->connectionStatus == EPCS_IDLE) ||
+              (pEP->connectionStatus == EPCS_DISCONNECTED))))) {
             return pEP;
         }
     }

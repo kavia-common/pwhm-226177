@@ -936,6 +936,7 @@ static swl_rc_ne s_checkAndStartZwDfs(T_Radio* pRad, bool direct) {
        !swl_chanspec_isDfs(pRad->targetChanspec.chanspec) ||
        !wld_rad_isUpExt(pRad) ||
        wld_secDmn_isGrpRestarting(pRad->hostapd) ||
+       wld_rad_hasRunningEndpoint(pRad) ||
        (wld_chanmgt_getCurBw(pRad) > pRad->maxChannelBandwidth) ||
        (pRad->bgdfs_config.status != BGDFS_STATUS_IDLE)) {
         if(pRad->bgdfs_config.status == BGDFS_STATUS_ERROR) {

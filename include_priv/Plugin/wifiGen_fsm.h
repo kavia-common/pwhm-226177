@@ -88,7 +88,7 @@ typedef enum {
     GEN_FSM_ENABLE_RAD,           /* Enable Radio device */
     GEN_FSM_ENABLE_AP,            /* Enable/Disable AP interface */
     GEN_FSM_ENABLE_EP,            /* Enable Endpoint interface */
-    GEN_FSM_CONNECTED_EP,         /* Update when Endpoint is connected */
+    GEN_FSM_CONNECT_EP,           /* Connect Endpoint using current profile */
     GEN_FSM_UPDATE_HOSTAPD,       /* Update hostapd (by sighup): conf in file */
     GEN_FSM_ADD_HOSTAPD,          /* Add config of all hostapd ifaces */
     GEN_FSM_START_HOSTAPD,        /* start and connect with hostapd */

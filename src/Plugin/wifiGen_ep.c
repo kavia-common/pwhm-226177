@@ -187,7 +187,11 @@ swl_rc_ne wifiGen_ep_connectAp(T_EndPointProfile* epProfile) {
     ASSERTS_NOT_NULL(epProfile, SWL_RC_INVALID_PARAM, ME, "NULL");
     T_EndPoint* pEP = epProfile->endpoint;
     ASSERTS_NOT_NULL(pEP, SWL_RC_ERROR, ME, "NULL");
-    setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_ENABLE_EP);
+    ASSERT_TRUE(wld_endpoint_isReady(pEP) && (pEP->currentProfile == epProfile), SWL_RC_INVALID_STATE,
+                ME, "%s: EP not ready to connect", pEP->Name);
+    setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_MOD_WPASUPP);
+    setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_UPDATE_WPASUPP);
+    setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_CONNECT_EP);
     return SWL_RC_OK;
 }
 

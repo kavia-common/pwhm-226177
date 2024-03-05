@@ -72,5 +72,6 @@ swl_rc_ne wifiGen_wpaSupp_stopDaemon(T_EndPoint* pEP);
 swl_rc_ne wifiGen_wpaSupp_reloadDaemon(T_EndPoint* pEP);
 void wifiGen_wpaSupp_writeConfig(T_EndPoint* pEP);
 bool wifiGen_wpaSupp_isRunning(T_EndPoint* pEP);
+bool wifiGen_wpaSupp_isAlive(T_EndPoint* pEP);
 
 #endif /* INCLUDE_PRIV_PLUGIN_WIFIGEN_WPASUPP_H_ */
