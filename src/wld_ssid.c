@@ -70,6 +70,7 @@
 #include "wld_util.h"
 #include "wld_ssid.h"
 #include "wld_accesspoint.h"
+#include "wld_endpoint.h"
 #include "wld_statsmon.h"
 #include "wld_radio.h"
 #include "wld_dm_trans.h"
@@ -189,6 +190,9 @@ T_SSID* s_createSsid(const char* name, uint32_t id) {
     pSSID->changeInfo.lastStatusChange = now;
     pSSID->bssIndex = -1;
     pSSID->mldUnit = -1;
+    pSSID->mldLinkId = -1;
+    pSSID->mldRole = SWL_MLO_ROLE_NONE;
+
     SAH_TRACEZ_INFO(ME, "created ssid(%s) ctx(%p) id(%d)", name, pSSID, id);
     SAH_TRACEZ_OUT(ME);
     return pSSID;
@@ -715,6 +719,10 @@ static void s_checkMLDUnit(T_SSID* pSSID, int32_t newMldUnit) {
         T_AccessPoint* pAP = pSSID->AP_HOOK;
         pAP->pFA->mfn_wvap_setMldUnit(pAP);
         wld_autoCommitMgr_notifyVapEdit(pAP);
+    } else if(pSSID->ENDP_HOOK != NULL) {
+        T_EndPoint* pEP = pSSID->ENDP_HOOK;
+        pEP->pFA->mfn_wendpoint_setMldUnit(pEP);
+        wld_autoCommitMgr_notifyEpEdit(pEP);
     }
     wld_mld_registerLink(pSSID, pSSID->mldUnit);
 
@@ -768,6 +776,35 @@ swl_rc_ne wld_ssid_getNetStats(T_SSID* pSSID, wld_stats_t* pOutStats) {
     W_SWL_SETPTR(pOutStats, pSSID->stats);
     return SWL_RC_OK;
 }
+
+/**
+ * Set the MLD Role of this endpoint.
+ * Shall only be relevant if endpoint is enabled
+ */
+void wld_ssid_setMLDRole(T_SSID* pSSID, swl_mlo_role_e mldRole) {
+    ASSERTI_NOT_EQUALS(pSSID->mldRole, mldRole, , ME, "%s: same role %s", pSSID->Name, swl_mlo_role_str[mldRole]);
+    pSSID->mldRole = mldRole;
+    if(pSSID->ENDP_HOOK != NULL) {
+        wld_endpoint_setConnectionStatus(pSSID->ENDP_HOOK, pSSID->ENDP_HOOK->connectionStatus, EPE_NONE);
+    }
+
+    amxd_trans_t trans;
+    ASSERT_TRANSACTION_INIT(pSSID->pBus, &trans, , ME, "%s : trans init failure", pSSID->Name);
+    amxd_trans_set_value(cstring_t, &trans, "MLDRole", swl_mlo_role_str[mldRole]);
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "trans apply failure");
+}
+
+void wld_ssid_setMLDLinkID(T_SSID* pSSID, int16_t mldLinkId) {
+    ASSERTI_NOT_EQUALS(pSSID->mldLinkId, mldLinkId, , ME, "%s: same id %d", pSSID->Name, mldLinkId);
+    pSSID->mldLinkId = mldLinkId;
+
+    amxd_trans_t trans;
+    ASSERT_TRANSACTION_INIT(pSSID->pBus, &trans, , ME, "%s : trans init failure", pSSID->Name);
+    amxd_trans_set_value(int16_t, &trans, "MLDLinkID", mldLinkId);
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "trans apply failure");
+}
+
+
 
 static void s_copyEpStats(T_Stats* pStats, T_EndPointStats* pEpStats) {
     ASSERTS_NOT_NULL(pStats, , ME, "NULL");

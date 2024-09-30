@@ -747,6 +747,21 @@ T_EndPoint* wld_getEndpointByAlias(const char* name) {
     return NULL;
 }
 
+
+T_EndPoint* wld_getEndpointByName(const char* name) {
+    T_Radio* pRad = NULL;
+    T_EndPoint* pEP = NULL;
+    wld_for_eachRad(pRad) {
+        wld_rad_forEachEp(pEP, pRad) {
+            if(swl_str_matches(pEP->Name, name)) {
+                return pEP;
+            }
+        }
+    }
+    return NULL;
+}
+
+
 T_AccessPoint* wld_getAccesspointByAlias(const char* name) {
     T_Radio* pRad = NULL;
     T_AccessPoint* pAP = NULL;
@@ -818,6 +833,32 @@ uint32_t wld_getNrApMldLinksById(int32_t id) {
 
         wld_rad_forEachAp(pAP, pRad) {
             if((pAP->pSSID != NULL) && (pAP->pSSID->mldUnit == id)) {
+                nrAp++;
+            }
+        }
+    }
+    return nrAp;
+}
+
+/**
+ * Returns the number of Endpoint, that have a positive id equal to
+ * to id.
+ * So negative (default non MLD) id will always return 0.
+ */
+uint32_t wld_getNrEpMldLinksById(int32_t id) {
+    if(id < 0) {
+        return 0;
+    }
+    uint32_t nrAp = 0;
+    T_Radio* pRad = NULL;
+    wld_for_eachRad(pRad) {
+        T_EndPoint* pEP = NULL;
+        if(!SWL_BIT_IS_SET(pRad->operatingStandards, SWL_RADSTD_BE)) {
+            continue;
+        }
+
+        wld_rad_forEachEp(pEP, pRad) {
+            if((pEP->pSSID != NULL) && (pEP->pSSID->mldUnit == id)) {
                 nrAp++;
             }
         }

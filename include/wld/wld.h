@@ -76,6 +76,7 @@
 #include <swl/swl_usp_cmdStatus.h>
 #include <swl/swl_wps.h>
 #include <swl/swl_security.h>
+#include <swl/swl_mlo.h>
 
 #include <amxc/amxc.h>
 #include <amxp/amxp.h>
@@ -337,6 +338,8 @@ typedef enum {
     EPCS_DISCONNECTED,
     EPCS_ERROR,
     EPCS_ERROR_MISCONFIGURED,
+    EPCS_PASSIVE,
+    EPCS_MAX
 } wld_epConnectionStatus_e;
 
 extern const char* cstr_EndPoint_lastError[];
@@ -1754,6 +1757,8 @@ struct S_SSID {
     bool syncEnableToIntf;                    /* Whether the sync should be SSID to intf (true) or other way (false)*/
     int32_t bssIndex;                         /* interface creation order among all radio's interfaces */
     int32_t mldUnit;                          /* the index in which "mld unit" this SSID is located */
+    swl_mlo_role_e mldRole;                   /* The current active MLO Role for this interface. */
+    int16_t mldLinkId;                        /* The Link Index of this interface in the MLD. */
     wld_autoMacSrc_e autoMacSrc;              /* auto generated mac source: from radio (/or dummy) base mac, or statically learned from driver */
     uint32_t autoMacRefIndex;                 /* mac address offset from source base mac */
     char customNetDevName[IFNAMSIZ];          /* custom interface name set by dm conf */
@@ -2093,9 +2098,9 @@ struct _EndPointProfile;
 typedef struct _EndPointProfile T_EndPointProfile;
 
 struct S_EndPoint {
-    int debug;                                /* FIX ME */
+    int debug;                 /* FIX ME */
     wld_intfStatus_e status;
-    char bridgeName[IFNAMSIZ];                /* The bridge interface name */
+    char bridgeName[IFNAMSIZ]; /* The bridge interface name */
     wld_epConnectionStatus_e connectionStatus;
     swl_timeMono_t lastConnStatusChange;
     wld_ep_assocStats_t assocStats;
@@ -2125,6 +2130,7 @@ struct S_EndPoint {
     uint32_t reconnect_rad_trigger;                 /* Amount of reconnect retries before toggling the radio */
 
     int enable;
+    swl_radioStandard_m requiredStandards;
     T_FSM fsm;
     struct S_CWLD_FUNC_TABLE* pFA;        /* Function Array */
     amxc_llist_it_t it;
@@ -2299,7 +2305,6 @@ typedef struct {
     char* optionalEltHexStr;
 } wld_rrmReq_t;
 typedef struct {
-    uint32_t linkid;            /*!< linkid of the affiliated accesspoint */
     uint32_t txPackets;         /*!< tx data packets */
     uint32_t txUbyte;           /*!< tx data Unicast bytes */
     uint32_t txBbyte;           /*!< tx data Broadcast bytes */
@@ -2665,7 +2670,13 @@ typedef struct S_CWLD_FUNC_TABLE {
     PFN_WENDPOINT_MULTIAP_ENABLE mfn_wendpoint_multiap_enable;         /**< Set MultiAP BackhaulSTA */
     PFN_WENDPOINT_SET_MAC_ADDR mfn_wendpoint_set_mac_address;          /**< Set Mac address on an endpoint interface */
     PFN_WENDPOINT_UPDATE mfn_wendpoint_update;                         /**< Update endpoint with new configuration */
+
     PFN_WEP_STATUS mfn_wendpoint_status;
+
+    /**
+     * Notify set of mldUnit
+     */
+    swl_rc_ne (* mfn_wendpoint_setMldUnit)(T_EndPoint* pEP);
 
     swl_rc_ne (* mfn_wendpoint_sendManagementFrame)(T_EndPoint* pEP, swl_80211_mgmtFrameControl_t* fc, swl_macBin_t* sta, swl_bit8_t* data, size_t dataLen, swl_chanspec_t* chanspec);
 
@@ -2744,6 +2755,7 @@ T_Radio* wld_getRadioOfIfaceName(const char* ifName);
 T_Radio* wld_getRadioByWiPhyId(int32_t wiPhyId);
 T_Radio* wld_getUinitRadioByBand(swl_freqBandExt_e band);
 T_EndPoint* wld_getEndpointByAlias(const char* name);
+T_EndPoint* wld_getEndpointByName(const char* name);
 T_AccessPoint* wld_getAccesspointByAlias(const char* name);
 T_Radio* wld_getRadioByAddress(unsigned char* macAddress);
 T_AccessPoint* wld_getAccesspointByAddress(unsigned char* macAddress);

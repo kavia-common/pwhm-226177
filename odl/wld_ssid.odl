@@ -164,6 +164,43 @@
 		%persistent %protected string Description {
 			userflags %upc;
 		}
+		
+
+		/**
+		 * The role this SSID is fulfilling the the MLDSta.
+		 * Possible options:
+		 * * None: The SSID does not have a Role in the MLD, i.e. the SSID is not supporting MLO, or the SSID is
+		 *    currently not actively either trying to connect or connecting.
+		 * * Primary: The SSID represents the Primary MLO SSID interface. This is the interface that should be used for connection management.
+		 *    When connected over MLO, this linux interface that will be used for traffic.
+		 * * Aux: The SSID is an auxiliary MLO SSID interface. This interface should not be used for connection management.
+		 *    For connections over MLO, this SSID linux interface shall not transmit or receive any traffic, but instead will be handled through
+		 *    the main SSID linux interface. 
+		 *    In case of Endpoints, on active MLO connections, there will only be traffic on the Primary interface, and not on Auxiliary.
+		 *    In case of AccessPoints, MLO stations shall be added to the Primary AccessPoint as AssociatedDevice, and the traffic of
+		 *    these station shall only use the primary interface, and not any Auxiliary interface. Note that this does not apply
+		 *    for stations not doing MLO.
+		 * 
+		 */
+		%read-only string MLDRole {
+			on action validate call check_enum ["None", "Primary", "Auxiliary"];
+			default "None";
+		}
+
+		/** 
+		 * The link ID of this SSID in active MLO connections.
+		 * If this SSID is not actively part of an MLD, this value shall be -1.
+		 *
+		 * For Endpoints, when MLDRole is not NA, and ConnectionStatus is Connected, it may still occur that MLDLinkId is -1. 
+		 * In this case the SSID is likely associated as a "Single Link", even though configured as MLO capable. 
+		 * It is thus not part of an active MLDSta. 
+		 * The Status of the SSID shall be Up, and this Endpoint Linux interface will still handle traffic.
+		 */
+		%read-only int16 MLDLinkID {
+			on action validate call check_range { min = -1, max = 14 };
+			default -1;
+		}
+		
 
 		/**
 		 * Custom netdev interface name:

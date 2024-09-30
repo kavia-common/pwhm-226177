@@ -646,6 +646,11 @@ static int TRAP_mfn_wendpoint_update_vendor_roaming(T_EndPoint* pEP _UNUSED) {
     return -1;
 }
 
+static swl_rc_ne TRAP_mfn_wendpoint_setMldUnit(T_EndPoint* pEP _UNUSED) {
+    SAH_TRACEZ_NOTICE(ME, "%p", pEP);
+    return SWL_RC_NOT_IMPLEMENTED;
+}
+
 static swl_rc_ne TRAP_mfn_wrad_update_mon_stats(T_Radio* rad _UNUSED) {
     _UNUSED_(rad);
     SAH_TRACEZ_NOTICE(ME, "%p", rad);
@@ -875,6 +880,7 @@ void wld_functionTable_init(vendor_t* vendor, T_CWLD_FUNC_TABLE* fta) {
     FTA_ASSIGN(mfn_wendpoint_sendManagementFrame);
     FTA_ASSIGN(mfn_wendpoint_updateConfigMaps);
     FTA_ASSIGN(mfn_wendpoint_update);
+    FTA_ASSIGN(mfn_wendpoint_setMldUnit);
 
     FTA_ASSIGN(mfn_wvap_request_rrm_report);
     FTA_ASSIGN(mfn_wvap_setEvtHandlers);

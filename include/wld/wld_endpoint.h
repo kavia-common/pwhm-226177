@@ -103,6 +103,7 @@ swl_rc_ne wld_endpoint_getBssidBin(T_EndPoint* pEP, swl_macBin_t* tgtMac);
 swl_rc_ne wld_endpoint_checkConnection(T_EndPoint* pEP);
 void wld_endpoint_writeStats(T_EndPoint* pEP, T_EndPointStats* stats, bool success);
 bool wld_endpoint_getTargetBssid(T_EndPoint* pEP, swl_macBin_t* macBuffer);
+bool wld_endpoint_isMloRequired(T_EndPoint* pEP);
 
 T_EndPoint* wld_endpoint_fromIt(amxc_llist_it_t* it);
 

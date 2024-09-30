@@ -104,7 +104,7 @@ const char* cstr_EndPoint_status[] = {"Disabled", "Enabled", "Error_Misconfigure
 /* Possible Endpoint ConnectionStatus values */
 const char* cstr_EndPoint_connectionStatus[] = {"Disabled", "Idle", "Discovering", "Connecting",
     "WPS_Pairing", "WPS_PairingDone", "WPS_Timeout", "Connected", "Disconnected", "Error",
-    "Error_Misconfigured", NULL};
+    "Error_Misconfigured", "Passive", NULL};
 
 /* Possible Endpoint LastError values */
 const char* cstr_EndPoint_lastError[] = {"None", "SSID_Not_Found", "Invalid_PassPhrase",
@@ -1048,6 +1048,37 @@ static void s_setEnable_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_para
     SAH_TRACEZ_OUT(ME);
 }
 
+
+/**
+ * @brief s_setRequiredStandards_pwf
+ *
+ * Write handler on the Endpoint "RequiredOperatingStandards" parameter
+ */
+static void s_setRequiredStandards_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_param_t* param _UNUSED, const amxc_var_t* const newValue) {
+    SAH_TRACEZ_IN(ME);
+
+    T_EndPoint* pEP = wld_ep_fromObj(object);
+    ASSERT_NOT_NULL(pEP, , ME, "Endpoint is not yet set");
+
+    swl_radioStandard_m requiredStandards = swl_conv_charToMask(amxc_var_get_const_cstring_t(newValue), swl_radStd_str, SWL_RADSTD_MAX);
+    SAH_TRACEZ_INFO(ME, "%s: set RequiredOperatingStandards %d -> %d", pEP->alias, pEP->requiredStandards, requiredStandards);
+
+    ASSERTI_NOT_EQUALS(requiredStandards, pEP->requiredStandards, , ME, "%s: set to same reqStd %d", pEP->alias, requiredStandards);
+
+    T_Radio* pRad = pEP->pRadio;
+    ASSERT_NOT_NULL(pRad, , ME, "Failed to get the T_Radio struct from Endpoint [%s]", pEP->alias);
+
+    pEP->requiredStandards = requiredStandards;
+
+    pRad->pFA->mfn_wendpoint_update(pEP, SET);
+
+    wld_endpoint_reconfigure(pEP);
+
+    /* when idle : kick the FSM state machine to handle the new state */
+    wld_autoCommitMgr_notifyEpEdit(pEP);
+    SAH_TRACEZ_OUT(ME);
+}
+
 /**
  * @brief syncData_OBJ2EndPoint
  *
@@ -1211,6 +1242,11 @@ void syncData_EndPoint2OBJ(T_EndPoint* pEP) {
 
 void wld_endpoint_setConnectionStatus(T_EndPoint* pEP, wld_epConnectionStatus_e connectionStatus, wld_epError_e error) {
     wld_intfStatus_e status = APSTI_ENABLED;
+    swl_mlo_role_e mldRole = SWL_MLO_ROLE_NONE;
+    if(pEP->pSSID != NULL) {
+        mldRole = pEP->pSSID->mldRole;
+    }
+
     if(connectionStatus == EPCS_ERROR) {
         status = APSTI_ERROR;
     } else if(connectionStatus == EPCS_DISABLED) {
@@ -1219,10 +1255,10 @@ void wld_endpoint_setConnectionStatus(T_EndPoint* pEP, wld_epConnectionStatus_e 
 
     bool connected = (connectionStatus == EPCS_CONNECTED);
 
-    SAH_TRACEZ_INFO(ME, "%s: set status connStat %u(%u) err %u stat %u(%u) conn %u",
+    SAH_TRACEZ_INFO(ME, "%s: set status connStat %u(%u) err %u stat %u(%u) conn %u, mlo %s",
                     pEP->alias,
                     connectionStatus, pEP->connectionStatus,
-                    error, status, pEP->status, connected);
+                    error, status, pEP->status, connected, swl_mlo_role_str[mldRole]);
 
     if(connected && (pEP->currentProfile != NULL) && !swl_str_isEmpty(pEP->currentProfile->SSID)) {
         //update enpoint's SSID  with the current connected profile.
@@ -1234,9 +1270,8 @@ void wld_endpoint_setConnectionStatus(T_EndPoint* pEP, wld_epConnectionStatus_e 
     s_setProfileStatus(pEP->currentProfile);
     s_setMultiApInfo(pEP);
 
-    if(!connected && wld_endpoint_isReady(pEP)) {
-        //We are not connected, but we should be. Start the reconnection
-        //timer.
+    if(!connected && wld_endpoint_isReady(pEP) && (mldRole != SWL_MLO_ROLE_AUXILIARY) && (connectionStatus != EPCS_PASSIVE)) {
+        //We are not connected, but we should be. Start the reconnection timer.
 
         uint32_t targetInterval = (previousStatus == EPCS_CONNECTED) ? pEP->reconnectDelay * 1000 : pEP->reconnectInterval * 1000;
         amxp_timer_state_t timerState = amxp_timer_get_state(pEP->reconnectTimer);
@@ -1573,6 +1608,7 @@ static void s_setEndpointStatus(T_EndPoint* pEP,
 
     bool changed = false;
     amxd_object_t* object = pEP->pBus;
+
     wld_epConnectionStatus_e oldConnectionStatus = pEP->connectionStatus;
     wld_intfStatus_e oldStatus = pEP->status;
 
@@ -2280,6 +2316,16 @@ swl_rc_ne wld_endpoint_finalize(T_EndPoint* pEP) {
     return SWL_RC_OK;
 }
 
+
+/**
+ * Returns whether MLO is required for the operation of this endpoint, i.e. that
+ * the requiredStandards contain MLO or later standards only.
+ */
+bool wld_endpoint_isMloRequired(T_EndPoint* pEP) {
+    int32_t lowestBit = swl_bit32_getLowest(pEP->requiredStandards);
+    return lowestBit >= SWL_RADSTD_BE;
+}
+
 amxd_status_t _EndPoint_debug(amxd_object_t* object,
                               amxd_function_t* func _UNUSED,
                               amxc_var_t* args,
@@ -2328,6 +2374,8 @@ amxd_status_t _EndPoint_debug(amxd_object_t* object,
         amxc_var_add_key(cstring_t, &cmdList, "profile", "");
         amxc_var_add_key(cstring_t, &cmdList, "checkConnection", "");
         amxc_var_add_key(cstring_t, &cmdList, "WpaSuppCfg", "");
+        amxc_var_add_key(cstring_t, &cmdList, "reconnectInfo", "");
+        amxc_var_add_key(cstring_t, &cmdList, "dm", "");
         amxc_var_add_key(cstring_t, &cmdList, "help", "");
         amxc_var_add_key(amxc_llist_t, retval, "cmds", amxc_var_get_const_amxc_llist_t(&cmdList));
     } else if(strcmp(feature, "checkConnection") == 0) {
@@ -2369,6 +2417,18 @@ amxd_status_t _EndPoint_debug(amxd_object_t* object,
             retCode = SWL_RC_OK;
         }
         amxc_var_add_key(cstring_t, retval, "result", swl_rc_toString(retCode));
+    } else if(strcmp(feature, "reconnectInfo") == 0) {
+        amxc_var_add_key(uint32_t, retval, "ReconnectDelay", pEP->reconnectDelay);
+        amxc_var_add_key(uint32_t, retval, "ReconnectInterval", pEP->reconnectInterval);
+        amxc_var_add_key(uint32_t, retval, "ReconnectCount", pEP->reconnect_count);
+        amxc_var_add_key(uint32_t, retval, "ReconnectRadTrigger", pEP->reconnect_rad_trigger);
+        amxc_var_add_key(uint32_t, retval, "ReconnectTimerState", amxp_timer_get_state(pEP->reconnectTimer));
+        amxc_var_add_key(uint32_t, retval, "ReconnectTimerTimeRemaining", amxp_timer_remaining_time(pEP->reconnectTimer));
+    } else if(strcmp(feature, "dm") == 0) {
+        amxc_var_add_key(bool, retval, "Enable", pEP->enable);
+        amxc_var_add_key(uint32_t, retval, "Status", pEP->status);
+        amxc_var_add_key(uint32_t, retval, "ConnectionStatus", pEP->connectionStatus);
+        amxc_var_add_key(uint32_t, retval, "RequiredOperatingStandards", pEP->requiredStandards);
     } else {
         snprintf(buffer, sizeof(buffer), "unknown command %s", feature);
         amxc_var_add_key(cstring_t, retval, "error", buffer);
@@ -2387,6 +2447,7 @@ SWLA_DM_HDLRS(sEpDmHdlrs,
                   SWLA_DM_PARAM_HDLR("ProfileReference", s_setProfileReference_pwf),
                   SWLA_DM_PARAM_HDLR("BridgeInterface", s_setBridgeInterface_pwf),
                   SWLA_DM_PARAM_HDLR("Enable", s_setEnable_pwf),
+                  SWLA_DM_PARAM_HDLR("RequiredOperatingStandards", s_setRequiredStandards_pwf),
                   ),
               .instAddedCb = s_addEpInst_oaf, );
 

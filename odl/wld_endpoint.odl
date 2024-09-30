@@ -111,10 +111,35 @@
 			default "Disabled";
 		}
 
-		/** <p>Indicates the state of the endpoint's connection.</p>*/
+		/** 
+		 * Indicates the state of the endpoint's connection.
+		 * Possible options:
+		 * * Disabled : Endpoint is disabled due to configured. Can either be due to endpoint or radio config
+		 * * Idle: Endpoint is enabled, but has no configuration, i.e. no Profile, or no ProfileRef. Waiting for configuration or WPS.
+		 * * Discovering: Endpoint is properly configured to connect, and trying to find an AP to connect to using AP scan
+		 * *     No AP found at this time
+		 * * Connecting: The endpoint has found a valid AP, and is trying to connect to this AP.
+		 * * WPS_Pairing: The endpoint is currently in a WPS_Pairing state.
+		 * * Connected: The endpoint is connected, and able to communicate with AP
+		 * * Passive: The endpoint is part of an MLDSta, and another MLDSta is connecting, causing this to stop discovery  / connection attempts.
+		 * * Error: The endpoint is unable to perform a connection due to unknown reasons
+		 * * Error_Misconfigured: The endpoint is unable to connect, because the current configuration is not supported or sufficient.
+		 **/
 		%read-only string ConnectionStatus {
-			on action validate call check_enum ["Disabled", "Idle", "Discovering", "Connecting", "WPS_Pairing", "WPS_PairingDone", "WPS_Timeout", "Connected", "Disconnected", "Error", "Error_Misconfigured"];
+			on action validate call check_enum ["Disabled", "Idle", "Discovering", "Connecting", "WPS_Pairing", 
+			"WPS_PairingDone", "WPS_Timeout", "Connected", "Passive", "Disconnected", "Error", "Error_Misconfigured"];
 			default "Disabled";
+		}
+		
+		/**
+		 * Comma separated list of strings, representing a list of standards as defined in the Radio.SupportedStandards
+		 * list.
+		 * This endpoint should only be operational and connected, if the connection supports one of the Required
+		 * Operating Standards listed in this list.
+		 * If the endpoint is unable to connect using any ofthese OperatingStandards, the radio may be disabled.
+		 */
+		%persistent string RequiredOperatingStandards{
+			default "";
 		}
 
 		/** <p>The last error that occurred</p> */

@@ -172,6 +172,7 @@ void wld_cleanupSurveyReport(wld_surveyReport_t* res);
 void wld_spectrum_cleanupResults(T_Radio* pR);
 T_Radio* wld_getRadioByFrequency(swl_freqBand_e freqBand);
 uint32_t wld_getNrApMldLinksById(int32_t id);
+uint32_t wld_getNrEpMldLinksById(int32_t id);
 
 int wld_rad_init_cap(T_Radio* pR);
 void wld_rad_updateCapabilities(T_Radio* pR, amxd_trans_t* trans);
