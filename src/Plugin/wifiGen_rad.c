@@ -742,7 +742,6 @@ static bool s_doRadEnable(T_Radio* pRad) {
     SAH_TRACEZ_INFO(ME, "%s: Enable rad", pRad->Name);
     if(pRad->isSTA && pRad->isSTASup) {
         wld_rad_nl80211_setSta(pRad);
-        wld_rad_nl80211_set4Mac(pRad, true);
         if(wld_rad_hasEnabledEp(pRad) && (wld_vep_from_name(pRad->Name) == NULL)) {
             SAH_TRACEZ_WARNING(ME, "%s: rad managed iface remains passive", pRad->Name);
             return true;
