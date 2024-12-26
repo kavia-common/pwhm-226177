@@ -90,6 +90,14 @@ swl_rc_ne wifiGen_ep_destroyHook(T_EndPoint* pEP) {
     return SWL_RC_OK;
 }
 
+static void s_updateStaMode(T_EndPoint* pEP) {
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    T_Radio* pRad = pEP->pRadio;
+    ASSERT_NOT_NULL(pRad, , ME, "NULL");
+    bool isRadSTA = (pRad->isSTASup && pEP->enable);
+    swl_typeBool_commitObjectParam(pRad->pBus, "STA_Mode", isRadSTA);
+}
+
 /**
  * @brief wifiGen_ep_enable
  *
@@ -109,7 +117,8 @@ swl_rc_ne wifiGen_ep_enable(T_EndPoint* pEP, bool enable) {
     SAH_TRACEZ_INFO(ME, "%s : Endpoint enable changed : [%d] --> [%d]", pEP->Name, pEP->enable, enable);
     pEP->enable = enable;
     bool isRadSTA = (pRad->isSTASup && enable);
-    swl_typeBool_commitObjectParam(pRad->pBus, "STA_Mode", isRadSTA);
+    //delay updating STA_Mode, in order to manage endpoint toggling (no need to re-create interface)
+    swla_delayExec_add((swla_delayExecFun_cbf) s_updateStaMode, pEP);
     SAH_TRACEZ_INFO(ME, "ep %s/%d rad %s/%d isSta(%d/%d) isStaSupp(%d)",
                     pEP->Name, pEP->index,
                     pRad->Name, pRad->index, pRad->isSTA, isRadSTA, pRad->isSTASup);

@@ -1061,7 +1061,12 @@ int wifiGen_rad_staMode(T_Radio* pRad, int val, int set) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     if(set & SET) {
         pRad->isSTA = val;
-        pRad->fsmRad.FSM_SyncAll = TRUE;
+        T_EndPoint* pEP = wld_rad_firstEp(pRad);
+        if(pEP != NULL) {
+            setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_MOD_EP_MACADDR);
+            setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_ENABLE_EP);
+            setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_ENABLE_EP);
+        }
     }
     return pRad->isSTA;
 }

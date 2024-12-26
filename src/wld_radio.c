@@ -473,7 +473,10 @@ static void s_finalizeEPs(T_Radio* pR) {
         }
     }
     if(needRadRestart) {
-        pR->fsmRad.FSM_SyncAll = TRUE;
+        swl_rc_ne rc = pR->pFA->mfn_wrad_stamode(pR, pR->isSTA, SET);
+        if(rc == SWL_RC_NOT_IMPLEMENTED) {
+            pR->fsmRad.FSM_SyncAll = TRUE;
+        }
         wld_autoCommitMgr_notifyRadEdit(pR);
     }
 }
@@ -2227,9 +2230,6 @@ void syncData_Radio2OBJ(amxd_object_t* object, T_Radio* pR, int set) {
             pR->MCS = tmp_int32;
             pR->pFA->mfn_wrad_mcs(pR, NULL, pR->MCS, SET);
         }
-
-        //if(get_OBJ_ParameterHelper(TPH_INT32, object, "TransmitPower", &pR->transmitPower))
-        //	pR->pFA->mfn_wrad_txpow(pR,pR->transmitPower,SET);
 
         tmp_int32 = amxd_object_get_int32_t(object, "MaxAssociatedDevices", NULL);
         if((tmp_int32 > 0) && (pR->maxStations != tmp_int32)) {
