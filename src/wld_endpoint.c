@@ -126,8 +126,8 @@ T_EndPoint* wld_ep_fromObj(amxd_object_t* epObj) {
     return pEP;
 }
 
-int32_t wld_endpoint_isProfileIdentical(T_EndPointProfile* currentProfile, T_EndPointProfile* newProfile) {
-    ASSERTS_NOT_NULL(currentProfile, LFALSE, ME, "currentProfile is NULL");
+lbool_t wld_endpoint_isProfileIdentical(T_EndPointProfile* currentProfile, T_EndPointProfile* newProfile) {
+    ASSERTS_NOT_NULL(currentProfile, ((newProfile == NULL) ? LTRUE : LFALSE), ME, "currentProfile is NULL");
     ASSERTS_NOT_NULL(newProfile, LFALSE, ME, "newProfile is NULL");
 
     if(memcmp(currentProfile->BSSID, &wld_ether_null, ETHER_ADDR_LEN) != 0) {
@@ -225,6 +225,22 @@ static void s_setMultiAPProfile_pwf(void* priv _UNUSED, amxd_object_t* object, a
     SAH_TRACEZ_OUT(ME);
 }
 
+static amxd_object_t* s_getProfileObjFromReference(amxd_object_t* endpointObject, const char* profileRefStr) {
+    ASSERTS_NOT_NULL(endpointObject, NULL, ME, "NULL");
+    ASSERTS_STR(profileRefStr, NULL, ME, "empty reference");
+    const char* oEpName = amxd_object_get_name(endpointObject, AMXD_OBJECT_NAMED);
+    amxd_object_t* profileRefObj = NULL;
+    if(swl_str_countChar(profileRefStr, '.') > 0) {
+        profileRefObj = swla_object_getReferenceObject(endpointObject, profileRefStr);
+    } else {
+        profileRefObj = amxd_object_findf(endpointObject, "Profile.%s", profileRefStr);
+    }
+    if(profileRefObj == NULL) {
+        SAH_TRACEZ_ERROR(ME, "%s: No profile found matching the profileRef [%s]", oEpName, profileRefStr);
+    }
+    return profileRefObj;
+}
+
 /**
  * @brief wld_endpoint_setProfileReference_pwf
  *
@@ -236,27 +252,20 @@ static void s_setProfileReference_pwf(void* priv _UNUSED, amxd_object_t* object,
     T_EndPoint* pEP = wld_ep_fromObj(object);
     ASSERT_NOT_NULL(pEP, , ME, "INVALID");
 
-    const char* newProfileRef = amxc_var_constcast(cstring_t, newValue);
-    ASSERTW_FALSE(swl_str_isEmpty(newProfileRef), , ME, "profile Ref is not yet set");
+    const char* newProfileRef = amxc_var_constcast(cstring_t, newValue) ? : "";
 
-    SAH_TRACEZ_INFO(ME, "%s: setProfileReference - %s", pEP->Name, newProfileRef);
+    SAH_TRACEZ_INFO(ME, "%s: setProfileReference - %s", pEP->alias, newProfileRef);
 
     bool credentialsChanged = false;
     T_EndPointProfile* oldProfile = pEP->currentProfile;
-    pEP->currentProfile = NULL;
 
-    amxd_object_t* newProfileObj = NULL;
+    amxd_object_t* newProfileObj = s_getProfileObjFromReference(object, newProfileRef);
 
-    if(swl_str_countChar(newProfileRef, '.') > 0) {
-        newProfileObj = swla_object_getReferenceObject(object, newProfileRef);
-    } else {
-        newProfileObj = amxd_object_findf(pEP->pBus, "Profile.%s", newProfileRef);
-    }
-    ASSERT_NOT_NULL(newProfileObj, , ME, "No profile found matching the profileRef [%s]", newProfileRef);
+    T_EndPointProfile* newProfile = (newProfileObj ? (T_EndPointProfile*) newProfileObj->priv : NULL);
 
+    ASSERTW_FALSE((oldProfile == NULL) && (newProfile == NULL), , ME, "%s: profile Ref is not yet set", pEP->alias);
 
-    T_EndPointProfile* newProfile = (T_EndPointProfile*) newProfileObj->priv;
-    int comparison = wld_endpoint_isProfileIdentical(oldProfile, newProfile);
+    lbool_t comparison = wld_endpoint_isProfileIdentical(oldProfile, newProfile);
 
     // First creation of a Profile matching the current connected SSID, avoid disconnect
     bool firstCreation = false;
@@ -268,13 +277,13 @@ static void s_setProfileReference_pwf(void* priv _UNUSED, amxd_object_t* object,
     }
 
     if((comparison < 0) && !firstCreation) {
-        SAH_TRACEZ_INFO(ME, "Profile is not identical %i", comparison);
+        SAH_TRACEZ_INFO(ME, "%s: Profile is not identical %i", pEP->alias, comparison);
         credentialsChanged = true;
     } else {
-        SAH_TRACEZ_INFO(ME, "Profile is identical, don't disconnect");
+        SAH_TRACEZ_INFO(ME, "%s: Profile is identical, don't disconnect", pEP->alias);
     }
 
-    SAH_TRACEZ_INFO(ME, "Profile reference found - Setting Current Profile for [%s]", newProfileRef);
+    SAH_TRACEZ_INFO(ME, "%s: Profile reference found - Setting Current Profile for [%s]", pEP->alias, newProfileRef);
     pEP->currentProfile = newProfile;
 
     if((pEP->pSSID != NULL) && (newProfile != NULL) &&
@@ -527,13 +536,13 @@ void wld_endpoint_setCurrentProfile(amxd_object_t* endpointObject, T_EndPointPro
     ASSERT_NOT_NULL(endpointObject, , ME, "NULL");
     ASSERT_NOT_NULL(Profile, , ME, "NULL");
 
-    T_EndPoint* EndPoint = (T_EndPoint*) endpointObject->priv;
-    ASSERT_NOT_NULL(EndPoint, , ME, "NULL");
+    T_EndPoint* pEP = (T_EndPoint*) endpointObject->priv;
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
 
     char* profileRefStr = amxd_object_get_cstring_t(endpointObject, "ProfileReference", NULL);
-    amxd_object_t* profileRefObj = swla_object_getReferenceObject(endpointObject, profileRefStr);
+    amxd_object_t* profileRefObj = s_getProfileObjFromReference(endpointObject, profileRefStr);
     if(profileRefObj == NULL) {
-        SAH_TRACEZ_INFO(ME, "Profile Reference is not yet set - not setting currentProfile");
+        SAH_TRACEZ_INFO(ME, "%s: Profile Reference is not yet set - not setting currentProfile", pEP->alias);
         free(profileRefStr);
         return;
     }
@@ -541,12 +550,18 @@ void wld_endpoint_setCurrentProfile(amxd_object_t* endpointObject, T_EndPointPro
     const char* profileRefName = amxd_object_get_name(profileRefObj, AMXD_OBJECT_NAMED);
 
     if(profileRefObj == Profile->pBus) {
-        SAH_TRACEZ_NOTICE(ME, "Profile Instance name [%s] matched : setting as currentProfile",
-                          profileName);
-        EndPoint->currentProfile = Profile;
+        SAH_TRACEZ_NOTICE(ME, "%s: Profile Instance name [%s] matched : setting as currentProfile",
+                          pEP->alias, profileName);
+        lbool_t comparison = wld_endpoint_isProfileIdentical(pEP->currentProfile, Profile);
+        pEP->currentProfile = Profile;
+        if(comparison < 0) {
+            SAH_TRACEZ_NOTICE(ME, "%s: reconfigure ep with matched profile reference [%s]",
+                              pEP->alias, profileName);
+            wld_endpoint_reconfigure(pEP);
+        }
     } else {
-        SAH_TRACEZ_NOTICE(ME, "Profile Instance name [%s] does not match the profileRefStr [%s] - not setting currentProfile",
-                          profileName, profileRefName);
+        SAH_TRACEZ_NOTICE(ME, "%s: Profile Instance name [%s] does not match the profileRefStr [%s] - not setting currentProfile",
+                          pEP->alias, profileName, profileRefName);
     }
 
     free(profileRefStr);
@@ -1146,7 +1161,7 @@ void syncData_EndPoint2OBJ(T_EndPoint* pEP) {
         if(loadProfs != savedProfs) {
             SAH_TRACEZ_WARNING(ME, "%s: loaded profiles %d != saved profiles %d => skip resetting profileReference", pEP->Name, loadProfs, savedProfs);
         } else {
-            SAH_TRACEZ_WARNING(ME, "%s: resetting profileReference", pEP->Name);
+            SAH_TRACEZ_INFO(ME, "%s: resetting profileReference", pEP->Name);
             amxd_trans_set_cstring_t(&trans, "ProfileReference", "");
         }
     }
