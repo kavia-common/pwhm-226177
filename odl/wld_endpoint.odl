@@ -126,14 +126,14 @@
 		/**
 		 * Time before try to connect
 		 */
-		uint32 ReconnectDelay {
+		%persistent uint32 ReconnectDelay {
 			default 15;
 		}
 
 		/**
 		 * If fail to reconnect, time before try again
 		 */
-		uint32 ReconnectInterval {
+		%persistent uint32 ReconnectInterval {
 			default 15;
 		}
 

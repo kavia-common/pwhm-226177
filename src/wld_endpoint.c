@@ -589,8 +589,9 @@ static void s_setDefaults(T_EndPoint* pEP, const char* endpointname) {
     pEP->error = EPE_NONE;
     pEP->enable = APSTI_DISABLED;
 
-    pEP->reconnectDelay = 15;
-    pEP->reconnectInterval = 15;
+    amxd_object_t* epObj = amxd_object_findf(get_wld_object(), "EndPoint.%s", endpointname);
+    pEP->reconnectDelay = epObj ? amxd_object_get_uint32_t(epObj, "ReconnectDelay", NULL) : 15;
+    pEP->reconnectInterval = epObj ? amxd_object_get_uint32_t(epObj, "ReconnectInterval", NULL) : 15;
 
     pEP->WPS_Enable = true;
 
