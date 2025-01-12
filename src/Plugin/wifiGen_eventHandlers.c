@@ -383,6 +383,9 @@ static void s_mngrReadyCb(void* userData, char* ifName, bool isReady) {
             wld_endpoint_setConnectionStatus(pEP, connState, EPE_NONE);
         }
         CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnRadioUp, ifName, true);
+        if((connState == EPCS_DISCOVERING) || (connState == EPCS_WPS_PAIRING)) {
+            CALL_MGR_I_NA_EXT(pEP->wpaCtrlInterface, fStationScanStartedCb);
+        }
         wld_rad_updateState(pRad, false);
         return;
     }
@@ -1261,6 +1264,50 @@ swl_rc_ne wifiGen_setVapEvtHandlers(T_AccessPoint* pAP) {
     return SWL_RC_OK;
 }
 
+static wld_epError_e s_getEpErrFromSysErr(int error) {
+    switch(error) {
+    case -ENOENT: return EPE_SSID_NOT_FOUND;
+    default: return EPE_NONE;
+    }
+}
+
+static wld_epError_e s_getEpErrFromDeauthReason(swl_IEEE80211deauthReason_ne reason) {
+    switch(reason) {
+    case SWL_IEEE80211_DEAUTH_REASON_MIC_FAILURE:
+    case SWL_IEEE80211_DEAUTH_REASON_4WAY_HANDSHAKE_TIMEOUT:
+    case SWL_IEEE80211_DEAUTH_REASON_GROUPKEY_HANDSHAKE_TIMEOUT:
+    case SWL_IEEE80211_DEAUTH_REASON_WRONG_4WAY_HANDSHAKE_IE:
+    case SWL_IEEE80211_DEAUTH_REASON_AUTHENTICATION_FAILED:
+        return EPE_INVALID_PASSPHRASE;
+    case SWL_IEEE80211_DEAUTH_REASON_INVALID_GROUP_CIPHER:
+    case SWL_IEEE80211_DEAUTH_REASON_INVALID_PAIRWIZE_CIPHER:
+    case SWL_IEEE80211_DEAUTH_REASON_INVALID_AKMP:
+    case SWL_IEEE80211_DEAUTH_REASON_UNSUPPORTED_RSNE_VERSION:
+    case SWL_IEEE80211_DEAUTH_REASON_INVALID_RSNE_CAPS:
+    case SWL_IEEE80211_DEAUTH_REASON_UNSUPPORTED_CIPHER_SUITE:
+        return EPE_SECURITYMETHOD_UNSUPPORTED;
+    default: return EPE_NONE;
+    }
+}
+
+static void s_refreshEpConnStatus(T_EndPoint* pEP) {
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    wld_epConnectionStatus_e connState = pEP->connectionStatus;
+    wifiGen_ep_connStatus(pEP, &connState);
+    if(connState != pEP->connectionStatus) {
+        wld_endpoint_setConnectionStatus(pEP, connState, EPE_NONE);
+    }
+}
+
+static void s_stationStartConnEvt(void* pRef, char* ifName, const char* ssid, swl_macBin_t* bssid, swl_chanspec_t* chanSpec _UNUSED) {
+    T_EndPoint* pEP = (T_EndPoint*) pRef;
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    ASSERT_NOT_NULL(ifName, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "%s: EP start connection to BSS %s (ssid: %s)",
+                    pEP->Name, swl_typeMacBin_toBuf32Ref(bssid).buf, ssid);
+    s_refreshEpConnStatus(pEP);
+}
+
 static void s_stationDisconnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssidMac, swl_IEEE80211deauthReason_ne reason) {
     T_EndPoint* pEP = (T_EndPoint*) pRef;
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
@@ -1268,8 +1315,12 @@ static void s_stationDisconnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBs
 
     SAH_TRACEZ_INFO(ME, "%s: station disconnected from "MAC_PRINT_FMT " reason %d", pEP->Name, MAC_PRINT_ARG(bBssidMac->bMac), reason);
 
-    if((pEP->currentProfile != NULL) && (pEP->connectionStatus == EPCS_CONNECTED)) {
-        wld_endpoint_sync_connection(pEP, false, 0);
+    if((pEP->currentProfile != NULL) &&
+       ((pEP->connectionStatus == EPCS_CONNECTING) ||
+        (pEP->connectionStatus == EPCS_CONNECTED))) {
+        wld_epError_e epErr = s_getEpErrFromDeauthReason(reason);
+        wld_endpoint_sync_connection(pEP, false, epErr ? : pEP->error);
+        CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnEpDisconnected, pEP->Name, false);
     }
 }
 
@@ -1305,7 +1356,7 @@ static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssid
     }
 
     SAH_TRACEZ_INFO(ME, "%s: station connected to ssid(%s) bssid(%s)", pEP->Name, tmpSsid, tmpBssidStr.cMac);
-    wld_endpoint_sync_connection(pEP, true, 0);
+    wld_endpoint_sync_connection(pEP, true, EPE_NONE);
 
     // update radio datamodel
     swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
@@ -1317,6 +1368,14 @@ static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssid
     CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnEpConnected, pEP->Name, true);
 }
 
+static void s_stationScanStartedEvt(void* pRef, char* ifName) {
+    T_EndPoint* pEP = (T_EndPoint*) pRef;
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    ASSERT_NOT_NULL(ifName, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "%s: EP start scan", pEP->Name);
+    s_refreshEpConnStatus(pEP);
+}
+
 static void s_stationScanFailedEvt(void* pRef, char* ifName, int error) {
     T_EndPoint* pEP = (T_EndPoint*) pRef;
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
@@ -1325,6 +1384,11 @@ static void s_stationScanFailedEvt(void* pRef, char* ifName, int error) {
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
 
     SAH_TRACEZ_INFO(ME, "%s: scan Failed with error(%d)", pEP->Name, error);
+    if(pEP->connectionStatus == EPCS_DISCOVERING) {
+        wld_epError_e epErr = s_getEpErrFromSysErr(error);
+        wld_endpoint_sync_connection(pEP, false, epErr ? : pEP->error);
+    }
+
     if((error == -EBUSY) && wifiGen_hapd_isAlive(pRad)) {
         ASSERT_TRUE(pEP->toggleBssOnReconnect, , ME, "%s: do not disable hostapd", pEP->Name);
         // disable hostapd to allow wpa_supplicant to do scan
@@ -1371,14 +1435,15 @@ static void s_stationWpsInProgress(void* userData, char* ifName _UNUSED) {
     T_EndPoint* pEP = (T_EndPoint*) userData;
     ASSERTS_NOT_NULL(pEP, , ME, "NULL");
     ASSERTS_TRUE(pEP->wpsSessionInfo.WPS_PairingInProgress, , ME, "%s: no wps session ongoing", pEP->Name);
-    wld_endpoint_setConnectionStatus(pEP, EPCS_WPS_PAIRING, EPE_NONE);
+    wld_endpoint_setConnectionStatus(pEP, EPCS_WPS_PAIRING, pEP->error);
 }
 
 static void s_stationWpsCancel(void* userData, char* ifName _UNUSED) {
     T_EndPoint* pEP = (T_EndPoint*) userData;
     ASSERTS_NOT_NULL(pEP, , ME, "NULL");
     ASSERTS_TRUE(pEP->wpsSessionInfo.WPS_PairingInProgress, , ME, "%s: no wps session ongoing", pEP->Name);
-    wld_endpoint_sync_connection(pEP, false, EPE_WPS_CANCELED);
+    wld_epConnectionStatus_e connectionStatus = (pEP->enable && pEP->pRadio->enable) ? EPCS_IDLE : EPCS_DISABLED;
+    wld_endpoint_setConnectionStatus(pEP, connectionStatus, EPE_WPS_CANCELED);
     wld_endpoint_sendPairingNotification(pEP, NOTIFY_PAIRING_DONE, WPS_CAUSE_CANCELLED, NULL);
 }
 
@@ -1386,7 +1451,8 @@ static void s_stationWpsTimeout(void* userData, char* ifName _UNUSED) {
     T_EndPoint* pEP = (T_EndPoint*) userData;
     ASSERTS_NOT_NULL(pEP, , ME, "NULL");
     ASSERTS_TRUE(pEP->wpsSessionInfo.WPS_PairingInProgress, , ME, "%s: no wps session ongoing", pEP->Name);
-    wld_endpoint_sync_connection(pEP, false, EPE_WPS_TIMEOUT);
+    wld_epConnectionStatus_e connectionStatus = (pEP->enable && pEP->pRadio->enable) ? EPCS_IDLE : EPCS_DISABLED;
+    wld_endpoint_setConnectionStatus(pEP, connectionStatus, EPE_WPS_TIMEOUT);
     wld_endpoint_sendPairingNotification(pEP, NOTIFY_PAIRING_DONE, WPS_CAUSE_TIMEOUT, NULL);
 }
 
@@ -1434,9 +1500,11 @@ swl_rc_ne wifiGen_setEpEvtHandlers(T_EndPoint* pEP) {
     memset(&wpaCtrlEpEvtHandlers, 0, sizeof(wpaCtrlEpEvtHandlers));
     //Set here the wpa_ctrl EP event handlers
     wpaCtrlEpEvtHandlers.fProcStdEvtMsg = s_wpaCtrlIfaceStdEvt;
+    wpaCtrlEpEvtHandlers.fStationStartConnCb = s_stationStartConnEvt;
     wpaCtrlEpEvtHandlers.fStationAssociatedCb = s_stationAssociatedEvt;
     wpaCtrlEpEvtHandlers.fStationDisconnectedCb = s_stationDisconnectedEvt;
     wpaCtrlEpEvtHandlers.fStationConnectedCb = s_stationConnectedEvt;
+    wpaCtrlEpEvtHandlers.fStationScanStartedCb = s_stationScanStartedEvt;
     wpaCtrlEpEvtHandlers.fStationScanFailedCb = s_stationScanFailedEvt;
     wpaCtrlEpEvtHandlers.fWpsCredReceivedCb = s_stationWpsCredReceivedEvt;
     wpaCtrlEpEvtHandlers.fWpsInProgressMsg = s_stationWpsInProgress;

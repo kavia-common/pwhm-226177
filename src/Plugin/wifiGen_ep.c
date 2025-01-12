@@ -246,9 +246,14 @@ swl_rc_ne wifiGen_ep_connStatus(T_EndPoint* pEP, wld_epConnectionStatus_e* pConn
         connState = EPCS_DISABLED;
     } else if(wld_wpaSupp_ep_getConnState(pEP, &connState) < SWL_RC_OK) {
         connState = EPCS_IDLE;
-    } else if((pEP->connectionStatus == EPCS_WPS_PAIRING) &&
-              ((connState == EPCS_DISCOVERING) || (connState == EPCS_CONNECTING))) {
-        connState = EPCS_WPS_PAIRING;
+    } else if((connState == EPCS_DISCOVERING) || (connState == EPCS_CONNECTING)) {
+        if(pEP->connectionStatus == EPCS_WPS_PAIRING) {
+            connState = pEP->connectionStatus;
+        }
+    } else if(connState == EPCS_DISCONNECTED) {
+        if((pEP->connectionStatus == EPCS_WPS_PAIRING) || (pEP->connectionStatus == EPCS_IDLE)) {
+            connState = pEP->connectionStatus;
+        }
     }
     SAH_TRACEZ_INFO(ME, "%s: connSta %s => %s", pEP->Name,
                     cstr_EndPoint_connectionStatus[pEP->connectionStatus],

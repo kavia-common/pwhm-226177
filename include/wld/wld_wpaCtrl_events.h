@@ -155,6 +155,7 @@ typedef void (* wld_wpaCtrl_btmReplyCb_f)(void* userData, char* ifName, swl_macC
 typedef void (* wld_wpaCtrl_mgtFrameReceivedCb_f)(void* userData, char* ifName, swl_80211_mgmtFrame_t* frame, size_t frameLen, char* frameStr);
 typedef void (* wld_wpaCtrl_stationConnectivityCb_f)(void* userData, char* ifName, swl_macBin_t* bBssidMac, swl_IEEE80211deauthReason_ne reason);
 typedef void (* wld_wpaCtrl_stationScanFailedCb_f)(void* userData, char* ifName, int error);
+typedef void (* wld_wpaCtrl_stationScanStartedCb_f)(void* userData, char* ifName);
 typedef void (* wld_wpaCtrl_beaconResponseCb_f)(void* userData, char* ifName, swl_macBin_t* station, wld_wpaCtrl_rrmBeaconRsp_t* rrmBeaconResponse);
 typedef void (* wld_wpaCtrl_stationStartConnCb_f)(void* userData, char* ifName, const char* ssid, swl_macBin_t* bBssidMac, swl_chanspec_t* pChansSpec);
 typedef void (* wld_wpaCtrl_stationStartConnFailedCb_f)(void* userData, char* ifName, int error);
@@ -194,6 +195,7 @@ typedef struct {
     wld_wpaCtrl_stationConnectivityCb_f fStationAssociatedCb;
     wld_wpaCtrl_stationConnectivityCb_f fStationDisconnectedCb;
     wld_wpaCtrl_stationConnectivityCb_f fStationConnectedCb;
+    wld_wpaCtrl_stationScanStartedCb_f fStationScanStartedCb;
     wld_wpaCtrl_stationScanFailedCb_f fStationScanFailedCb;
     wld_wpaCtrl_stationStartConnCb_f fStationStartConnCb;             // Endpoint starting connection
     wld_wpaCtrl_stationStartConnFailedCb_f fStationStartConnFailedCb; // Endpoint connection init failure
@@ -260,6 +262,7 @@ typedef struct {
     wld_wpaCtrl_syncOnReadyCb_f fSyncOnEpConnected;                   // Handler to sync radio conf when endpoint is connected
     wld_wpaCtrl_syncOnReadyCb_f fSyncOnEpDisconnected;                // Handler to sync radio conf when endpoint is disconnected
     wld_wpaCtrl_fetchSocketLinkIface_f fFetchSockLinkIface;           // Handler to fetch of link iface name from wpa socket file name
+    wld_wpaCtrl_stationScanStartedCb_f fStationScanStartedCb;         // EndPoint starting to scan BSS
     wld_wpaCtrl_stationScanFailedCb_f fStationScanFailedCb;           // EndPoint failing to scan BSS
     wld_wpaCtrl_stationStartConnCb_f fStationStartConnCb;             // Endpoint starting connection
     wld_wpaCtrl_stationStartConnFailedCb_f fStationStartConnFailedCb; // Endpoint connection init failure

@@ -685,6 +685,16 @@ static void s_stationScanFailed(wld_wpaCtrlInterface_t* pInterface, char* event 
     NOTIFY(pInterface, fStationScanFailedCb, error);
 }
 
+static void s_stationScanStarted(wld_wpaCtrlInterface_t* pInterface, char* event _UNUSED, char* params _UNUSED) {
+    // Example:<3>CTRL-EVENT-SCAN-STARTED
+    NOTIFY_NA(pInterface, fStationScanStartedCb);
+}
+
+static void s_stationScanNetworkNotFound(wld_wpaCtrlInterface_t* pInterface, char* event _UNUSED, char* params _UNUSED) {
+    // Example:<3>CTRL-EVENT-NETWORK-NOT-FOUND
+    NOTIFY(pInterface, fStationScanFailedCb, -ENOENT);
+}
+
 static void s_stationAuthenticating(wld_wpaCtrlInterface_t* pInterface, char* event _UNUSED, char* params) {
     //endpoint case: msg format: <3>SME: Trying to authenticate with 98:42:65:2d:23:43 (SSID='ssid' freq=5500 MHz)
     swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
@@ -743,6 +753,16 @@ static void s_stationAssociating(wld_wpaCtrlInterface_t* pInterface, char* event
     }
     SAH_TRACEZ_INFO(ME, "%s: Associating with BSSID(%s) SSID(%s) chspec(%s) ",
                     pInterface->name, swl_typeMacBin_toBuf32Ref(&bssidBin).buf, ssid, swl_typeChanspec_toBuf32Ref(&chanSpec).buf);
+}
+
+static void s_stationAuthRejected(wld_wpaCtrlInterface_t* pInterface, char* event _UNUSED, char* params) {
+    //endpoint case: msg format: <3>CTRL-EVENT-AUTH-REJECT a0:b5:49:00:66:29 auth_type=3 auth_transaction=2 status_code=1
+    swl_macBin_t bssidBin = SWL_MAC_BIN_NEW();
+    swl_macChar_t bssidStr = {{0}};
+    swl_str_ncopy(bssidStr.cMac, SWL_MAC_CHAR_LEN, params, SWL_MAC_CHAR_LEN - 1);
+    swl_mac_charToBin(&bssidBin, &bssidStr);
+    uint8_t reasonCode = SWL_IEEE80211_DEAUTH_REASON_AUTHENTICATION_FAILED;
+    CALL_INTF(pInterface, fStationDisconnectedCb, &bssidBin, reasonCode);
 }
 
 static void s_beaconResponseEvt(wld_wpaCtrlInterface_t* pInterface, char* event _UNUSED, char* params) {
@@ -820,6 +840,9 @@ SWL_TABLE(sWpaCtrlEvents,
               {"CTRL-EVENT-DISCONNECTED", &s_stationDisconnected},
               {"CTRL-EVENT-CONNECTED", &s_stationConnected},
               {"CTRL-EVENT-SCAN-FAILED", &s_stationScanFailed},
+              {"CTRL-EVENT-SCAN-STARTED", &s_stationScanStarted},
+              {"CTRL-EVENT-NETWORK-NOT-FOUND", &s_stationScanNetworkNotFound},
+              {"CTRL-EVENT-AUTH-REJECT", &s_stationAuthRejected},
               {"BEACON-RESP-RX", &s_beaconResponseEvt},
               ));
 
