@@ -63,8 +63,8 @@
 #define __WLD_UTIL_H__
 
 #include "wld.h"
-
-
+#include "swl/swl_genericFrameParser.h"
+#include "swl/swl_hex.h"
 
 
 #ifdef __cplusplus
@@ -469,6 +469,14 @@ swl_rc_ne wld_util_fetchExecutablePath(const char* searchPaths, const char* cmd,
  *         SWL_RC_RESULT_OUT_OF_BOUNDS incomplete path caused by too short target buffer size
  */
 swl_rc_ne wld_util_getExecutablePath(const char* cmd, char* buf, size_t bufSize);
+/**
+ * @brief copy Info Elements details into scan results struct
+ *
+ * @param pResult scan result entry
+ * @param pWirelessDevIE wireless frame parsed Info elements
+ * @return SWL_RC_OK if successful error code otherwise
+ */
+swl_rc_ne wld_util_copyScanInfoFromIEs(wld_scanResultSSID_t* pResult, swl_wirelessDevice_infoElements_t* pWirelessDevIE);
 
 /*
  * @brief build EHT Operation Information Element

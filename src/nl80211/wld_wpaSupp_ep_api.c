@@ -210,6 +210,7 @@ swl_rc_ne wld_wpaSupp_ep_getScanResults(T_EndPoint* pEP, wld_scanResults_t* res)
                 swl_chanspec_t chanspec;
                 swl_chanspec_channelFromMHz(&chanspec, (uint32_t) frequency);
                 result->channel = chanspec.channel;
+                wld_wpaSupp_ep_getBssScanInfo(pEP, &result->bssid, result);
                 if(strstr(security, "WPA2-PSK-CCMP")) {
                     result->secModeEnabled = SWL_SECURITY_APMODE_WPA2_P;
                 } else if(strstr(security, "WPA2-PSK+SAE-CCMP")) {
@@ -228,6 +229,87 @@ swl_rc_ne wld_wpaSupp_ep_getScanResults(T_EndPoint* pEP, wld_scanResults_t* res)
     }
 
     return SWL_RC_OK;
+}
+
+/**
+ * @brief get the scanned bss details
+ *
+ * @param pInterface Wpa ctrl interface used to send command
+ * @param pMacBin the bssid bin value
+ * @param[out] pResult pointer to output result struct
+ * @return - SWL_RC_OK when the value is retrieved successfully (valid)
+ *         - Otherwise SWL_RC_ERROR
+ */
+swl_rc_ne wld_wpaSupp_getBssScanInfo(wld_wpaCtrlInterface_t* pInterface, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult) {
+    ASSERTS_NOT_NULL(pMacBin, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_FALSE(swl_mac_binIsNull(pMacBin), SWL_RC_INVALID_PARAM, ME, "invalid mac");
+    char buf[2048] = {0};
+    swl_str_catFormat(buf, sizeof(buf), "BSS %s", swl_typeMacBin_toBuf32Ref(pMacBin).buf);
+    ASSERTI_TRUE(wld_wpaCtrl_sendCmdSynced(pInterface, buf, buf, sizeof(buf)), SWL_RC_ERROR, ME, "fail to send request");
+    wld_scanResultSSID_t result;
+    memset(&result, 0, sizeof(result));
+    if(pResult) {
+        memcpy(&result, pResult, sizeof(result));
+    }
+
+    swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
+    swl_chanspec_fromMHz(&chanSpec, wld_wpaCtrl_getValueInt(buf, "freq"));
+    result.channel = chanSpec.channel;
+
+    char str[2048] = {0};
+    ssize_t strL = 0;
+    if(((strL = wld_wpaCtrl_getValueStr(buf, "ie", str, sizeof(str))) > 0) ||
+       ((strL = wld_wpaCtrl_getValueStr(buf, "beacon_ie", str, sizeof(str))) > 0)) {
+        swl_wirelessDevice_infoElements_t wirelessDevIE;
+        memset(&wirelessDevIE, 0, sizeof(wirelessDevIE));
+        size_t iesLen = strL / 2;
+        swl_bit8_t iesData[iesLen + (strL % 2)];
+        if(swl_hex_toBytes(iesData, sizeof(iesData), str, strL)) {
+            swl_parsingArgs_t parsingArgs;
+            swl_parsingArgs_t* pParsingArgs = NULL;
+            if(chanSpec.channel > 0) {
+                parsingArgs.seenOnChanspec = chanSpec;
+                pParsingArgs = &parsingArgs;
+            }
+            ssize_t parsedLen = swl_80211_parseInfoElementsBuffer(&wirelessDevIE, pParsingArgs, iesLen, iesData);
+            if(parsedLen < (ssize_t) iesLen) {
+                SAH_TRACEZ_WARNING(ME, "Error while parsing probe/beacon rcvd IEs (%zi < %zu)", parsedLen, iesLen);
+            }
+            if(parsedLen > 0) {
+                wld_util_copyScanInfoFromIEs(&result, &wirelessDevIE);
+            }
+        }
+    }
+
+    if((strL = wld_wpaCtrl_getValueStr(buf, "ssid", str, sizeof(str))) > 0) {
+        result.ssidLen = strL;
+        swl_str_ncopy((char*) result.ssid, sizeof(result.ssid), str, strL);
+    }
+    if((wld_wpaCtrl_getValueStr(buf, "bssid", str, sizeof(str)) > 0) &&
+       (swl_mac_charIsValidStaMac((swl_macChar_t*) str))) {
+        SWL_MAC_CHAR_TO_BIN(&result.bssid, str);
+    }
+    result.snr = wld_wpaCtrl_getValueInt(buf, "snr");
+    result.noise = wld_wpaCtrl_getValueInt(buf, "noise");
+    result.rssi = wld_wpaCtrl_getValueInt(buf, "level");
+    result.linkrate = wld_wpaCtrl_getValueInt(buf, "est_throughput");
+
+    W_SWL_SETPTR(pResult, result);
+    return SWL_RC_OK;
+}
+
+/**
+ * @brief get the scanned bss details
+ *
+ * @param pEP endpoint
+ * @param pMacBin the bssid bin value
+ * @param[out] pResult pointer to output result struct
+ * @return - SWL_RC_OK when the value is retrieved successfully (valid)
+ *         - Otherwise SWL_RC_ERROR
+ */
+swl_rc_ne wld_wpaSupp_ep_getBssScanInfo(T_EndPoint* pEP, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult) {
+    ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    return wld_wpaSupp_getBssScanInfo(pEP->wpaCtrlInterface, pMacBin, pResult);
 }
 
 /**

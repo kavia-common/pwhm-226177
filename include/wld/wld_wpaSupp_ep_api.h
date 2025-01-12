@@ -77,5 +77,7 @@ swl_rc_ne wld_wpaSupp_ep_getSsid(T_EndPoint* pEP, char* ssid, size_t ssidSize);
 swl_rc_ne wld_wpaSupp_ep_getConnState(T_EndPoint* pEP, wld_epConnectionStatus_e* pEPConnState);
 swl_rc_ne wld_wpaSupp_ep_reconfigure(T_EndPoint* pEP);
 swl_rc_ne wld_wpaSupp_ep_increaseSecurityModeInCreds(T_EndPoint* pEP, T_WPSCredentials* creds);
+swl_rc_ne wld_wpaSupp_ep_getBssScanInfo(T_EndPoint* pEP, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult);
+swl_rc_ne wld_wpaSupp_getBssScanInfo(wld_wpaCtrlInterface_t* pInterface, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult);
 
 #endif /* __WLD_WPA_SUPPLICANT_API_H__ */

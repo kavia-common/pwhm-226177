@@ -2520,6 +2520,29 @@ swl_rc_ne wld_util_getExecutablePath(const char* cmd, char* buf, size_t bufSize)
     return wld_util_fetchExecutablePath(getenv("PATH"), cmd, buf, bufSize);
 }
 
+swl_rc_ne wld_util_copyScanInfoFromIEs(wld_scanResultSSID_t* pResult, swl_wirelessDevice_infoElements_t* pWirelessDevIE) {
+    ASSERTS_NOT_NULL(pResult, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_NOT_NULL(pWirelessDevIE, SWL_RC_INVALID_PARAM, ME, "NULL");
+    if(pWirelessDevIE->operChanInfo.channel > 0) {
+        pResult->channel = pWirelessDevIE->operChanInfo.channel;
+    }
+    if(pWirelessDevIE->operChanInfo.bandwidth != SWL_BW_AUTO) {
+        pResult->bandwidth = swl_chanspec_bwToInt(pWirelessDevIE->operChanInfo.bandwidth);
+    }
+    swl_chanspec_t chanSpec = SWL_CHANSPEC_NEW(pResult->channel, pWirelessDevIE->operChanInfo.bandwidth, pWirelessDevIE->operChanInfo.band);
+    pResult->centreChannel = swl_chanspec_getCentreChannel(&chanSpec);
+    swl_operatingClass_t operClass = swl_chanspec_getOperClass(&chanSpec);
+    if(operClass > 0) {
+        pResult->operClass = operClass;
+    }
+    pResult->ssidLen = SWL_MIN((uint8_t) sizeof(pResult->ssid), pWirelessDevIE->ssidLen);
+    memcpy(pResult->ssid, pWirelessDevIE->ssid, pResult->ssidLen);
+    pResult->operatingStandards = pWirelessDevIE->operatingStandards;
+    pResult->secModeEnabled = pWirelessDevIE->secModeEnabled;
+    pResult->WPS_ConfigMethodsEnabled = pWirelessDevIE->WPS_ConfigMethodsEnabled;
+    return SWL_RC_OK;
+}
+
 swl_80211_ehtOpIE_t wld_util_buildEhtOperationIE(swl_chanspec_t tgtChspec, swl_bit32_t bitmap, uint32_t nTx, uint32_t nRx) {
     swl_80211_ehtOpIE_t ehtOperationIE;
     memset(&ehtOperationIE, 0, sizeof(ehtOperationIE));
@@ -2581,3 +2604,4 @@ swl_80211_ehtOpIE_t wld_util_buildEhtOperationIE(swl_chanspec_t tgtChspec, swl_b
 
     return ehtOperationIE;
 }
+
