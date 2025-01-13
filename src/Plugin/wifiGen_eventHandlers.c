@@ -1336,6 +1336,20 @@ static void s_stationAssociatedEvt(void* pRef, char* ifName, swl_macBin_t* bBssi
     }
 }
 
+static void s_refreshChspecOnEpConnected(T_EndPoint* pEP) {
+    ASSERT_TRUE(debugIsEpPointer(pEP), , ME, "INVALID");
+    ASSERTI_EQUALS(pEP->connectionStatus, EPCS_CONNECTED, , ME, "%s: ep is not connected", pEP->Name);
+    T_Radio* pRad = pEP->pRadio;
+    ASSERT_NOT_NULL(pRad, , ME, "%s: no radio mapped", pEP->Name);
+    // update radio datamodel
+    swl_chanspec_t chanSpec = wld_chanmgt_getCurChspec(pRad);
+    wld_nl80211_getChanSpec(wld_nl80211_getSharedState(), pEP->index, &chanSpec);
+    s_saveChanChanged(pRad, &chanSpec, CHAN_REASON_EP_MOVE);
+    wld_channel_clear_passive_band(chanSpec);
+
+    CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnEpConnected, pEP->Name, true);
+}
+
 static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssidMac, swl_IEEE80211deauthReason_ne reason _UNUSED) {
     T_EndPoint* pEP = (T_EndPoint*) pRef;
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
@@ -1359,13 +1373,13 @@ static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssid
     wld_endpoint_sync_connection(pEP, true, EPE_NONE);
 
     // update radio datamodel
-    swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
-    pRad->pFA->mfn_wrad_getChanspec(pRad, &chanSpec);
-    s_saveChanChanged(pRad, &chanSpec, CHAN_REASON_EP_MOVE);
-    wld_channel_clear_passive_band(chanSpec);
-    wld_rad_updateState(pRad, true);
+    wld_rad_updateState(pRad, false);
 
-    CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnEpConnected, pEP->Name, true);
+    /*
+     * delay refreshing current radio chanspec,
+     * in order to give time for channel sync, on driver side
+     */
+    swla_delayExec_addTimeout((swla_delayExecFun_cbf) s_refreshChspecOnEpConnected, pEP, 1000);
 }
 
 static void s_stationScanStartedEvt(void* pRef, char* ifName) {
