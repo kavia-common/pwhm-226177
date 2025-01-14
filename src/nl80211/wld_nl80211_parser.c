@@ -137,9 +137,11 @@ swl_rc_ne wld_nl80211_parseChanSpec(struct nlattr* tb[], wld_nl80211_chanSpec_t*
     ASSERTS_NOT_NULL(tb[NL80211_ATTR_WIPHY_FREQ], rc, ME, "no freq");
     pChanSpec->ctrlFreq = nla_get_u32(tb[NL80211_ATTR_WIPHY_FREQ]);
     ASSERTS_NOT_NULL(tb[NL80211_ATTR_CHANNEL_WIDTH], rc, ME, "no chan width");
-    uint32_t bwVal = wld_nl80211_bwNlToVal(nla_get_u32(tb[NL80211_ATTR_CHANNEL_WIDTH]));
+    uint32_t nl80211Bw = nla_get_u32(tb[NL80211_ATTR_CHANNEL_WIDTH]);
+    uint32_t bwVal = wld_nl80211_bwNlToVal(nl80211Bw);
     if(bwVal > 0) {
         pChanSpec->chanWidth = bwVal;
+        pChanSpec->noHT = (nl80211Bw == NL80211_CHAN_WIDTH_20_NOHT);
     }
     NLA_GET_VAL(pChanSpec->centerFreq1, nla_get_u32, tb[NL80211_ATTR_CENTER_FREQ1]);
     NLA_GET_VAL(pChanSpec->centerFreq2, nla_get_u32, tb[NL80211_ATTR_CENTER_FREQ2]);

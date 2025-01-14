@@ -97,6 +97,7 @@ typedef struct {
     uint32_t ctrlFreq;        //frequency of the control channel in MHz
     uint32_t centerFreq1;     //Center frequency of the first part of the channel for bw > 20
     uint32_t centerFreq2;     //Center frequency of the second part of the channel, bw 80+80
+    bool noHT;                //flag for no HT reduced bandwidth
 } wld_nl80211_chanSpec_t;
 
 typedef struct {
