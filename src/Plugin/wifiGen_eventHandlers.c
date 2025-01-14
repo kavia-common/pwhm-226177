@@ -1346,8 +1346,6 @@ static void s_refreshChspecOnEpConnected(T_EndPoint* pEP) {
     wld_nl80211_getChanSpec(wld_nl80211_getSharedState(), pEP->index, &chanSpec);
     s_saveChanChanged(pRad, &chanSpec, CHAN_REASON_EP_MOVE);
     wld_channel_clear_passive_band(chanSpec);
-
-    CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnEpConnected, pEP->Name, true);
 }
 
 static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssidMac, swl_IEEE80211deauthReason_ne reason _UNUSED) {
@@ -1374,6 +1372,8 @@ static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssid
 
     // update radio datamodel
     wld_rad_updateState(pRad, false);
+
+    CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnEpConnected, pEP->Name, true);
 
     /*
      * delay refreshing current radio chanspec,

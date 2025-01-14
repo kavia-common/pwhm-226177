@@ -1082,6 +1082,12 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: connected endpoint", pEP->Name);
+    wld_nl80211_ifaceInfo_t epIfInfo;
+    swl_rc_ne rc = wld_nl80211_getInterfaceInfo(wld_nl80211_getSharedState(), pEP->index, &epIfInfo);
+    if(swl_rc_isOk(rc) && epIfInfo.chanSpec.noHT) {
+        SAH_TRACEZ_WARNING(ME, "%s: re-establish ep connection to recover full chanwidth", pEP->Name);
+        wld_wpaCtrl_sendCmdCheckResponse(pEP->wpaCtrlInterface, "REATTACH", "OK");
+    }
 }
 
 static void s_registerWpaSuppRadEvtHandlers(wld_secDmn_t* wpaSupp) {
