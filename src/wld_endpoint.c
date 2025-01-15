@@ -2193,7 +2193,6 @@ static bool s_finalizeEpCreation(T_EndPoint* pEP) {
         SAH_TRACEZ_WARNING(ME, "set ep iface(%s) (ifIndex:%d) on radio(%s)", epIfName, epIfIndex, pRad->Name);
         swl_str_copy(pEP->Name, sizeof(pEP->Name), epIfName);
         pEP->index = epIfIndex;
-        pEP->toggleBssOnReconnect = (pEP->index == pRad->index);
 
         ret = pRad->pFA->mfn_wendpoint_create_hook(pEP);
         ASSERT_FALSE(ret < 0, false, ME, "%s: ep create hook failed %d", pEP->alias, ret);

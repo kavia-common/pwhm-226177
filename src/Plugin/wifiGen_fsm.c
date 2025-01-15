@@ -708,6 +708,48 @@ static void s_syncOnRadUp(void* userData, char* ifName, bool state) {
     }
 }
 
+static bool s_checkHapdDown(T_Radio* pRad) {
+    chanmgt_rad_state radDetState = CM_RAD_UNKNOWN;
+    swl_rc_ne rc = wifiGen_hapd_getRadState(pRad, &radDetState);
+    return ((!swl_rc_isOk(rc)) || (radDetState == CM_RAD_DOWN));
+}
+
+static bool s_checkHapdActive(T_Radio* pRad) {
+    chanmgt_rad_state radDetState = CM_RAD_UNKNOWN;
+    swl_rc_ne rc = wifiGen_hapd_getRadState(pRad, &radDetState);
+    return ((swl_rc_isOk(rc)) && (radDetState != CM_RAD_DOWN));
+}
+
+static void s_disableFronthaul(T_Radio* pRad) {
+    ASSERT_NOT_NULL(pRad, , ME, "NULL");
+    if(wld_scan_isRunning(pRad)) {
+        wld_scan_stop(pRad);
+    }
+    ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
+    if(s_checkHapdActive(pRad)) {
+        // disable BSSs to allow wpa_supplicant to do scan
+        SAH_TRACEZ_INFO(ME, "%s: disable hostapd ifaces to let wpa_supplicant take the control", pRad->Name);
+        setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_DISABLE_HOSTAPD);
+        wld_rad_doCommitIfUnblocked(pRad);
+    }
+}
+
+static void s_restoreFronthaul(T_Radio* pRad) {
+    if(wifiGen_hapd_isAlive(pRad) && s_checkHapdDown(pRad)) {
+        wld_epConnectionStatus_e connState = EPCS_DISABLED;
+        wld_wpaSupp_ep_getConnState(wld_rad_getEnabledEndpoint(pRad), &connState);
+        if((connState == EPCS_IDLE) || (connState == EPCS_DISABLED) ||
+           (connState == EPCS_CONNECTED) || (connState == EPCS_DISCONNECTED)) {
+            SAH_TRACEZ_INFO(ME, "%s: restore fronthaul chanspec conf", pRad->Name);
+            pRad->pFA->mfn_wrad_setChanspec(pRad, true);
+        }
+    }
+}
+
+static void s_delayRestoreFronthaul(T_Radio* pRad) {
+    swla_delayExec_addTimeout((swla_delayExecFun_cbf) s_restoreFronthaul, pRad, 1500);
+}
+
 static void s_syncOnEpRadUp(void* userData, char* ifName, bool state _UNUSED) {
     T_Radio* pRad = (T_Radio*) userData;
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
@@ -834,12 +876,7 @@ static bool s_doRemoveHostapd(T_Radio* pRad) {
 
 static bool s_doDisableHostapd(T_Radio* pRad) {
     ASSERTS_TRUE(wifiGen_hapd_isRunning(pRad), true, ME, "%s: hostapd stopped", pRad->Name);
-    chanmgt_rad_state radDetState = CM_RAD_UNKNOWN;
-    swl_rc_ne rc = wifiGen_hapd_getRadState(pRad, &radDetState);
-    if((!swl_rc_isOk(rc)) || (radDetState == CM_RAD_DOWN)) {
-        SAH_TRACEZ_INFO(ME, "%s: hapd iface already disabled", pRad->Name);
-        return true;
-    }
+    ASSERTI_FALSE(s_checkHapdDown(pRad), true, ME, "%s: hapd iface already disabled", pRad->Name);
     if(wld_secDmn_isGrpRestarting(pRad->hostapd)) {
         SAH_TRACEZ_WARNING(ME, "%s: hostapd group is restarting: skip immediate disabling", pRad->Name);
         return true;
@@ -1000,50 +1037,12 @@ static bool s_doSyncState(T_Radio* pRad) {
     return true;
 }
 
-#define FIRST_DELAY_MS 3000
-#define RETRY_DELAY_MS 1000
-#define WPA_SUPP_MAX_ATTEMPTS 3
-static uint8_t wpaSuppStartingAttempts = 0;
-static amxp_timer_t* wpaSuppTimer = NULL;
-
-static void s_startWpaSuppTimer(amxp_timer_t* timer, void* userdata) {
-    ASSERTS_NOT_NULL(timer, , ME, "NULL");
-    ASSERTS_NOT_NULL(userdata, , ME, "NULL");
-    T_EndPoint* pEP = (T_EndPoint*) userdata;
-    ASSERT_NOT_NULL(pEP, , ME, "NULL");
-
-    T_Radio* pRad = pEP->pRadio;
-    ASSERT_NOT_NULL(pRad, , ME, "NULL");
-    bool ret = wifiGen_hapd_isAlive(pRad);
-    if(ret) {
-        SAH_TRACEZ_WARNING(ME, "%s: disable hostapd", pRad->Name);
-        wld_rad_hostapd_disable(pRad);
-        wpaSuppStartingAttempts = 0;
-        amxp_timer_delete(&timer);
-    } else if(wpaSuppStartingAttempts < WPA_SUPP_MAX_ATTEMPTS) {
-        SAH_TRACEZ_WARNING(ME, "%s: hostapd is not yet alive, waiting (%d/%d)..", pRad->Name, wpaSuppStartingAttempts, WPA_SUPP_MAX_ATTEMPTS);
-        wpaSuppStartingAttempts++;
-    } else {
-        wpaSuppStartingAttempts = 0;
-        amxp_timer_delete(&timer);
-        SAH_TRACEZ_ERROR(ME, "%s: Fail to disable hostapd", pRad->Name);
-    }
-}
 static bool s_doEnableEp(T_EndPoint* pEP, T_Radio* pRad) {
     bool enaConds = (pRad->enable && pEP->enable && (pEP->index > 0));
     wld_endpoint_setConnectionStatus(pEP, enaConds ? EPCS_IDLE : EPCS_DISABLED, pEP->error);
     ASSERTS_TRUE(enaConds, true, ME, "%d: ep not ready", pEP->Name);
     wld_endpoint_resetStats(pEP);
     SAH_TRACEZ_INFO(ME, "%s: enable endpoint", pEP->Name);
-    ASSERT_TRUE(pEP->toggleBssOnReconnect, true, ME, "%s: do not disable hostapd", pEP->Name);
-    // check if there is a running hostapd in order to disable it in order allow to wpa_supplicant to connect.
-    // Otherwise, wpa_supplicant will fail to connect
-    if(wld_endpoint_isReady(pEP) && wifiGen_hapd_isRunning(pRad)) {
-        wpaSuppStartingAttempts = 0;
-        amxp_timer_new(&wpaSuppTimer, s_startWpaSuppTimer, pEP);
-        amxp_timer_set_interval(wpaSuppTimer, RETRY_DELAY_MS);
-        amxp_timer_start(wpaSuppTimer, FIRST_DELAY_MS);
-    }
     return true;
 }
 
@@ -1087,6 +1086,123 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     if(swl_rc_isOk(rc) && epIfInfo.chanSpec.noHT) {
         SAH_TRACEZ_WARNING(ME, "%s: re-establish ep connection to recover full chanwidth", pEP->Name);
         wld_wpaCtrl_sendCmdCheckResponse(pEP->wpaCtrlInterface, "REATTACH", "OK");
+        return;
+    }
+    s_delayRestoreFronthaul(pRad);
+}
+
+static void s_syncOnEpDisconnected(void* userData, char* ifName, bool state) {
+    ASSERTS_FALSE(state, , ME, "still connected");
+    T_Radio* pRad = (T_Radio*) userData;
+    T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "%s: disconnected endpoint", pEP->Name);
+    ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
+    chanmgt_rad_state detRadState = CM_RAD_UNKNOWN;
+    if((wifiGen_hapd_getRadState(pRad, &detRadState) == SWL_RC_OK) &&
+       (detRadState != CM_RAD_UP)) {
+        SAH_TRACEZ_INFO(ME, "%s: restore fronthaul chanspec conf", pEP->Name);
+        //restore tgt chanspec after disconnection
+        s_delayRestoreFronthaul(pRad);
+    }
+}
+
+static void s_syncOnEpStartConn(void* userData, char* ifName, const char* ssid, swl_macBin_t* bssid, swl_chanspec_t* chanSpec) {
+    T_Radio* pRad = (T_Radio*) userData;
+    T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "%s: endpoint is connecting to (%s) %s over chspec(%s)",
+                    pEP->Name, ssid, swl_typeMacBin_toBuf32Ref(bssid).buf, swl_typeChanspecExt_toBuf32Ref(chanSpec).buf);
+    if(wld_endpoint_isReady(pEP) && (pEP->currentProfile != NULL)) {
+        memcpy(pEP->currentProfile->BSSID, bssid->bMac, SWL_MAC_BIN_LEN);
+    }
+    memcpy(pEP->pSSID->BSSID, bssid->bMac, SWL_MAC_BIN_LEN);
+    ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
+
+    swl_chanspec_t currChanSpec = SWL_CHANSPEC_EMPTY;
+    pRad->pFA->mfn_wrad_getChanspec(pRad, &currChanSpec);
+
+    if((chanSpec->channel > 0) && !swl_channel_isInChanspec(&currChanSpec, chanSpec->channel)) {
+        SAH_TRACEZ_INFO(ME, "%s: rad(%s) currentChanspec(%s) mismatch remoteChanspec(%s)",
+                        pEP->Name, pRad->Name,
+                        swl_typeChanspecExt_toBuf32Ref(&currChanSpec).buf,
+                        swl_typeChanspecExt_toBuf32Ref(chanSpec).buf);
+    }
+}
+
+static void s_syncOnEpScanFail(void* userData, char* ifName, int error) {
+    T_Radio* pRad = (T_Radio*) userData;
+    T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "%s: EP failed to start scan: error(%d)", pEP->Name, error);
+    if(error == -EBUSY) {
+        if(wld_scan_isRunning(pRad)) {
+            wld_scan_stop(pRad);
+        }
+        ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
+        chanmgt_rad_state detRadState = CM_RAD_UNKNOWN;
+        wifiGen_hapd_getRadState(pRad, &detRadState);
+        if((detRadState == CM_RAD_FG_CAC) ||
+           ((detRadState == CM_RAD_UP) && swl_chanspec_isDfs(wld_chanmgt_getCurChspec(pRad)))) {
+            swl_chanspec_t noDfsChspec = SWL_CHANSPEC_NEW(
+                wld_chanmgt_getDefaultSupportedChannel(pRad),
+                wld_chanmgt_getDefaultSupportedBandwidth(pRad),
+                pRad->operatingFrequencyBand);
+            SAH_TRACEZ_INFO(ME, "%s: switch to noDFS %s to allow wpa_supplicant to start scan",
+                            pEP->Name, swl_typeChanspecExt_toBuf32(noDfsChspec).buf);
+            wld_chanmgt_setTargetChanspec(pRad, noDfsChspec, true, CHAN_REASON_EP_MOVE, "force noDfs to allow ep scan");
+        }
+    } else if(error == -ENOENT) {
+        s_delayRestoreFronthaul(pRad);
+    }
+}
+
+static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
+    T_Radio* pRad = (T_Radio*) userData;
+    T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "%s: EP failed to start connection: error(%d)", pEP->Name, error);
+    ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
+    if(error == -EBUSY) {
+        swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
+        wld_scanResultSSID_t result;
+        memset(&result, 0, sizeof(result));
+        swl_macBin_t* bssid = (swl_macBin_t*) pEP->pSSID->BSSID;
+        if(swl_rc_isOk(wld_wpaSupp_ep_getBssScanInfo(pEP, bssid, &result))) {
+            swl_chanspec_fromFreqCtrlCentre(&chanSpec, swl_chanspec_operClassToFreq(result.operClass), result.channel, result.centreChannel);
+        }
+        if((!chanSpec.channel) || (chanSpec.band != wld_chanmgt_getCurChspec(pRad).band)) {
+            SAH_TRACEZ_WARNING(ME, "%s: ignore target ep chanspec %s out of current band",
+                               pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf);
+            return;
+        }
+        if(!swl_chanspec_isDfs(chanSpec)) {
+            if(chanSpec.band == SWL_FREQ_BAND_EXT_2_4GHZ) {
+                //only pre-connect to 2g/20MHz
+                chanSpec = (swl_chanspec_t) SWL_CHANSPEC_NEW(chanSpec.channel, SWL_BW_20MHZ, chanSpec.band);
+            }
+            SAH_TRACEZ_INFO(ME, "%s: switch fronthaul to chspec %s to allow wpa_supplicant to connect to %s",
+                            pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf,
+                            swl_typeMacBin_toBuf32Ref(bssid).buf
+                            );
+            wld_chanmgt_setTargetChanspec(pRad, chanSpec, true, CHAN_REASON_EP_MOVE, "ep preConnect");
+            return;
+        }
+        // disable BSSs to allow wpa_supplicant to do start connection
+        SAH_TRACEZ_INFO(ME, "%s: disable fronthaul to allow wpa_supplicant to connect on chspec %s to %s",
+                        pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf,
+                        swl_typeMacBin_toBuf32Ref(bssid).buf);
+        s_disableFronthaul(pRad);
+    }
+}
+
+static void s_syncOnWpsFail(void* userData, char* ifName) {
+    T_Radio* pRad = (T_Radio*) userData;
+    T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
+    if(pEP != NULL) {
+        SAH_TRACEZ_INFO(ME, "%s: EP wps failed", pEP->Name);
+        ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
+        s_restoreFronthaul(pRad);
     }
 }
 
@@ -1097,6 +1213,13 @@ static void s_registerWpaSuppRadEvtHandlers(wld_secDmn_t* wpaSupp) {
     if(wld_wpaCtrlMngr_getEvtHandlers(wpaSupp->wpaCtrlMngr, &userdata, &handlers)) {
         handlers.fSyncOnEpConnected = s_syncOnEpConnected;
         handlers.fSyncOnRadioUp = s_syncOnEpRadUp;
+        handlers.fSyncOnEpDisconnected = s_syncOnEpDisconnected;
+        handlers.fStationStartConnCb = s_syncOnEpStartConn;
+        handlers.fStationScanFailedCb = s_syncOnEpScanFail;
+        handlers.fStationStartConnFailedCb = s_syncOnEpStartConnFail;
+        handlers.fWpsCancelMsg = s_syncOnWpsFail;
+        handlers.fWpsTimeoutMsg = s_syncOnWpsFail;
+        handlers.fWpsOverlapMsg = s_syncOnWpsFail;
         wld_wpaCtrlMngr_setEvtHandlers(wpaSupp->wpaCtrlMngr, userdata, &handlers);
     }
 }

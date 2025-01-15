@@ -252,7 +252,7 @@ static void s_saveChanChanged(T_Radio* pRad, swl_chanspec_t* pChanSpec, wld_chan
     ASSERTS_NOT_NULL(pRad, , ME, "NULL");
     ASSERTS_NOT_NULL(pChanSpec, , ME, "NULL");
     ASSERTS_TRUE(pChanSpec->channel > 0, , ME, "invalid chan");
-    if(pRad->targetChanspec.reason == reason) {
+    if((reason != CHAN_REASON_EP_MOVE) && (pRad->targetChanspec.reason == reason)) {
         swl_chanspec_t chSpec = *pChanSpec;
         if(pRad->targetChanspec.chanspec.extensionHigh == SWL_CHANSPEC_EXT_AUTO) {
             chSpec.extensionHigh = SWL_CHANSPEC_EXT_AUTO;
@@ -1401,12 +1401,6 @@ static void s_stationScanFailedEvt(void* pRef, char* ifName, int error) {
     if(pEP->connectionStatus == EPCS_DISCOVERING) {
         wld_epError_e epErr = s_getEpErrFromSysErr(error);
         wld_endpoint_sync_connection(pEP, false, epErr ? : pEP->error);
-    }
-
-    if((error == -EBUSY) && wifiGen_hapd_isAlive(pRad)) {
-        ASSERT_TRUE(pEP->toggleBssOnReconnect, , ME, "%s: do not disable hostapd", pEP->Name);
-        // disable hostapd to allow wpa_supplicant to do scan
-        wld_rad_hostapd_disable(pRad);
     }
 }
 
