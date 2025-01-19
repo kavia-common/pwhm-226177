@@ -4481,6 +4481,26 @@ uint32_t wld_rad_getCurrentFreq(T_Radio* pRad) {
     return swl_chanspec_toMHzDef(&spec, 0);
 }
 
+swl_rc_ne wld_rad_printPossibleChansWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep) {
+    ASSERT_TRUE(swl_str_copy(tgtBuf, tgtBufSize, NULL), SWL_RC_INVALID_PARAM, ME, "empty");
+    ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    swl_typeUInt8_arrayToCharSep(tgtBuf, tgtBufSize, pRad->possibleChannels, pRad->nrPossibleChannels, (sep ? : ","));
+    return SWL_RC_OK;
+}
+
+swl_rc_ne wld_rad_printPossibleFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep) {
+    ASSERT_TRUE(swl_str_copy(tgtBuf, tgtBufSize, NULL), SWL_RC_INVALID_PARAM, ME, "empty");
+    ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    for(int i = 0; i < pRad->nrPossibleChannels; i++) {
+        uint32_t freqMHz = 0;
+        swl_chanspec_t chanspec = SWL_CHANSPEC_NEW(pRad->possibleChannels[i], SWL_BW_20MHZ, pRad->operatingFrequencyBand);
+        if((SWL_RC_OK == swl_chanspec_channelToMHz(&chanspec, &freqMHz))) {
+            swl_strlst_catFormat(tgtBuf, tgtBufSize, (sep ? : ","), "%d", freqMHz);
+        }
+    }
+    return SWL_RC_OK;
+}
+
 static void s_setStats(amxc_var_t* pRetMap, T_Stats* pStats) {
     amxc_var_add_key(uint64_t, pRetMap, "BytesSent", pStats->BytesSent);
     amxc_var_add_key(uint64_t, pRetMap, "BytesSent", pStats->BytesSent);
