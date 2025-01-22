@@ -485,7 +485,7 @@ FSM_STATE wld_rad_fsm(T_Radio* rad) {
                     rad->fsm_radio_st = FSM_RUN;              // Lock the RADIO for our FSM
                     rad->fsmStats.nrStarts++;
                     rad->fsmRad.FSM_State = FSM_WAIT;
-                    rad->fsmRad.FSM_Retry = WLD_FSM_MAX_WAIT; // When failing, wait 10 seconds to allow init / WPS to finish ?
+                    rad->fsmRad.FSM_Retry = WLD_FSM_MAX_WAIT; // When failing, wait 10 seconds to allow init
                     rad->fsmRad.FSM_Loop = 0;                 // Be sure this is resetted!
                 }
             }
@@ -494,12 +494,11 @@ FSM_STATE wld_rad_fsm(T_Radio* rad) {
     }
     case FSM_WAIT: {
         bool waitForVaps = !wld_rad_areAllVapsDone(rad);
-        bool waitForWps = wld_rad_hasWpsActiveEndpoint(rad);
         bool isInitConfigPending = wld_persist_isRadInitConfigPending(rad);
-        if(waitForVaps || waitForWps || isInitConfigPending) {
+        if(waitForVaps || isInitConfigPending) {
             if(rad->fsmRad.FSM_Retry > 0) {
-                SAH_TRACEZ_WARNING(ME, "Delay commit %s %i / %i ( vap %u / WPS %u, radInit %u)", rad->Name, rad->fsmRad.FSM_Retry, WLD_FSM_MAX_WAIT,
-                                   waitForVaps, waitForWps, isInitConfigPending);
+                SAH_TRACEZ_WARNING(ME, "Delay commit %s %i / %i ( vap %u / radInit %u)", rad->Name, rad->fsmRad.FSM_Retry, WLD_FSM_MAX_WAIT,
+                                   waitForVaps, isInitConfigPending);
                 rad->fsmRad.timeout_msec = WLD_FSM_WAIT_TIME;
                 rad->fsmRad.FSM_Retry--;
                 break;
@@ -511,10 +510,7 @@ FSM_STATE wld_rad_fsm(T_Radio* rad) {
         bool has_lock = s_tryGetLock(rad);
         if(has_lock) {
 
-            if(waitForWps) {
-                SAH_TRACEZ_ERROR(ME, "%s start while EP WPS active (vap %u / WPS %u)", rad->Name,
-                                 waitForVaps, waitForWps);
-            } else if(waitForVaps) {
+            if(waitForVaps) {
                 SAH_TRACEZ_WARNING(ME, "%s start after wait VAP config", rad->Name);
             }
 
