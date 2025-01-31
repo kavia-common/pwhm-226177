@@ -1177,10 +1177,7 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
             return;
         }
         if(!swl_chanspec_isDfs(chanSpec)) {
-            if(chanSpec.band == SWL_FREQ_BAND_EXT_2_4GHZ) {
-                //only pre-connect to 2g/20MHz
-                chanSpec = (swl_chanspec_t) SWL_CHANSPEC_NEW(chanSpec.channel, SWL_BW_20MHZ, chanSpec.band);
-            }
+            chanSpec = (swl_chanspec_t) SWL_CHANSPEC_NEW(chanSpec.channel, SWL_BW_20MHZ, chanSpec.band);
             SAH_TRACEZ_INFO(ME, "%s: switch fronthaul to chspec %s to allow wpa_supplicant to connect to %s",
                             pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf,
                             swl_typeMacBin_toBuf32Ref(bssid).buf
