@@ -382,7 +382,7 @@ static void s_mngrReadyCb(void* userData, char* ifName, bool isReady) {
         } else {
             wld_endpoint_setConnectionStatus(pEP, connState, EPE_NONE);
         }
-        CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnRadioUp, ifName, true);
+        CALL_MGR_I_EXT(pEP->wpaCtrlInterface, fSyncOnRadioUp, true);
         if((connState == EPCS_DISCOVERING) || (connState == EPCS_WPS_PAIRING)) {
             CALL_MGR_I_NA_EXT(pEP->wpaCtrlInterface, fStationScanStartedCb);
         }
@@ -1320,7 +1320,7 @@ static void s_stationDisconnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBs
         (pEP->connectionStatus == EPCS_CONNECTED))) {
         wld_epError_e epErr = s_getEpErrFromDeauthReason(reason);
         wld_endpoint_sync_connection(pEP, false, epErr ? : pEP->error);
-        CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnEpDisconnected, pEP->Name, false);
+        CALL_MGR_I_EXT(pEP->wpaCtrlInterface, fSyncOnEpDisconnected, false);
     }
 }
 
@@ -1373,7 +1373,7 @@ static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssid
     // update radio datamodel
     wld_rad_updateState(pRad, false);
 
-    CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnEpConnected, pEP->Name, true);
+    CALL_MGR_I_EXT(pEP->wpaCtrlInterface, fSyncOnEpConnected, true);
 
     /*
      * delay refreshing current radio chanspec,
