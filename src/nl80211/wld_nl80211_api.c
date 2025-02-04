@@ -379,6 +379,10 @@ swl_rc_ne wld_nl80211_addDefaultWiphyInterfacesExt(const char* custIfNamePfx,
             SAH_TRACEZ_WARNING(ME, "proc bandPos %d bandMask 0x%x nrWiphyWlIfaces %d maxWiphyWlIfaces %d",
                                bandPos, bandMask, nrWiphyWlIfaces, maxWiphyWlIfaces);
             W_SWL_BIT_CLEAR(bandMask, bandPos);
+            T_Radio* pRadEx = wld_getRadioByFrequency(bandPos);
+            if((pRadEx != NULL) && (pRadEx->wDevId > 0)) {
+                continue;
+            }
             char wlIfName[IFNAMSIZ];
             snprintf(wlIfName, sizeof(wlIfName), "%s%d", ifNamePfx, bandPos);
             wld_nl80211_ifaceInfo_t* pExWl = s_getWlIfaceByName(wlIfName, maxWiphys, maxWlIfaces, wlIfacesInfo);
