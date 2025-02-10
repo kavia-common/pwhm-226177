@@ -269,6 +269,7 @@ typedef struct {
     wld_wpaCtrl_wpsTimeoutMsg_f fWpsTimeoutMsg;                       // WPS Timeouting
     wld_wpaCtrl_wpsCancelMsg_f fWpsCancelMsg;                         // WPS Canceled
     wld_wpaCtrl_wpsOverlapMsg_f fWpsOverlapMsg;                       // WPS Overlap
+    wld_wpaCtrl_wpsFailMsg_f fWpsFailMsg;                             // WPS failed after M2D */
 } wld_wpaCtrl_radioEvtHandlers_cb;
 
 int wld_wpaCtrl_getValueStr(const char* pData, const char* pKey, char* pValue, int length);

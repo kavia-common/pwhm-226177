@@ -274,7 +274,7 @@ static void s_wpsFailEvent(wld_wpaCtrlInterface_t* pInterface, char* event, char
     wld_wpaCtrl_getValueIntExt(params, "msg", &wpsMsgId);
     wld_wpaCtrl_getValueIntExt(params, "config_error", &wpsCfgErr);
     SAH_TRACEZ_INFO(ME, "%s: %s wpsMsgId(%d) wpsCfgErrId(%d)", pInterface->name, event, wpsMsgId, wpsCfgErr);
-    CALL_INTF_NA(pInterface, fWpsFailMsg);
+    NOTIFY_NA(pInterface, fWpsFailMsg);
 }
 
 static void s_wpsCredReceivedEvent(wld_wpaCtrlInterface_t* pInterface, char* event, char* params) {

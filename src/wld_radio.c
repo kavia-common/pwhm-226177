@@ -3204,7 +3204,7 @@ T_AccessPoint* wld_rad_vap_from_name(T_Radio* pR, const char* ifname) {
     T_AccessPoint* pAP = NULL;
 
     wld_rad_forEachAp(pAP, pR) {
-        if(!strcmp((const char*) pAP->alias, ifname)) {
+        if(swl_str_matches((const char*) pAP->alias, ifname)) {
             return pAP;
         }
     }
@@ -3231,7 +3231,7 @@ T_EndPoint* wld_rad_ep_from_name(T_Radio* pR, const char* ifname) {
     T_EndPoint* pEP = NULL;
 
     wld_rad_forEachEp(pEP, pR) {
-        if(!strcmp((const char*) pEP->Name, ifname)) {
+        if(swl_str_matches((const char*) pEP->Name, ifname)) {
             return pEP;
         }
     }
@@ -3242,7 +3242,7 @@ T_Radio* wld_rad_from_name(const char* ifname) {
     T_Radio* pR;
 
     wld_for_eachRad(pR) {
-        if(!strcmp((const char*) pR->Name, ifname)) {
+        if(swl_str_matches((const char*) pR->Name, ifname)) {
             return pR;
         }
     }
@@ -4055,7 +4055,7 @@ void wld_rad_updateActiveDevices(T_Radio* pRad, amxd_trans_t* trans) {
 T_Radio* wld_rad_get_radio(const char* ifname) {
     T_Radio* pRad = NULL;
     wld_for_eachRad(pRad) {
-        if(pRad && !strcmp(pRad->Name, ifname)) {
+        if(pRad && swl_str_matches(pRad->Name, ifname)) {
             return pRad;
         }
     }

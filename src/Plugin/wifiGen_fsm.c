@@ -1235,6 +1235,7 @@ static void s_registerWpaSuppRadEvtHandlers(wld_secDmn_t* wpaSupp) {
         handlers.fWpsCancelMsg = s_syncOnWpsFail;
         handlers.fWpsTimeoutMsg = s_syncOnWpsFail;
         handlers.fWpsOverlapMsg = s_syncOnWpsFail;
+        handlers.fWpsFailMsg = s_syncOnWpsFail;
         wld_wpaCtrlMngr_setEvtHandlers(wpaSupp->wpaCtrlMngr, userdata, &handlers);
     }
 }
