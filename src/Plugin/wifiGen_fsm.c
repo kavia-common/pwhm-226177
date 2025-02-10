@@ -1176,14 +1176,32 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
                                pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf);
             return;
         }
-        if(!swl_chanspec_isDfs(chanSpec)) {
+        if(chanSpec.band == SWL_FREQ_BAND_EXT_2_4GHZ) {
+            //only pre-connect to 2g/20MHz
             chanSpec = (swl_chanspec_t) SWL_CHANSPEC_NEW(chanSpec.channel, SWL_BW_20MHZ, chanSpec.band);
+        }
+        /*
+         * try moving fronthaul to backhaul chanspec, only if backhaul chanspsec is:
+         * 1) not dfs: prevent blocking the ep scan while fronthaul doing CAC
+         * 2) not yet applied on fronthaul
+         * 3) not yet tried on fronthaul for ep pre-connect, and rejected
+         * 4) not rejected on direct application
+         * Otherwise, the fronthaul is disabled in favor of backhaul, letting it take the radio control
+         */
+        if(!((swl_chanspec_isDfs(chanSpec)) ||
+             (swl_typeChanspec_equals(wld_chanmgt_getCurChspec(pRad), chanSpec)) ||
+             ((swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pRad), chanSpec)) &&
+              (swl_str_matches(pRad->targetChanspec.reasonExt, "ep preConnect")) &&
+              (pRad->targetChanspec.isApplied == SWL_TRL_FALSE)))) {
             SAH_TRACEZ_INFO(ME, "%s: switch fronthaul to chspec %s to allow wpa_supplicant to connect to %s",
                             pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf,
                             swl_typeMacBin_toBuf32Ref(bssid).buf
                             );
             wld_chanmgt_setTargetChanspec(pRad, chanSpec, true, CHAN_REASON_EP_MOVE, "ep preConnect");
-            return;
+            if((swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pRad), chanSpec)) &&
+               (pRad->targetChanspec.isApplied != SWL_TRL_FALSE)) {
+                return;
+            }
         }
         // disable BSSs to allow wpa_supplicant to do start connection
         SAH_TRACEZ_INFO(ME, "%s: disable fronthaul to allow wpa_supplicant to connect on chspec %s to %s",
