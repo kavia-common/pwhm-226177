@@ -270,6 +270,9 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
             if(s_checkSGI(pRad, SWL_SGI_400)) {
                 swl_str_cat(htCaps, sizeof(htCaps), "[SHORT-GI-40]");
             }
+            if(pRad->htCapabilities & M_SWL_80211_HTCAPINFO_MODE_40) {
+                swl_str_cat(htCaps, sizeof(htCaps), "[DSSS_CCK_MODE_40]");
+            }
         }
         if(s_checkSGI(pRad, SWL_SGI_400)) {
             swl_str_cat(htCaps, sizeof(htCaps), "[SHORT-GI-20]");
