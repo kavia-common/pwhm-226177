@@ -1171,7 +1171,7 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
         if(swl_rc_isOk(wld_wpaSupp_ep_getBssScanInfo(pEP, bssid, &result))) {
             swl_chanspec_fromFreqCtrlCentre(&chanSpec, swl_chanspec_operClassToFreq(result.operClass), result.channel, result.centreChannel);
         }
-        if((!chanSpec.channel) || (chanSpec.band != wld_chanmgt_getCurChspec(pRad).band)) {
+        if((chanSpec.channel != 0) && (chanSpec.band != wld_chanmgt_getCurChspec(pRad).band)) {
             SAH_TRACEZ_WARNING(ME, "%s: ignore target ep chanspec %s out of current band",
                                pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf);
             return;
@@ -1182,13 +1182,15 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
         }
         /*
          * try moving fronthaul to backhaul chanspec, only if backhaul chanspsec is:
+         * 0) define
          * 1) not dfs: prevent blocking the ep scan while fronthaul doing CAC
          * 2) not yet applied on fronthaul
          * 3) not yet tried on fronthaul for ep pre-connect, and rejected
          * 4) not rejected on direct application
          * Otherwise, the fronthaul is disabled in favor of backhaul, letting it take the radio control
          */
-        if(!((swl_chanspec_isDfs(chanSpec)) ||
+        if(!((chanSpec.channel == 0) ||
+             (swl_chanspec_isDfs(chanSpec)) ||
              (swl_typeChanspec_equals(wld_chanmgt_getCurChspec(pRad), chanSpec)) ||
              ((swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pRad), chanSpec)) &&
               (swl_str_matches(pRad->targetChanspec.reasonExt, "ep preConnect")) &&
