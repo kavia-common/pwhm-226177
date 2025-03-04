@@ -288,4 +288,14 @@ bool wld_linuxIfUtils_getLowerIfaces(const char* ifname, char*** pppLowerIfaces,
  */
 bool wld_linuxIfUtils_getVlanLowerIface(const char* ifname, char* lowerIfaceBuf, size_t lowerIfaceBufSize);
 
+/*
+ * @brief check if the interface is currently in bridge
+ *
+ * @param intfName interface name
+ *
+ * @return true in case of the interface is in bridge
+ *         false otherwise
+ */
+bool wld_linuxIfUtils_inBridge(char* intfName);
+
 #endif /* INCLUDE_WLD_WLD_LINUXIFUTILS_H_ */

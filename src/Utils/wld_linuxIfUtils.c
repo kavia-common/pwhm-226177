@@ -70,6 +70,7 @@
 #include "swl/swl_common.h"
 #include "swla/swla_mac.h"
 #include "swl/swl_string.h"
+#include "swl/fileOps/swl_fileUtils.h"
 
 #include "wld.h"
 
@@ -381,4 +382,11 @@ bool wld_linuxIfUtils_getVlanLowerIface(const char* ifname, char* lowerIfaceBuf,
         free(lowers);
     }
     return ret;
+}
+
+bool wld_linuxIfUtils_inBridge(char* intfName) {
+    ASSERTS_STR(intfName, false, ME, "Empty ifname");
+    char path[128] = {0};
+    snprintf(path, sizeof(path), "/sys/class/net/%s/brport", intfName);
+    return (swl_fileUtils_existsDir(path));
 }

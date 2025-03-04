@@ -400,6 +400,13 @@ swl_rc_ne wifiGen_ep_multiApEnable(T_EndPoint* pEP) {
     ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
     setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_MOD_WPASUPP);
     setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_UPDATE_WPASUPP);
+    if((pEP->multiAPEnable == 0) && wld_linuxIfUtils_inBridge(pEP->Name)) {
+        SAH_TRACEZ_WARNING(ME, "%s: interface is in bridge: disable 4addr is not possible", pEP->Name);
+        return SWL_RC_OK;
+    }
+
+    SAH_TRACEZ_INFO(ME, "%s: set 4addr %u", pEP->Name, pEP->multiAPEnable);
+    wld_ep_nl80211_set4Mac(pEP, pEP->multiAPEnable);
     return SWL_RC_OK;
 }
 
