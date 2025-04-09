@@ -3670,6 +3670,9 @@ bool wld_rad_hasActiveApMld(T_Radio* pRad, uint32_t minNLinks) {
 
 bool wld_rad_hasUsableApMld(T_Radio* pRad, uint32_t minNLinks) {
     ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
+    if(wld_rad_hasActiveApMld(pRad, minNLinks)) {
+        return true;
+    }
     T_AccessPoint* pAP;
     wld_rad_forEachAp(pAP, pRad) {
         if((pAP->pSSID != NULL) &&

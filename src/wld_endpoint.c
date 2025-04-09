@@ -1018,6 +1018,9 @@ bool wld_endpoint_hasStackEnabled(T_EndPoint* pEP) {
 swl_rc_ne wld_endpoint_applyEnable(T_EndPoint* pEP, bool combEnable, bool enable) {
     ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
 
+    if(pEP->pSSID) {
+        wld_mld_setLinkConfigured(pEP->pSSID->pMldLink, false);
+    }
     /* set enable flag */
     pEP->pFA->mfn_wendpoint_enable(pEP, combEnable);
 

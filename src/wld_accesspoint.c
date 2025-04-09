@@ -1934,6 +1934,9 @@ swl_rc_ne wld_ap_applyEnable(T_AccessPoint* pAP, bool combEnable, bool enable) {
 
     SAH_TRACEZ_INFO(ME, "%s: apply AP enable (combE: %d, apE:%d)", pAP->alias, combEnable, enable);
 
+    if(pAP->pSSID) {
+        wld_mld_setLinkConfigured(pAP->pSSID->pMldLink, false);
+    }
     pAP->pFA->mfn_wvap_enable(pAP, combEnable, SET);
     wld_autoCommitMgr_notifyVapEdit(pAP);
 
