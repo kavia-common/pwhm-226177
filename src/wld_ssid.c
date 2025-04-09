@@ -879,6 +879,16 @@ void wld_ssid_setMLDLinkID(T_SSID* pSSID, int16_t mldLinkId) {
     ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "trans apply failure");
 }
 
+void wld_ssid_setMLDStatus(T_SSID* pSSID, swl_mlo_intfMldStatus_e mldStatus) {
+    ASSERTI_NOT_EQUALS(pSSID->mldStatus, mldStatus, , ME, "%s: same mldStatus %d", pSSID->Name, mldStatus);
+    pSSID->mldStatus = mldStatus;
+
+    amxd_trans_t trans;
+    ASSERT_TRANSACTION_INIT(pSSID->pBus, &trans, , ME, "%s : trans init failure", pSSID->Name);
+    amxd_trans_set_value(cstring_t, &trans, "MLDStatus", swl_mlo_intfMldStatus_str[mldStatus]);
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "trans apply failure");
+}
+
 
 
 static void s_copyEpStats(T_Stats* pStats, T_EndPointStats* pEpStats) {

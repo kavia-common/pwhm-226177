@@ -75,6 +75,72 @@
 #define ME "mld"
 
 /**
+ * Return whether all the BSSes in a given mldUnit are enabled.
+ *
+ * @param mldUnit: the mld unit of the apMld with which to match.
+ *
+ * @return
+ * This will return true, if mldUnit >= 0 and if for every T_SSID known to the system, of with pSSID->mldUnit matches mldUnit, and, that pSSID is enabled
+ * and the radio on which that pSSID is present is also enabled.
+ *
+ * This will return false otherwise.
+ *
+ */
+bool wld_apMld_areAllBssEnabled(int32_t mldUnit) {
+    if(mldUnit < 0) {
+        return false;
+    }
+
+    T_Radio* pRad = NULL;
+    wld_for_eachRad(pRad) {
+        T_AccessPoint* tmpAp = NULL;
+        wld_rad_forEachAp(tmpAp, pRad) {
+            if(tmpAp == NULL) {
+                continue;
+            }
+
+            if(tmpAp->pSSID == NULL) {
+                continue;
+            }
+
+            if(tmpAp->pSSID->mldUnit != mldUnit) {
+                continue;
+            }
+            if(pRad->enable == 0) {
+                return false;
+            }
+
+            if(tmpAp->enable == 0) {
+                return false;
+            }
+        }
+
+        T_EndPoint* tmpEp = NULL;
+        wld_rad_forEachEp(tmpEp, pRad) {
+            if(tmpEp == NULL) {
+                continue;
+            }
+
+            if(tmpEp->pSSID == NULL) {
+                continue;
+            }
+
+            if(tmpEp->pSSID->mldUnit != mldUnit) {
+                continue;
+            }
+            if(pRad->enable == 0) {
+                return false;
+            }
+
+            if(tmpEp->enable == 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/**
  * Retrieve an affiliatedStaInfo for a given MAC Address associated to a given MLD unit.
  *
  * Because inactive affiliated sta is remembered, and affiliatedSta mac addresses may be reused on other band

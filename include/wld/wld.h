@@ -1758,6 +1758,7 @@ struct S_SSID {
     int32_t bssIndex;                         /* interface creation order among all radio's interfaces */
     int32_t mldUnit;                          /* the index in which "mld unit" this SSID is located */
     swl_mlo_role_e mldRole;                   /* The current active MLO Role for this interface. */
+    swl_mlo_intfMldStatus_e mldStatus;        /* The current status of this interface within the MLD. */
     int16_t mldLinkId;                        /* The Link Index of this interface in the MLD. */
     wld_autoMacSrc_e autoMacSrc;              /* auto generated mac source: from radio (/or dummy) base mac, or statically learned from driver */
     uint32_t autoMacRefIndex;                 /* mac address offset from source base mac */

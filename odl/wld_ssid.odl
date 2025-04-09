@@ -268,6 +268,25 @@
 		%persistent int32 MLDUnit{
 		    default -1;
 		}
+		
+		
+		/**
+		 * The MLD Status of this SSID.
+		 * A string of with following possible values:
+		 * * Unknown: MLD Status is not known
+		 * * Unsupported: MLD is not supported by driver
+		 * * Unconfigured: No MLD Unit set on this SSID
+		 * * StandardDisabled: MLO supporting standards are disabled.
+		 * * InvalidMLDConfig: The config across this MLD is not consistent with operating MLO. E.g. SSID is not consistent.
+		 * * InvalidOtherConfig: Some other configuration
+		 * * BSSDisabled: Config is ready for MLO enable, but a BSS in the MLD is disabled, preventing global enable
+		 * * Ready: MLD is ready to operate. This means that this SSID is able to support MLO connections. However, this
+		 *     does not mean that an MLO connection will actually be made. Only if the other side of the connection has its MLD ready
+		 *     should an MLO connection be made.
+		 */
+		%read-only string MLDStatus{
+			default "Unknown";
+		}
 
 		%read-only object Stats{
 			on action read call wld_ssid_getStats_orf;
