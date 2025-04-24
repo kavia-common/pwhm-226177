@@ -2383,6 +2383,34 @@ bool wld_endpoint_isMloRequired(T_EndPoint* pEP) {
     return lowestBit >= SWL_RADSTD_BE;
 }
 
+
+static void s_syncEpNetdevIndex(char* epName) {
+    T_EndPoint* pEP = wld_getEndpointByName(epName);
+    free(epName);
+    ASSERTI_NOT_NULL(pEP, , ME, "NULL");
+    swl_typeUInt32_commitObjectParam(pEP->pBus, "Index", pEP->index);
+
+    T_SSID* pSSID = pEP->pSSID;
+    if(pSSID != NULL) {
+        swl_typeUInt32_commitObjectParam(pSSID->pBus, "Index", pEP->index);
+    }
+
+    T_Radio* pRad = pEP->pRadio;
+    if(pRad != NULL) {
+        swl_typeUInt32_commitObjectParam(pRad->pBus, "Index", pRad->index);
+    }
+}
+
+void wld_endpoint_setNetdevIndex(T_EndPoint* pEP, int32_t netDevIndex) {
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "%s: update NetDevIndex from %d to %d", pEP->alias, pEP->index, netDevIndex);
+
+    pEP->index = netDevIndex;
+
+    ASSERT_NOT_NULL(pEP->Name, , ME, "NULL");
+    swla_delayExec_add((swla_delayExecFun_cbf) s_syncEpNetdevIndex, strdup(pEP->Name));
+}
+
 amxd_status_t _EndPoint_debug(amxd_object_t* object,
                               amxd_function_t* func _UNUSED,
                               amxc_var_t* args,
