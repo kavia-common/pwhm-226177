@@ -1726,9 +1726,14 @@ static void s_setEndpointStatus(T_EndPoint* pEP,
         if(connectionStatus == EPCS_CONNECTED) {
             pEP->assocStats.lastAssocTime = pEP->lastConnStatusChange;
             pEP->assocStats.nrAssociations++;
-            swl_macBin_t bssid;
+            swl_macBin_t bssid = g_swl_macBin_null;
             wld_endpoint_getBssidBin(pEP, &bssid);
             SAH_TRACEZ_WARNING(ME, "%s: EP connect to %s <"MAC_PRINT_FMT ">", pEP->Name, ssid->SSID, MAC_PRINT_ARG(bssid.bMac));
+            if(!swl_mac_binIsNull(&bssid)) {
+                pEP->currConnBssid = bssid;
+            }
+        } else if(connectionStatus != EPCS_CONNECTING) {
+            swl_mac_binClear(&pEP->currConnBssid);
         }
         s_writeAssocStats(pEP);
     }

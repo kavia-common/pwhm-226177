@@ -1111,10 +1111,6 @@ static void s_syncOnEpStartConn(void* userData, char* ifName, const char* ssid, 
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: endpoint is connecting to (%s) %s over chspec(%s)",
                     pEP->Name, ssid, swl_typeMacBin_toBuf32Ref(bssid).buf, swl_typeChanspecExt_toBuf32Ref(chanSpec).buf);
-    if(wld_endpoint_isReady(pEP) && (pEP->currentProfile != NULL)) {
-        memcpy(pEP->currentProfile->BSSID, bssid->bMac, SWL_MAC_BIN_LEN);
-    }
-    memcpy(pEP->pSSID->BSSID, bssid->bMac, SWL_MAC_BIN_LEN);
     ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
 
     swl_chanspec_t currChanSpec = SWL_CHANSPEC_EMPTY;
@@ -1165,7 +1161,7 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
         swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
         wld_scanResultSSID_t result;
         memset(&result, 0, sizeof(result));
-        swl_macBin_t* bssid = (swl_macBin_t*) pEP->pSSID->BSSID;
+        swl_macBin_t* bssid = &pEP->currConnBssid;
         if(swl_rc_isOk(wld_wpaSupp_ep_getBssScanInfo(pEP, bssid, &result))) {
             swl_chanspec_fromFreqCtrlCentre(&chanSpec, swl_chanspec_operClassToFreq(result.operClass), result.channel, result.centreChannel);
         }

@@ -2104,6 +2104,7 @@ struct S_EndPoint {
     char bridgeName[IFNAMSIZ]; /* The bridge interface name */
     wld_epConnectionStatus_e connectionStatus;
     swl_timeMono_t lastConnStatusChange;
+    swl_macBin_t currConnBssid;
     wld_ep_assocStats_t assocStats;
     wld_epError_e error;
     char Name[16];      /* The interface name */

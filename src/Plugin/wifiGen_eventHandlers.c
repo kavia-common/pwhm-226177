@@ -1306,6 +1306,7 @@ static void s_stationStartConnEvt(void* pRef, char* ifName, const char* ssid, sw
     SAH_TRACEZ_INFO(ME, "%s: EP start connection to BSS %s (ssid: %s)",
                     pEP->Name, swl_typeMacBin_toBuf32Ref(bssid).buf, ssid);
     s_refreshEpConnStatus(pEP);
+    pEP->currConnBssid = bssid ? *bssid : g_swl_macBin_null;
 }
 
 static void s_stationDisconnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssidMac, swl_IEEE80211deauthReason_ne reason) {
