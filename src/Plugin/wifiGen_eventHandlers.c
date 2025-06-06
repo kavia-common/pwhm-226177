@@ -1295,6 +1295,9 @@ static void s_refreshEpConnStatus(T_EndPoint* pEP) {
     wld_epConnectionStatus_e connState = pEP->connectionStatus;
     wifiGen_ep_connStatus(pEP, &connState);
     if(connState != pEP->connectionStatus) {
+        if((connState == EPCS_DISCOVERING) || (connState == EPCS_CONNECTING)) {
+            amxp_timer_stop(pEP->reconnectTimer);
+        }
         wld_endpoint_setConnectionStatus(pEP, connState, EPE_NONE);
     }
 }
