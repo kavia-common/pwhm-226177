@@ -1268,6 +1268,19 @@ const wld_nl80211_ifaceMloLinkInfo_t* wld_nl80211_fetchIfaceMloLinkById(wld_nl80
     return NULL;
 }
 
+const wld_nl80211_ifaceMloLinkInfo_t* wld_nl80211_fetchIfaceMloLinkByFreqBand(wld_nl80211_ifaceInfo_t* pIface, swl_freqBandExt_e band) {
+    ASSERTS_NOT_NULL(pIface, NULL, ME, "NULL");
+    for(uint32_t i = 0; i < pIface->nMloLinks; i++) {
+        const wld_nl80211_ifaceMloLinkInfo_t* pLink = &pIface->mloLinks[i];
+        swl_chanspec_t swlChSpec = SWL_CHANSPEC_EMPTY;
+        swl_rc_ne rc = wld_nl80211_chanSpecNlToSwl(&swlChSpec, (wld_nl80211_chanSpec_t*) &pLink->chanSpec);
+        if(swl_rc_isOk(rc) && (swlChSpec.band == band)) {
+            return pLink;
+        }
+    }
+    return NULL;
+}
+
 const wld_nl80211_ifaceMloLinkInfo_t* wld_nl80211_getIfaceMloLinkAtPos(wld_nl80211_ifaceInfo_t* pIface, uint32_t linkPos) {
     ASSERTS_NOT_NULL(pIface, NULL, ME, "NULL");
     ASSERTS_TRUE((pIface->nMloLinks > 0) && (linkPos < pIface->nMloLinks), NULL, ME, "no mlo Link");

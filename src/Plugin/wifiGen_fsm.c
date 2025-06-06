@@ -1081,10 +1081,20 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     SAH_TRACEZ_INFO(ME, "%s: connected endpoint", pEP->Name);
     wld_nl80211_ifaceInfo_t epIfInfo;
     swl_rc_ne rc = wld_nl80211_getInterfaceInfo(wld_nl80211_getSharedState(), pEP->index, &epIfInfo);
-    if(swl_rc_isOk(rc) && epIfInfo.chanSpec.noHT) {
-        SAH_TRACEZ_WARNING(ME, "%s: re-establish ep connection to recover full chanwidth", pEP->Name);
-        wld_wpaCtrl_sendCmdCheckResponse(pEP->wpaCtrlInterface, "REATTACH", "OK");
-        return;
+    if(swl_rc_isOk(rc)) {
+        const wld_nl80211_ifaceMloLinkInfo_t* pLinkInfo = NULL;
+        const wld_nl80211_chanSpec_t* pNlChspec = &epIfInfo.chanSpec;
+        if(epIfInfo.nMloLinks > 0) {
+            pLinkInfo = wld_nl80211_fetchIfaceMloLinkByFreqBand(&epIfInfo, wld_chanmgt_getCurChspec(pEP->pRadio).band);
+            if(!pNlChspec->ctrlFreq && pLinkInfo) {
+                pNlChspec = &pLinkInfo->chanSpec;
+            }
+        }
+        if(pNlChspec->noHT) {
+            SAH_TRACEZ_WARNING(ME, "%s: re-establish ep connection to recover full chanwidth", pEP->Name);
+            wld_wpaCtrl_sendCmdCheckResponse(pEP->wpaCtrlInterface, "REATTACH", "OK");
+            return;
+        }
     }
     s_delayRestoreFronthaul(pRad);
 }

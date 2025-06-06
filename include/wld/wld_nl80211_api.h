@@ -746,6 +746,16 @@ const wld_nl80211_ifaceMloLinkInfo_t* wld_nl80211_fetchIfaceMloLinkByMac(wld_nl8
 const wld_nl80211_ifaceMloLinkInfo_t* wld_nl80211_fetchIfaceMloLinkById(wld_nl80211_ifaceInfo_t* pIface, int32_t linkId);
 
 /*
+ * @brief seeking by frequency band for interface MLO link info into included interface MLO links
+ *
+ * @param pIface pointer to input mld interface info
+ * @param band MLO link frequency band to look for
+ *
+ * @return pointer to found interface MLO link info, NULL otherwise
+ */
+const wld_nl80211_ifaceMloLinkInfo_t* wld_nl80211_fetchIfaceMloLinkByFreqBand(wld_nl80211_ifaceInfo_t* pIface, swl_freqBandExt_e band);
+
+/*
  * @brief get by position the interface MLO link info
  *
  * @param pIface pointer to input mld interface info
