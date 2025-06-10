@@ -67,6 +67,7 @@
 #include "swl/swl_common.h"
 #include "wld_mld.h"
 #include "wld_radio.h"
+#include "wld_chanmgt.h"
 
 #define ME "nlSSID"
 
@@ -116,6 +117,8 @@ swl_rc_ne wld_ssid_nl80211_getMldIfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo_
 
 swl_rc_ne wld_ssid_nl80211_getInterfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo_t* pIfaceInfo) {
     ASSERT_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "No ssid");
+    T_Radio* pRad = pSSID->RADIO_PARENT;
+    ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_STATE, ME, "No mapped radio");
     swl_rc_ne rc = SWL_RC_NOT_AVAILABLE;
     if(wld_mld_isLinkEnabled(pSSID->pMldLink) || wld_mld_isLinkActive(pSSID->pMldLink)) {
         rc = wld_ssid_nl80211_getMldIfaceInfo(pSSID, pIfaceInfo, NULL);
@@ -127,6 +130,18 @@ swl_rc_ne wld_ssid_nl80211_getInterfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo
         ASSERTS_TRUE(tgtIfIndex > 0, rc, ME, "%s: no tgt ifIndex", pSSID->Name);
         rc = wld_nl80211_getInterfaceInfo(wld_nl80211_getSharedState(), tgtIfIndex, &ifaceInfo);
         ASSERTS_TRUE(swl_rc_isOk(rc), rc, ME, "fail to get iface info");
+        if(ifaceInfo.nMloLinks > 0) {
+            swl_freqBandExt_e band = pRad->operatingFrequencyBand;
+            if(band >= SWL_FREQ_BAND_EXT_NONE) {
+                band = wld_chanmgt_getCurChspec(pRad).band;
+            }
+            const wld_nl80211_ifaceMloLinkInfo_t* pLinkInfo =
+                wld_nl80211_fetchIfaceMloLinkByFreqBand(&ifaceInfo, band);
+            if(pLinkInfo) {
+                ifaceInfo.chanSpec = pLinkInfo->chanSpec;
+                ifaceInfo.txPower = pLinkInfo->txPower;
+            }
+        }
         W_SWL_SETPTR(pIfaceInfo, ifaceInfo);
     }
     return rc;

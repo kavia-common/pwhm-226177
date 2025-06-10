@@ -70,6 +70,7 @@
 #include "wld/wld_wpaCtrl_api.h"
 #include "wld/wld_rad_nl80211.h"
 #include "wld/wld_ap_nl80211.h"
+#include "wld/wld_ep_nl80211.h"
 #include "wld/wld_chanmgt.h"
 #include "wld/wld_wpaCtrlGSock.h"
 #include "wld/wld_secDmn.h"
@@ -1073,6 +1074,19 @@ static bool s_doStopWpaSupp(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
     return true;
 }
 
+static swl_chanspec_t s_getEpBssTgtChanspec(T_EndPoint* pEP, swl_macBin_t* bssid) {
+    swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
+    if(!pEP || !bssid || swl_mac_binIsNull(bssid) || swl_mac_binIsBroadcast(bssid)) {
+        return chanSpec;
+    }
+    wld_scanResultSSID_t result;
+    memset(&result, 0, sizeof(result));
+    if(swl_rc_isOk(wld_wpaSupp_ep_getBssScanInfo(pEP, bssid, &result))) {
+        swl_chanspec_fromFreqCtrlCentre(&chanSpec, swl_chanspec_operClassToFreq(result.operClass), result.channel, result.centreChannel);
+    }
+    return chanSpec;
+}
+
 static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     ASSERTS_TRUE(state, , ME, "not connected");
     T_Radio* pRad = (T_Radio*) userData;
@@ -1080,20 +1094,64 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: connected endpoint", pEP->Name);
     wld_nl80211_ifaceInfo_t epIfInfo;
-    swl_rc_ne rc = wld_nl80211_getInterfaceInfo(wld_nl80211_getSharedState(), pEP->index, &epIfInfo);
+    swl_rc_ne rc = wld_ep_nl80211_getInterfaceInfo(pEP, &epIfInfo);
     if(swl_rc_isOk(rc)) {
-        const wld_nl80211_ifaceMloLinkInfo_t* pLinkInfo = NULL;
         const wld_nl80211_chanSpec_t* pNlChspec = &epIfInfo.chanSpec;
-        if(epIfInfo.nMloLinks > 0) {
-            pLinkInfo = wld_nl80211_fetchIfaceMloLinkByFreqBand(&epIfInfo, wld_chanmgt_getCurChspec(pEP->pRadio).band);
-            if(!pNlChspec->ctrlFreq && pLinkInfo) {
-                pNlChspec = &pLinkInfo->chanSpec;
-            }
-        }
         if(pNlChspec->noHT) {
             SAH_TRACEZ_WARNING(ME, "%s: re-establish ep connection to recover full chanwidth", pEP->Name);
             wld_wpaCtrl_sendCmdCheckResponse(pEP->wpaCtrlInterface, "REATTACH", "OK");
             return;
+        }
+
+        /*
+         * manage case where endpoint connects with reduced bw, although larger is supported:
+         * This may happen when fronthaul is still active and configuring radio to different set of channels
+         * The driver may decide to select to shared channels range, which reduces the final bandwidth
+         */
+
+        /*
+         * get the current chanspec from nl info
+         * and the target chanspec from last wpa_s bss scan results
+         */
+        swl_chanspec_t curChspec = SWL_CHANSPEC_EMPTY;
+        wld_nl80211_chanSpecNlToSwl(&curChspec, (wld_nl80211_chanSpec_t*) pNlChspec);
+        swl_macBin_t* bssid = (swl_macBin_t*) pEP->pSSID->BSSID;
+        swl_chanspec_t tgtChspec = s_getEpBssTgtChanspec(pEP, bssid);
+
+        /*
+         * proceed to reconnect using the scan tgt chanspec, if:
+         *    - mismatching the current ep connection chanspe
+         *    - supported and applicable
+         *    - not already tried for sync
+         *    - fronthaul is still active
+         */
+        if((curChspec.channel > 0) && (tgtChspec.channel > 0) &&
+           (!swl_typeChanspec_equals(tgtChspec, curChspec))) {
+            SAH_TRACEZ_WARNING(ME, "%s: connected to %s but chspec mismatching scan (used:%s vs scan:%s)",
+                               pEP->Name, swl_typeMacBin_toBuf32Ref(bssid).buf,
+                               swl_typeChanspecExt_toBuf32(curChspec).buf,
+                               swl_typeChanspecExt_toBuf32(tgtChspec).buf);
+            if(!((!wld_channel_is_band_usable(tgtChspec)) ||
+                 (tgtChspec.bandwidth > pRad->maxChannelBandwidth) ||
+                 ((swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pRad), tgtChspec)) &&
+                  (swl_str_matches(pRad->targetChanspec.reasonExt, "ep preConnect")) &&
+                  (pRad->targetChanspec.isApplied == SWL_TRL_FALSE)) ||
+                 (!wifiGen_hapd_isAlive(pRad)) || (!s_checkHapdActive(pRad)))) {
+                wld_chanmgt_setTargetChanspec(pRad, tgtChspec, false, CHAN_REASON_EP_MOVE, "ep preConnect");
+                if((swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pRad), tgtChspec)) &&
+                   (pRad->targetChanspec.isApplied != SWL_TRL_FALSE)) {
+                    /*
+                     * 1) disconnect ep to release the radio config
+                     * 2) schedule reconfiguring radio chanspec through the fronthaul
+                     * 3) schedule restoring the ep connection just after
+                     *
+                     * => this allows recovering the applicable chanspec as detected in the scan results
+                     */
+                    SAH_TRACEZ_WARNING(ME, "%s: reconnect ep to sync chanspec", pEP->Name);
+                    wld_endpoint_reconfigure(pEP);
+                    return;
+                }
+            }
         }
     }
     s_delayRestoreFronthaul(pRad);
@@ -1168,13 +1226,8 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
     SAH_TRACEZ_INFO(ME, "%s: EP failed to start connection: error(%d)", pEP->Name, error);
     ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
     if(error == -EBUSY) {
-        swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
-        wld_scanResultSSID_t result;
-        memset(&result, 0, sizeof(result));
         swl_macBin_t* bssid = &pEP->currConnBssid;
-        if(swl_rc_isOk(wld_wpaSupp_ep_getBssScanInfo(pEP, bssid, &result))) {
-            swl_chanspec_fromFreqCtrlCentre(&chanSpec, swl_chanspec_operClassToFreq(result.operClass), result.channel, result.centreChannel);
-        }
+        swl_chanspec_t chanSpec = s_getEpBssTgtChanspec(pEP, bssid);
         if((chanSpec.channel != 0) && (chanSpec.band != wld_chanmgt_getCurChspec(pRad).band)) {
             SAH_TRACEZ_WARNING(ME, "%s: ignore target ep chanspec %s out of current band",
                                pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf);
@@ -1194,7 +1247,7 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
          * Otherwise, the fronthaul is disabled in favor of backhaul, letting it take the radio control
          */
         if(!((chanSpec.channel == 0) ||
-             (swl_chanspec_isDfs(chanSpec)) ||
+             (!wld_channel_is_band_usable(chanSpec)) ||
              (swl_typeChanspec_equals(wld_chanmgt_getCurChspec(pRad), chanSpec)) ||
              ((swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pRad), chanSpec)) &&
               (swl_str_matches(pRad->targetChanspec.reasonExt, "ep preConnect")) &&
