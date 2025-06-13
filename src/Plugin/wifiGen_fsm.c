@@ -1062,8 +1062,12 @@ static bool s_doSetEpMAC(T_EndPoint* pEP, T_Radio* pRadio) {
 
 static bool s_doConnectEp(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
     ASSERTI_TRUE(wifiGen_wpaSupp_isAlive(pEP), true, ME, "%s: wpasupp not running", pEP->Name);
+    ASSERTW_TRUE(wld_endpoint_isReady(pEP), true, ME, "%s: endpoint profile is not ready for connection", pEP->Name);
     wld_wpaCtrl_sendCmdCheckResponse(pEP->wpaCtrlInterface, "ENABLE_NETWORK all", "OK");
     wld_wpaCtrl_sendCmdCheckResponse(pEP->wpaCtrlInterface, "SELECT_NETWORK any", "OK");
+    if(wld_linuxIfUtils_getStateExt(pEP->Name) == 0) {
+        wld_linuxIfUtils_setStateExt(pEP->Name, true);
+    }
     return true;
 }
 
@@ -1376,6 +1380,9 @@ static void s_checkApDependency(T_AccessPoint* pAP, T_Radio* pRad) {
 void s_checkEpDependency(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
     if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_ENABLE_RAD)) {
         setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_ENABLE_EP);
+    }
+    if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_MOD_COUNTRYCODE)) {
+        setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_WPASUPP);
     }
     if(isBitSetLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_CONNECT_EP)) {
         if(!wifiGen_wpaSupp_isRunning(pEP)) {
