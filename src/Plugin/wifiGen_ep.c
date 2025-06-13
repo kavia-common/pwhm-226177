@@ -413,3 +413,15 @@ swl_rc_ne wifiGen_ep_multiApEnable(T_EndPoint* pEP) {
 swl_rc_ne wifiGen_ep_sendManagementFrame(T_EndPoint* pEP, swl_80211_mgmtFrameControl_t* fc, swl_macBin_t* tgtMac, swl_bit8_t* data, size_t dataLen, swl_chanspec_t* chanspec) {
     return wld_ep_nl80211_sendManagementFrameCmd(pEP, fc, tgtMac, data, dataLen, chanspec, 0);
 }
+
+swl_rc_ne wifiGen_ep_getConnChspec(T_EndPoint* pEP, swl_chanspec_t* pChanSpec) {
+    ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTI_EQUALS(pEP->connectionStatus, EPCS_CONNECTED, SWL_RC_INVALID_STATE, ME, "%s: ep is not connected", pEP->Name);
+    wld_nl80211_ifaceInfo_t ifaceInfo;
+    memset(&ifaceInfo, 0, sizeof(ifaceInfo));
+    swl_rc_ne rc;
+    if((rc = wld_ep_nl80211_getInterfaceInfo(pEP, &ifaceInfo)) >= SWL_RC_OK) {
+        rc = wld_nl80211_getChanSpecFromIfaceInfo(pChanSpec, &ifaceInfo);
+    }
+    return rc;
+}

@@ -65,9 +65,12 @@
 
 #include "wld/wld.h"
 
+#define BKH_CHSPEC_REFRESH_DELAY_MS 1000
+
 swl_rc_ne wifiGen_setRadEvtHandlers(T_Radio* pRad);
 swl_rc_ne wifiGen_setVapEvtHandlers(T_AccessPoint* pAP);
 swl_rc_ne wifiGen_setEpEvtHandlers(T_EndPoint* pEP);
 void wifiGen_refreshVapsIfIdx(T_Radio* pRad);
+swl_rc_ne wifiGen_refreshEpConnChspec(T_EndPoint* pEP);
 
 #endif /* INCLUDE_PRIV_PLUGIN_WIFIGEN_EVENTS_H_ */

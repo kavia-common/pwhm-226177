@@ -80,5 +80,6 @@ swl_rc_ne wifiGen_ep_sendManagementFrame(T_EndPoint* pEP, swl_80211_mgmtFrameCon
 swl_rc_ne wifiGen_ep_setMacAddress(T_EndPoint* pEP);
 swl_rc_ne wifiGen_ep_update(T_EndPoint* pEP, int set);
 swl_rc_ne wifiGen_ep_connStatus(T_EndPoint* pEP, wld_epConnectionStatus_e* pConnState);
+swl_rc_ne wifiGen_ep_getConnChspec(T_EndPoint* pEP, swl_chanspec_t* pChanSpec);
 
 #endif /* INCLUDE_PRIV_PLUGIN_WIFIGEN_EP_H_ */

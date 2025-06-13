@@ -306,7 +306,12 @@ static void s_chanSwitchCb(void* userData, char* ifName _UNUSED, swl_chanspec_t*
         pRad->obssCoexistenceActive = true;
     }
 
-    s_saveChanChanged(pRad, chanSpec, pRad->targetChanspec.reason);
+    wld_channelChangeReason_e reason = pRad->targetChanspec.reason;
+    T_EndPoint* pEP = wld_vep_from_name(ifName);
+    if(pEP != NULL) {
+        reason = CHAN_REASON_EP_MOVE;
+    }
+    s_saveChanChanged(pRad, chanSpec, reason);
 }
 
 static void s_csaFinishedCb(void* userData, char* ifName _UNUSED, swl_chanspec_t* chanSpec) {
@@ -1340,16 +1345,24 @@ static void s_stationAssociatedEvt(void* pRef, char* ifName, swl_macBin_t* bBssi
     }
 }
 
-static void s_refreshChspecOnEpConnected(T_EndPoint* pEP) {
-    ASSERT_TRUE(debugIsEpPointer(pEP), , ME, "INVALID");
-    ASSERTI_EQUALS(pEP->connectionStatus, EPCS_CONNECTED, , ME, "%s: ep is not connected", pEP->Name);
+swl_rc_ne wifiGen_refreshEpConnChspec(T_EndPoint* pEP) {
+    ASSERT_TRUE(debugIsEpPointer(pEP), SWL_RC_INVALID_PARAM, ME, "INVALID");
+    ASSERTI_EQUALS(pEP->connectionStatus, EPCS_CONNECTED, SWL_RC_INVALID_STATE, ME, "%s: ep is not connected", pEP->Name);
     T_Radio* pRad = pEP->pRadio;
-    ASSERT_NOT_NULL(pRad, , ME, "%s: no radio mapped", pEP->Name);
+    ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_STATE, ME, "%s: no radio mapped", pEP->Name);
     // update radio datamodel
     swl_chanspec_t chanSpec = wld_chanmgt_getCurChspec(pRad);
-    wld_nl80211_getChanSpec(wld_nl80211_getSharedState(), pEP->index, &chanSpec);
-    s_saveChanChanged(pRad, &chanSpec, CHAN_REASON_EP_MOVE);
-    wld_channel_clear_passive_band(chanSpec);
+    if(wifiGen_ep_getConnChspec(pEP, &chanSpec) >= SWL_RC_OK) {
+        s_saveChanChanged(pRad, &chanSpec, CHAN_REASON_EP_MOVE);
+        wld_channel_clear_passive_band(chanSpec);
+    }
+    return SWL_RC_OK;
+}
+
+static void s_refreshChspecOnEpConnected(char* epIfName) {
+    T_EndPoint* pEP = wld_vep_from_name(epIfName);
+    wifiGen_refreshEpConnChspec(pEP);
+    free(epIfName);
 }
 
 static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssidMac, swl_IEEE80211deauthReason_ne reason _UNUSED) {
@@ -1383,7 +1396,7 @@ static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssid
      * delay refreshing current radio chanspec,
      * in order to give time for channel sync, on driver side
      */
-    swla_delayExec_addTimeout((swla_delayExecFun_cbf) s_refreshChspecOnEpConnected, pEP, 1000);
+    swla_delayExec_addTimeout((swla_delayExecFun_cbf) s_refreshChspecOnEpConnected, strdup(ifName), BKH_CHSPEC_REFRESH_DELAY_MS);
 }
 
 static void s_stationScanStartedEvt(void* pRef, char* ifName) {
