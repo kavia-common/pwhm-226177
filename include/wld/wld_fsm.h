@@ -100,6 +100,7 @@ typedef struct {
 FSM_STATE wld_rad_fsm(T_Radio* rad);
 swl_rc_ne wld_rad_fsm_reset(T_Radio* rad);
 void wld_rad_fsm_cleanFsmBits(T_Radio* rad);
+void wld_rad_fsm_cleanAcFsmBits(T_Radio* rad);
 int wld_rad_fsm_clearFsmBitForAll(T_Radio* rad, int bitNr);
 bool wld_rad_fsm_doesExternalLocking(T_Radio* pRad);
 

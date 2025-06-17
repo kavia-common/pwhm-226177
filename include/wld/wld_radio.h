@@ -247,6 +247,7 @@ swl_rc_ne wld_rad_printPossibleFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t 
 
 void wld_rad_triggerDelayCommit(T_Radio* pRad, uint32_t delay, bool restartIfActive);
 int wld_rad_doRadioCommit(T_Radio* pR);
+swl_rc_ne wld_rad_doRadioReset(T_Radio* pRad);
 void wld_rad_doSync(T_Radio* pRad);
 int wld_rad_doCommitIfUnblocked(T_Radio* pR);
 bool wld_rad_has_endpoint_enabled(T_Radio* rad);

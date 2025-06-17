@@ -203,6 +203,18 @@ int wld_rad_fsm_clearFsmBitForAll(T_Radio* pR, int bitNr) {
     return clearBitLongArray(pR->fsmRad.FSM_AC_BitActionArray, FSM_BW, bitNr);
 }
 
+void wld_rad_fsm_cleanAcFsmBits(T_Radio* rad) {
+    T_AccessPoint* pAP = NULL;
+    T_EndPoint* pEP = NULL;
+    clearAllBitsLongArray(rad->fsmRad.FSM_AC_BitActionArray, FSM_BW);
+    wld_rad_forEachAp(pAP, rad) {
+        clearAllBitsLongArray(pAP->fsm.FSM_AC_BitActionArray, FSM_BW);
+    }
+    wld_rad_forEachEp(pEP, rad) {
+        clearAllBitsLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW);
+    }
+}
+
 /**
  * This function shall collect all bits that are currently pending to be set across the radio, and all its vaps and endpoints.
  * It shall set it the output to the OR of the Radio FSM_BA, VAP FSM_BA and Endpoint FSM_BA.

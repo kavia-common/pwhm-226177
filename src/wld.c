@@ -978,6 +978,31 @@ amxd_status_t _Reset(amxd_object_t* obj _UNUSED,
                      amxc_var_t* args _UNUSED,
                      amxc_var_t* retval _UNUSED) {
 
+    T_Radio* tmpRad = NULL;
+    wld_for_eachRad(tmpRad) {
+        SAH_TRACEZ_WARNING(ME, "%s: stop radio for reset", tmpRad->Name);
+        wld_rad_doRadioReset(tmpRad);
+
+        /*
+         * force reset local enabling flag of APs/EPs/SSIDs
+         * to allow handling loaded values and mirroring them when needed
+         */
+        T_EndPoint* pEP = NULL;
+        wld_rad_forEachEp(pEP, tmpRad) {
+            pEP->enable = 0;
+            if(pEP->pSSID) {
+                pEP->pSSID->enable = 0;
+            }
+        }
+        T_AccessPoint* pAP = NULL;
+        wld_rad_forEachAp(pAP, tmpRad) {
+            pAP->enable = 0;
+            if(pAP->pSSID) {
+                pAP->pSSID->enable = 0;
+            }
+        }
+    }
+
     amxd_object_t* rootObj = amxd_dm_get_root(get_wld_plugin_dm());
     amxo_parser_t* parser = get_wld_plugin_parser();
     amxo_parser_parse_string(parser, "include '${definition_file}';", rootObj);
@@ -990,7 +1015,6 @@ amxd_status_t _Reset(amxd_object_t* obj _UNUSED,
     }
     wld_vendorModuleMgr_loadDefaultsAll();
 
-    T_Radio* tmpRad = NULL;
     wld_for_eachRad(tmpRad) {
         tmpRad->fsmRad.FSM_SyncAll = TRUE;
         wld_autoCommitMgr_notifyRadEdit(tmpRad);

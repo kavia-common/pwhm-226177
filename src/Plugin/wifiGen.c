@@ -104,6 +104,7 @@ bool wifiGen_init() {
     //Misc functions
     fta.mfn_misc_has_support = wifiGen_rad_miscHasSupport;
     fta.mfn_wvdr_setDmnExecSettings = wifiGen_setDmnExecSettings;
+    fta.mfn_wrad_fsm_reset = wifiGen_rad_fsmReset;
 
     //Wrad functions
     fta.mfn_wrad_create_hook = wifiGen_rad_createHook;

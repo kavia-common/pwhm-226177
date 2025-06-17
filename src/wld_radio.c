@@ -2828,25 +2828,25 @@ void Radio_Commit_Abort(uint64_t call_id _UNUSED, void* userdata) {
 
 static void doRadioReset(T_Radio* pRad) {
     /* Looks we're hanging? free all timer/callbacks ! */
-    SAH_TRACEZ_ERROR(ME, "Radio reset %s ", pRad->Name);
+    SAH_TRACEZ_WARNING(ME, "Radio reset %s ", pRad->Name);
     int fsmState = pRad->pFA->mfn_wrad_fsm_state(pRad);
-    SAH_TRACEZ_ERROR(ME, "BloCom %u State %u", pRad->blockCommit, fsmState);
+    SAH_TRACEZ_WARNING(ME, "blockCommit %u State %u", pRad->blockCommit, fsmState);
     T_AccessPoint* pAP;
     /* collect all dependencies on all attached ep interfaces, mirror it on the RAD interface */
     T_EndPoint* pEP;
     wld_rad_forEachEp(pEP, pRad) {
-        SAH_TRACEZ_ERROR(ME, "Reset ep %s: 0x%lx 0x%lx // 0x%lx 0x%lx ",
-                         pEP->alias,
-                         pEP->fsm.FSM_BitActionArray[0], pEP->fsm.FSM_BitActionArray[1],
-                         pEP->fsm.FSM_AC_BitActionArray[0], pEP->fsm.FSM_AC_BitActionArray[1]);
+        SAH_TRACEZ_WARNING(ME, "Reset ep %s: 0x%lx 0x%lx // 0x%lx 0x%lx ",
+                           pEP->alias,
+                           pEP->fsm.FSM_BitActionArray[0], pEP->fsm.FSM_BitActionArray[1],
+                           pEP->fsm.FSM_AC_BitActionArray[0], pEP->fsm.FSM_AC_BitActionArray[1]);
     }
 
     /* collect all dependencies on all attached vap interfaces, mirror it on the RAD interface */
     wld_rad_forEachAp(pAP, pRad) {
-        SAH_TRACEZ_ERROR(ME, "Reset ap %s: 0x%lx 0x%lx // 0x%lx 0x%lx",
-                         pAP->alias,
-                         pAP->fsm.FSM_BitActionArray[0], pAP->fsm.FSM_BitActionArray[1],
-                         pAP->fsm.FSM_AC_BitActionArray[0], pAP->fsm.FSM_AC_BitActionArray[1]);
+        SAH_TRACEZ_WARNING(ME, "Reset ap %s: 0x%lx 0x%lx // 0x%lx 0x%lx",
+                           pAP->alias,
+                           pAP->fsm.FSM_BitActionArray[0], pAP->fsm.FSM_BitActionArray[1],
+                           pAP->fsm.FSM_AC_BitActionArray[0], pAP->fsm.FSM_AC_BitActionArray[1]);
     }
 
     if(pRad->call_id != 0) {
@@ -2873,6 +2873,11 @@ static void doRadioReset(T_Radio* pRad) {
     wld_rad_incrementCounterStr(pRad, &pRad->genericCounters, WLD_RAD_EV_FSM_RESET, "0x%x", fsmState);
 }
 
+swl_rc_ne wld_rad_doRadioReset(T_Radio* pRad) {
+    ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    doRadioReset(pRad);
+    return SWL_RC_OK;
+}
 
 static void doAllRadioReset() {
     T_Radio* pRad = NULL;

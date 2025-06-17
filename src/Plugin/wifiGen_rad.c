@@ -1289,3 +1289,20 @@ swl_rc_ne wifiGen_rad_bgDfsStop(T_Radio* pRad) {
     wld_rad_updateState(pRad, false);
     return rc;
 }
+
+swl_rc_ne wifiGen_rad_fsmReset(T_Radio* pRad) {
+    ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    wld_scan_stop(pRad);
+    wld_secDmn_stop(pRad->hostapd);
+    T_EndPoint* pEP = NULL;
+    wld_rad_forEachEp(pEP, pRad) {
+        wld_secDmn_stop(pEP->wpaSupp);
+    }
+
+    wld_rad_fsm_cleanFsmBits(pRad);
+    wld_rad_fsm_cleanAcFsmBits(pRad);
+
+    wld_rad_fsm_reset(pRad);
+    return SWL_RC_OK;
+}
