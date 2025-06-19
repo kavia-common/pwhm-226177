@@ -1087,6 +1087,10 @@ static swl_chanspec_t s_getEpBssTgtChanspec(T_EndPoint* pEP, swl_macBin_t* bssid
     memset(&result, 0, sizeof(result));
     if(swl_rc_isOk(wld_wpaSupp_ep_getBssScanInfo(pEP, bssid, &result))) {
         swl_chanspec_fromFreqCtrlCentre(&chanSpec, swl_chanspec_operClassToFreq(result.operClass), result.channel, result.centreChannel);
+        if(chanSpec.band == SWL_FREQ_BAND_EXT_2_4GHZ) {
+            //only pre-connect to 2g/20MHz
+            chanSpec = (swl_chanspec_t) SWL_CHANSPEC_NEW(chanSpec.channel, SWL_BW_20MHZ, chanSpec.band);
+        }
     }
     return chanSpec;
 }
@@ -1236,10 +1240,6 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
             SAH_TRACEZ_WARNING(ME, "%s: ignore target ep chanspec %s out of current band",
                                pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf);
             return;
-        }
-        if(chanSpec.band == SWL_FREQ_BAND_EXT_2_4GHZ) {
-            //only pre-connect to 2g/20MHz
-            chanSpec = (swl_chanspec_t) SWL_CHANSPEC_NEW(chanSpec.channel, SWL_BW_20MHZ, chanSpec.band);
         }
         /*
          * try moving fronthaul to backhaul chanspec, only if backhaul chanspsec is:
