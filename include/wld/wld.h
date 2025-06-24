@@ -1248,6 +1248,7 @@ typedef struct {
     char* fastScanReasons;
     wld_scanArgs_t scanArguments;
     bool enableScanResultsDm;
+    bool onlyScanPscChannels;
 } wld_scan_config_t;
 
 typedef struct {

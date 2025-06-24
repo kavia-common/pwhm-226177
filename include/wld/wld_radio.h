@@ -244,6 +244,7 @@ uint32_t wld_rad_getCurrentFreq(T_Radio* pRad);
 swl_rc_ne wld_rad_getCurrentNoise(T_Radio* pRad, int32_t* pNoise);
 swl_rc_ne wld_rad_printPossibleChansWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep);
 swl_rc_ne wld_rad_printPossibleFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep);
+swl_rc_ne wld_rad_printScanningFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep, bool onlyPscChannels);
 
 void wld_rad_triggerDelayCommit(T_Radio* pRad, uint32_t delay, bool restartIfActive);
 int wld_rad_doRadioCommit(T_Radio* pR);

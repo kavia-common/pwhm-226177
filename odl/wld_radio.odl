@@ -2920,6 +2920,14 @@ define probelist_t{
 			%persistent string FastScanReasons{
 				default "Ssid";
 			}
+
+			/**
+			 * Only scan preferred channels. See 80211ax-2021 section 26.17.2.3.
+			 * Affects only 6GHz scan, no effect in other bands.
+			 */
+			%persistent bool OnlyScanPscChannels {
+				default false;
+			}
 		}
 
 		/**

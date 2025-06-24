@@ -61,6 +61,7 @@
 ****************************************************************************/
 
 #include "wld_common.h"
+#include "Utils/wld_autoCommitMgr.h"
 
 #define ME "wldScan"
 
@@ -110,6 +111,17 @@ static void s_setScanConfig_ocf(void* priv _UNUSED, amxd_object_t* object, const
     pRad->scanState.cfg.scanRequestInterval = amxd_object_get_int32_t(object, "ScanRequestInterval", NULL);
     pRad->scanState.cfg.scanChannelCount = amxd_object_get_int32_t(object, "ScanChannelCount", NULL);
     pRad->scanState.cfg.enableScanResultsDm = amxd_object_get_bool(object, "EnableScanResultsDm", NULL);
+
+    bool onlyScanPscChannels = amxd_object_get_bool(object, "OnlyScanPscChannels", NULL);
+    if(wld_rad_is_6ghz(pRad) && (pRad->scanState.cfg.onlyScanPscChannels != onlyScanPscChannels)) {
+        pRad->scanState.cfg.onlyScanPscChannels = onlyScanPscChannels;
+        T_EndPoint* pEP = wld_rad_getEnabledEndpoint(pRad);
+        if(pEP != NULL) {
+            // reconfigure wpa_supplicant
+            pEP->pFA->mfn_wendpoint_update(pEP, SET);
+            wld_autoCommitMgr_notifyEpEdit(pEP);
+        }
+    }
 
     if(pRad->scanState.cfg.fastScanReasons != NULL) {
         free(pRad->scanState.cfg.fastScanReasons);

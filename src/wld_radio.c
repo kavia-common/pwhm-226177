@@ -4490,9 +4490,16 @@ swl_rc_ne wld_rad_printPossibleChansWithSep(T_Radio* pRad, char* tgtBuf, size_t 
 }
 
 swl_rc_ne wld_rad_printPossibleFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep) {
+    return wld_rad_printScanningFreqsWithSep(pRad, tgtBuf, tgtBufSize, sep, false);
+}
+
+swl_rc_ne wld_rad_printScanningFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep, bool onlyPscChannels) {
     ASSERT_TRUE(swl_str_copy(tgtBuf, tgtBufSize, NULL), SWL_RC_INVALID_PARAM, ME, "empty");
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     for(int i = 0; i < pRad->nrPossibleChannels; i++) {
+        if(onlyPscChannels && (pRad->operatingFrequencyBand == SWL_FREQ_BAND_EXT_6GHZ) && !swl_channel_is6gPsc(pRad->possibleChannels[i])) {
+            continue;
+        }
         uint32_t freqMHz = 0;
         swl_chanspec_t chanspec = SWL_CHANSPEC_NEW(pRad->possibleChannels[i], SWL_BW_20MHZ, pRad->operatingFrequencyBand);
         if((SWL_RC_OK == swl_chanspec_channelToMHz(&chanspec, &freqMHz))) {
