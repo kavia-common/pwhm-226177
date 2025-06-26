@@ -64,7 +64,6 @@
 #include "wld_util.h"
 #include "wld_wps.h"
 #include "wld_endpoint.h"
-#include "wld_radio.h"
 #include "swl/map/swl_mapCharFmt.h"
 #include "wld_wpaSupp_cfgManager.h"
 #include "wld_wpaSupp_cfgManager_priv.h"
@@ -121,9 +120,14 @@ static swl_rc_ne s_setWpaSuppGlobalConfig(T_EndPoint* pEP, wld_wpaSupp_config_t*
     }
 
     char freqListStr[320] = {'\0'};
-    wld_rad_printPossibleFreqsWithSep(pRad, freqListStr, sizeof(freqListStr), " ");
+    for(int i = 0; i < pRad->nrPossibleChannels; i++) {
+        uint32_t freqMHz = 0;
+        swl_chanspec_t chanspec = SWL_CHANSPEC_NEW(pRad->possibleChannels[i], SWL_BW_20MHZ, pRad->operatingFrequencyBand);
+        if((SWL_RC_OK == swl_chanspec_channelToMHz(&chanspec, &freqMHz))) {
+            swl_strlst_catFormat(freqListStr, sizeof(freqListStr), " ", "%d", freqMHz);
+        }
+    }
     if(!swl_str_isEmpty(freqListStr)) {
-        swl_mapChar_add(global, "initial_freq_list", freqListStr);
         swl_mapChar_add(global, "freq_list", freqListStr);
     }
 
@@ -181,12 +185,6 @@ static swl_rc_ne s_setWpaSuppNetworkConfig(T_EndPoint* pEP, wld_wpaSupp_config_t
     ASSERT_FALSE(ret, SWL_RC_ERROR, ME, "empty SSID");
 
     swl_mapChar_add(network, "scan_ssid", "1");
-    char freqListStr[320] = {'\0'};
-    wld_rad_printPossibleFreqsWithSep(pRad, freqListStr, sizeof(freqListStr), " ");
-    if(!swl_str_isEmpty(freqListStr)) {
-        swl_mapChar_add(network, "scan_freq", freqListStr);
-        swl_mapChar_add(network, "freq_list", freqListStr);
-    }
     char ssid[SSID_NAME_LEN + 2] = {0};
     swl_str_catFormat(ssid, sizeof(ssid), "\"%s\"", epProfile->SSID);
     swl_mapChar_add(network, "ssid", ssid);
