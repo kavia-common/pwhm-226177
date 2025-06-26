@@ -1300,6 +1300,11 @@ static void s_refreshEpConnStatus(T_EndPoint* pEP) {
     wld_epConnectionStatus_e connState = pEP->connectionStatus;
     wifiGen_ep_connStatus(pEP, &connState);
     if(connState != pEP->connectionStatus) {
+        if(connState == EPCS_CONNECTED) {
+            CALL_INTF_EXT(pEP->wpaCtrlInterface, fStationConnectedCb, NULL, 0);
+            return;
+        }
+
         if((connState == EPCS_DISCOVERING) || (connState == EPCS_CONNECTING)) {
             amxp_timer_stop(pEP->reconnectTimer);
         }
