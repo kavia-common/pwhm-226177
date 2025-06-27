@@ -98,7 +98,7 @@ static swl_rc_ne s_setWpaSuppGlobalConfig(T_EndPoint* pEP, wld_wpaSupp_config_t*
     swl_mapChar_add(global, "model_number", pRad->wpsConst->ModelNumber);
     swl_mapChar_add(global, "serial_number", pRad->wpsConst->SerialNumber);
     swl_mapChar_add(global, "uuid", pRad->wpsConst->UUID);
-    int tmpver[4];
+    int tmpver[4] = {0};
     sscanf(pRad->wpsConst->OsVersion, "%i.%i.%i.%i", &tmpver[0], &tmpver[1], &tmpver[2], &tmpver[3]);
     swl_mapCharFmt_addValStr(global, "os_version", "%.8x", ((unsigned int) (tmpver[0] << 24 | tmpver[1] << 16 | tmpver[2] << 8 | tmpver[3])));
     swl_mapChar_add(global, "device_type", "6-0050F204-1");
