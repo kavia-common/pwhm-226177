@@ -61,8 +61,11 @@
 ****************************************************************************/
 #include "wld/wld.h"
 #include "wld/wld_radio.h"
+#include "wld/wld_ssid.h"
+#include "wld/wld_endpoint.h"
+#include "wld/wld_linuxIfUtils.h"
 #include "wld/wld_wpaSupp_cfgFile.h"
-#include "wifiGen_hapd.h"
+#include "wifiGen_wpaSupp.h"
 
 #define ME "genWsup"
 #define WPASUPP_CONF_FILE_PATH_FORMAT "/tmp/%s_wpa_supplicant.conf"
@@ -129,6 +132,8 @@ swl_rc_ne wifiGen_wpaSupp_stopDaemon(T_EndPoint* pEP) {
     ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
     SAH_TRACEZ_WARNING(ME, "%s: Stop wpa_supplicant", pEP->Name);
     swl_rc_ne rc = wld_secDmn_stop(pEP->wpaSupp);
+    ASSERTI_NOT_EQUALS(rc, SWL_RC_CONTINUE, rc, ME, "%s: wpa_supp being stopped", pEP->Name);
+    wld_linuxIfUtils_setStateExt(pEP->Name, 0);
     ASSERTI_FALSE(rc < SWL_RC_OK, rc, ME, "%s: wpa_supplicant not running", pEP->Name);
     return SWL_RC_OK;
 }
