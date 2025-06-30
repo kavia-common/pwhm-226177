@@ -132,6 +132,8 @@ swl_rc_ne wifiGen_wpaSupp_stopDaemon(T_EndPoint* pEP) {
     ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
     SAH_TRACEZ_WARNING(ME, "%s: Stop wpa_supplicant", pEP->Name);
     swl_rc_ne rc = wld_secDmn_stop(pEP->wpaSupp);
+    wld_ssid_setMLDLinkID(pEP->pSSID, NO_LINK_ID);
+    wld_ssid_setMLDRole(pEP->pSSID, SWL_MLO_ROLE_NONE);
     ASSERTI_NOT_EQUALS(rc, SWL_RC_CONTINUE, rc, ME, "%s: wpa_supp being stopped", pEP->Name);
     wld_linuxIfUtils_setStateExt(pEP->Name, 0);
     ASSERTI_FALSE(rc < SWL_RC_OK, rc, ME, "%s: wpa_supplicant not running", pEP->Name);

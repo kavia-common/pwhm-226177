@@ -64,6 +64,7 @@
 #include "wld_mld.h"
 #include "wld_ssid.h"
 #include "wld_util.h"
+#include "wld_radio.h"
 #include "wld_radioOperatingStandards.h"
 #include "wld_chanmgt.h"
 #include "wld_eventing.h"
@@ -208,6 +209,7 @@ static wld_mldLink_t* s_takeLink(wld_mldLink_t* pLink) {
     ASSERTS_NOT_NULL(pLink, NULL, ME, "NULL");
     wld_mld_t* pMld = pLink->pMld;
     wld_apMld_deleteAffiliatedAPObjects(pLink);
+    wld_ssid_setMLDLinkID(pLink->pSSID, NO_LINK_ID);
     wld_mld_resetLinkId(pLink);
     amxc_llist_it_take(&pLink->it);
     pLink->configured = false;
@@ -541,14 +543,38 @@ bool wld_mld_checkUsableLinkBasicConditions(wld_mldLink_t* pLink) {
     return true;
 }
 
+swl_mlo_intfMldStatus_e wld_mld_checkMLDStatus(T_SSID* pSSID) {
+    if((pSSID == NULL) || (pSSID->RADIO_PARENT == NULL)) {
+        return SWL_MLO_INTF_MLD_STATUS_UNKNOWN;
+    }
+    T_Radio* pRad = pSSID->RADIO_PARENT;
+    if(!wld_rad_isMloCapable(pRad)) {
+        return SWL_MLO_INTF_MLD_STATUS_UNSUPPORTED;
+    }
+    if(!wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_BE)) {
+        return SWL_MLO_INTF_MLD_STATUS_STANDARD_DISABLED;
+    }
+    if(!wld_ssid_hasStackEnabled(pSSID) || swl_mac_binIsNull((swl_macBin_t*) pSSID->MACAddress)) {
+        return SWL_MLO_INTF_MLD_STATUS_BSS_DISABLED;
+    }
+    wld_mldLink_t* pLink = pSSID->pMldLink;
+    if(pLink == NULL) {
+        return SWL_MLO_INTF_MLD_STATUS_UNCONFIGURED;
+    }
+    if(!wld_mld_countNeighLinks(pLink) || !wld_ssid_hasMloSupport(pSSID)) {
+        return SWL_MLO_INTF_MLD_STATUS_INVALID_MLD_CONFIG;
+    }
+    if(wld_ssid_getType(pSSID) == WLD_SSID_TYPE_AP) {
+        if(!wld_apMld_hasSharedConnectionConf(pSSID->AP_HOOK)) {
+            return SWL_MLO_INTF_MLD_STATUS_INVALID_OTHER_CONFIG;
+        }
+    }
+    return SWL_MLO_INTF_MLD_STATUS_READY;
+}
+
 bool wld_mld_isLinkUsable(wld_mldLink_t* pLink) {
-    if(!wld_mld_checkUsableLinkBasicConditions(pLink)) {
-        return false;
-    }
-    if(wld_ssid_getType(pLink->pSSID) == WLD_SSID_TYPE_AP) {
-        return wld_apMld_hasSharedConnectionConf(pLink->pSSID->AP_HOOK);
-    }
-    return true;
+    ASSERTS_NOT_NULL(pLink, false, ME, "NULL");
+    return (wld_mld_checkMLDStatus(pLink->pSSID) == SWL_MLO_INTF_MLD_STATUS_READY);
 }
 
 bool wld_mld_saveLinkConfigured(wld_mldLink_t* pLink, bool flag) {

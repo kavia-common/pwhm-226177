@@ -88,8 +88,8 @@ swl_rc_ne wld_ssid_accuMloStats(T_SSID* pSSID, wld_stats_t* pDiffStats);
 swl_rc_ne wld_ssid_getMloStats(T_SSID* pSSID, wld_stats_t* pOutStats);
 swl_rc_ne wld_ssid_accuNetStats(T_SSID* pSSID, wld_stats_t* pDiffStats);
 swl_rc_ne wld_ssid_getNetStats(T_SSID* pSSID, wld_stats_t* pOutStats);
-void wld_ssid_setMLDRole(T_SSID* pEP, swl_mlo_role_e mldRole);
-void wld_ssid_setMLDLinkID(T_SSID* pEP, int16_t mldLinkId);
+void wld_ssid_setMLDRole(T_SSID* pSSID, swl_mlo_role_e mldRole);
+void wld_ssid_setMLDLinkID(T_SSID* pSSID, int16_t mldLinkId);
 void wld_ssid_setMLDStatus(T_SSID* pSSID, swl_mlo_intfMldStatus_e mldStatus);
 
 T_SSID* wld_ssid_createApSsid(T_AccessPoint* pAP);

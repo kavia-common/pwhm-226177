@@ -843,9 +843,7 @@ static void s_apDisabledCb(void* userData, char* ifName) {
     SAH_TRACEZ_INFO(ME, "%s: AP iface disabled", ifName);
     T_AccessPoint* pAP = (T_AccessPoint*) userData;
     ASSERT_TRUE(debugIsVapPointer(pAP), , ME, "INVALID");
-    if(pAP->pSSID) {
-        wld_mld_resetLinkId(pAP->pSSID->pMldLink);
-    }
+    wld_ssid_setMLDLinkID(pAP->pSSID, NO_LINK_ID);
     wld_vap_updateState(pAP);
 }
 

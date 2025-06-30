@@ -353,9 +353,8 @@ static bool s_stopHapdCb(wld_secDmn_t* pSecDmn, void* userdata _UNUSED) {
     wifiGen_hapd_deauthKnownStations(pRad, true);
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRad) {
-        if(pAP->pSSID) {
-            wld_mld_resetLinkId(pAP->pSSID->pMldLink);
-        }
+        wld_ssid_setMLDLinkID(pAP->pSSID, NO_LINK_ID);
+        wld_ssid_setMLDRole(pAP->pSSID, SWL_MLO_ROLE_NONE);
     }
     if(!swl_str_isEmpty(sockName)) {
         wld_wpaCtrlInterface_t* pIface = wld_wpaCtrlGSock_getGIface(pSecDmn->glSk);
@@ -460,9 +459,8 @@ swl_rc_ne wifiGen_hapd_stopDaemon(T_Radio* pRad) {
     swl_rc_ne rc = wld_secDmn_stop(pRad->hostapd);
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRad) {
-        if(pAP->pSSID) {
-            wld_mld_resetLinkId(pAP->pSSID->pMldLink);
-        }
+        wld_ssid_setMLDLinkID(pAP->pSSID, NO_LINK_ID);
+        wld_ssid_setMLDRole(pAP->pSSID, SWL_MLO_ROLE_NONE);
     }
     ASSERTI_NOT_EQUALS(rc, SWL_RC_CONTINUE, rc, ME, "%s: hostapd being stopped", pRad->Name);
     wld_rad_forEachAp(pAP, pRad) {

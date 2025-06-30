@@ -164,11 +164,16 @@ T_SSID* wifiGen_mld_fetchSockLinkSSID(wld_wpaCtrlMngr_t* pMgr, const char* sockN
     ASSERTS_NOT_NULL(pLinkSSID, NULL, ME, "sock(%s): Fail to match any SSID", sockName);
 
     if(wld_mld_getLinkId(pLinkSSID->pMldLink) != linkId) {
-        wld_mld_setLinkId(pLinkSSID->pMldLink, linkId);
-        const char* pLinkIfName = wld_ssid_getIfName(pLinkSSID);
-        if(swl_str_matches(pLinkIfName, mldIface)) {
-            wld_mld_setPrimaryLink(pLinkSSID->pMldLink);
+        wld_ssid_setMLDLinkID(pLinkSSID, linkId);
+        swl_mlo_role_e mldRole;
+        if(linkId == NO_LINK_ID) {
+            mldRole = SWL_MLO_ROLE_NONE;
+        } else if(swl_str_matches(wld_ssid_getIfName(pLinkSSID), mldIface)) {
+            mldRole = SWL_MLO_ROLE_PRIMARY;
+        } else {
+            mldRole = SWL_MLO_ROLE_AUXILIARY;
         }
+        wld_ssid_setMLDRole(pLinkSSID, mldRole);
     }
     return pLinkSSID;
 }
