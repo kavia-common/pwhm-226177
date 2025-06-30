@@ -1262,7 +1262,7 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
                             );
             wld_chanmgt_setTargetChanspec(pRad, chanSpec, true, CHAN_REASON_EP_MOVE, "ep preConnect");
             if((swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pRad), chanSpec)) &&
-               (pRad->targetChanspec.isApplied != SWL_TRL_FALSE)) {
+               (pRad->targetChanspec.isApplied == SWL_TRL_TRUE)) {
                 return;
             }
         }
