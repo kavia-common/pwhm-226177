@@ -680,6 +680,7 @@ int wifiGen_rad_supports(T_Radio* pRad, char* buf _UNUSED, int bufsize _UNUSED) 
 int wifiGen_rad_status(T_Radio* pRad) {
     swl_chanspec_t currChanSpec;
     T_EndPoint* pActiveEp;
+    bool activeEpLinked = false;
     if(!wld_rad_hasEnabledIface(pRad)) {
         SAH_TRACEZ_INFO(ME, "%s: has no enabled interface", pRad->Name);
         pRad->detailedState = CM_RAD_DOWN;
@@ -687,7 +688,7 @@ int wifiGen_rad_status(T_Radio* pRad) {
         // In this situation, there is a background dfs running.
         SAH_TRACEZ_INFO(ME, "%s: background dfs is running", pRad->Name);
     } else if(((pActiveEp = wld_rad_getFirstActiveEp(pRad)) != NULL) &&
-              ((wld_linuxIfUtils_getLinkStateExt(pActiveEp->Name) > 0) || (!wld_rad_hasEnabledVap(pRad)))) {
+              ((activeEpLinked = (wld_linuxIfUtils_getLinkStateExt(pActiveEp->Name) > 0)) || (!wld_rad_hasEnabledVap(pRad)))) {
         /*
          * if radio has active backhaul:
          *  - endpoint connected (iface LINK_UP)
@@ -727,6 +728,13 @@ int wifiGen_rad_status(T_Radio* pRad) {
         if(pRad->pLastAirStats != NULL) {
             pRad->pLastAirStats->timestamp = 0;
         }
+    }
+    /*
+     * force refresh endpoint connection status, when nl link is mismatching
+     * (sometimes, wpa_s wpactrl events may be missed)
+     */
+    if(wld_rad_hasConnectedEp(pRad) != activeEpLinked) {
+        wifiGen_refreshEpConnStatus(wld_rad_getFirstEp(pRad));
     }
     // All other intermediate states are handled with eventing (nl80211/wpactrl)
     return (pRad->detailedState != CM_RAD_DOWN);

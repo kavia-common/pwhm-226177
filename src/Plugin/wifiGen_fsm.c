@@ -1463,12 +1463,12 @@ wld_fsmMngr_action_t actions[GEN_FSM_MAX] = {
     {FSM_ACTION(GEN_FSM_ENABLE_RAD), .doRadFsmAction = s_doRadEnable},
     {FSM_ACTION(GEN_FSM_ENABLE_AP), .doVapFsmAction = s_doEnableAp},
     {FSM_ACTION(GEN_FSM_ENABLE_EP), .doEpFsmAction = s_doEnableEp},
-    {FSM_ACTION(GEN_FSM_CONNECT_EP), .doEpFsmAction = s_doConnectEp},
     {FSM_ACTION(GEN_FSM_UPDATE_HOSTAPD), .doRadFsmAction = s_doUpdateHostapd},
     {FSM_ACTION(GEN_FSM_ADD_HOSTAPD), .doRadFsmAction = s_doAddHostapd},
     {FSM_ACTION(GEN_FSM_START_HOSTAPD), .doRadFsmAction = s_doStartHostapd},
-    {FSM_ACTION(GEN_FSM_START_WPASUPP), .doEpFsmAction = s_doStartWpaSupp},
     {FSM_ACTION(GEN_FSM_SYNC_STATE), .doRadFsmAction = s_doSyncState},
+    {FSM_ACTION(GEN_FSM_CONNECT_EP), .doEpFsmAction = s_doConnectEp},
+    {FSM_ACTION(GEN_FSM_START_WPASUPP), .doEpFsmAction = s_doStartWpaSupp},
 };
 
 wld_fsmMngr_t mngr = {

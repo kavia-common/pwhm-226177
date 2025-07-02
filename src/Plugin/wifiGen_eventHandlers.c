@@ -1295,14 +1295,14 @@ static wld_epError_e s_getEpErrFromDeauthReason(swl_IEEE80211deauthReason_ne rea
     }
 }
 
-static void s_refreshEpConnStatus(T_EndPoint* pEP) {
-    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+swl_rc_ne wifiGen_refreshEpConnStatus(T_EndPoint* pEP) {
+    ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_epConnectionStatus_e connState = pEP->connectionStatus;
     wifiGen_ep_connStatus(pEP, &connState);
     if(connState != pEP->connectionStatus) {
         if(connState == EPCS_CONNECTED) {
             CALL_INTF_EXT(pEP->wpaCtrlInterface, fStationConnectedCb, NULL, 0);
-            return;
+            return SWL_RC_OK;
         }
 
         if((connState == EPCS_DISCOVERING) || (connState == EPCS_CONNECTING)) {
@@ -1310,6 +1310,7 @@ static void s_refreshEpConnStatus(T_EndPoint* pEP) {
         }
         wld_endpoint_setConnectionStatus(pEP, connState, EPE_NONE);
     }
+    return SWL_RC_OK;
 }
 
 static void s_stationStartConnEvt(void* pRef, char* ifName, const char* ssid, swl_macBin_t* bssid, swl_chanspec_t* chanSpec _UNUSED) {
@@ -1318,7 +1319,7 @@ static void s_stationStartConnEvt(void* pRef, char* ifName, const char* ssid, sw
     ASSERT_NOT_NULL(ifName, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: EP start connection to BSS %s (ssid: %s)",
                     pEP->Name, swl_typeMacBin_toBuf32Ref(bssid).buf, ssid);
-    s_refreshEpConnStatus(pEP);
+    wifiGen_refreshEpConnStatus(pEP);
     pEP->currConnBssid = bssid ? *bssid : g_swl_macBin_null;
 }
 
@@ -1409,7 +1410,7 @@ static void s_stationScanStartedEvt(void* pRef, char* ifName) {
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
     ASSERT_NOT_NULL(ifName, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: EP start scan", pEP->Name);
-    s_refreshEpConnStatus(pEP);
+    wifiGen_refreshEpConnStatus(pEP);
 }
 
 static void s_stationScanFailedEvt(void* pRef, char* ifName, int error) {
