@@ -411,7 +411,7 @@ int wifiGen_rad_addEndpointIf(T_Radio* pRad, char* buf, int bufsize) {
         ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to create new ep iface %s", pRad->Name, epIfname);
         wld_linuxIfUtils_setMac(wld_rad_getSocket(pRad), epIfname, &epMacAddr);
     }
-    wld_nl80211_setInterfaceUse4Mac(wld_nl80211_getSharedState(), ifaceInfo.ifIndex, false);
+    wld_nl80211_setInterfaceUse4Mac(wld_nl80211_getSharedState(), ifaceInfo.ifIndex, (pEP != NULL) ? pEP->multiAPEnable : false);
     if(pEP != NULL) {
         pEP->index = ifaceInfo.ifIndex;
         pEP->wDevId = ifaceInfo.wDevId;
