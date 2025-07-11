@@ -67,6 +67,47 @@
 
 #define NO_LINK_ID (-1)
 
+/**
+ * @brief Group of MLD instances per SSID type.
+ */
+typedef struct {
+    wld_ssidType_e type;              /* SSID type this group belongs to (e.g. AP or STA) */
+    amxc_llist_t mlds;                /* List of MLD instances registered under this group */
+} wld_mldGroup_t;
+
+/**
+ * @brief Global MLD manager tracking all MLD groups.
+ */
+struct wld_mldMgr {
+    bool init;                                /* Initialization flag */
+    wld_mldGroup_t groups[WLD_SSID_TYPE_MAX]; /* Groups for each SSID type */
+};
+
+/**
+ * @brief Structure representing a Multi-Link Device (MLD).
+ */
+typedef struct {
+    amxc_llist_it_t it;
+    amxd_object_t* object;
+    uint8_t unit;                 /* Unique MLD unit identifier */
+    amxc_llist_t links;           /* List of affiliated links belonging to this MLD */
+    wld_mldGroup_t* pGroup;       /* Back pointer to parent group */
+    wld_mldLink_t* pPrimLink;     /* Primary link for this MLD */
+    wld_apMldCfg_t Cfg;
+} wld_mld_t;
+
+/**
+ * @brief Structure representing an individual link within an MLD.
+ */
+struct wld_mldLink {
+    amxc_llist_it_t it;
+    amxd_object_t* AffObj;
+    T_SSID* pSSID;                /* Pointer to SSID object associated with this link */
+    int16_t linkId;               /* Link identifier */
+    wld_mld_t* pMld;              /* Back pointer to parent MLD */
+    bool configured;              /* Indicates whether link has been configured */
+};
+
 /*
  * event needed to make mld members react when one link / mld change
  */

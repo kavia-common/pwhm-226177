@@ -220,3 +220,92 @@ bool wld_apMld_hasSharedConnectionConf(T_AccessPoint* pAP) {
     return false;
 }
 
+/**
+ * @brief Notify when an MLD event occurs.
+ *
+ * Handles creation of DM objects or other actions based on MLD events
+ * (e.g. when the first SSID is linked to an MLD).
+ *
+ * @param pMld   Pointer to the MLD object.
+ * @param event  Event type (e.g. add/remove).
+ * @param reason Reason string for the event.
+ */
+void wld_apMld_notifyChange(wld_mld_t* pMld, wld_mldChangeEvent_e event, const char* reason) {
+
+    ASSERTS_NOT_NULL(pMld, , ME, "pMld is NULL in Notify Change");
+    SAH_TRACEZ_INFO(ME, "MLD Event %d for unit %d - Reason: %s",
+                    event, pMld->unit, reason);
+
+    switch(event) {
+    case WLD_MLD_EVT_ADD:
+        amxd_object_t* Obj = wld_apMld_getOrCreateDmObject(pMld->unit, pMld->pGroup->type, pMld);
+        if(Obj == NULL) {
+            SAH_TRACEZ_ERROR(ME, "Failed to create/get DM object for MLD unit %d", pMld->unit);
+        }
+        break;
+
+    default:
+        SAH_TRACEZ_INFO(ME, "Unhandled MLD event: %d", event);
+        break;
+    }
+}
+
+/**
+ * @brief Get or create the DM object for an APMLD instance.
+ *
+ * Looks up an APMLD.{i} object in the DM by unit ID. If not found,
+ * creates a new instance.
+ *
+ * @param mld_unit     MLD unit ID.
+ * @param mld_type     SSID type (must be AP).
+ * @param pMld_internal Pointer to the internal MLD structure.
+ *
+ * @return Pointer to the DM object, or NULL on failure.
+ */
+amxd_object_t* wld_apMld_getOrCreateDmObject(uint32_t mld_unit, wld_ssidType_e mld_type, wld_mld_t* pMld_internal) {
+    if(mld_type != WLD_SSID_TYPE_AP) {
+        SAH_TRACEZ_ERROR(ME, "Expected AP SSID type for APMLD");
+        return NULL;
+    }
+
+    amxd_object_t* object = NULL;
+    amxd_object_t* rootObj = get_wld_object();
+    ASSERT_NOT_NULL(rootObj, NULL, ME, "Failed to get root object");
+    amxd_object_t* templateObject = amxd_object_get(rootObj, "APMLD");
+    uint32_t instCount = amxd_object_get_instance_count(templateObject);
+    SAH_TRACEZ_INFO(ME, "APMLD instance count is %d and mldunit is %d", instCount, mld_unit);
+
+    // ---- Iterate all existing instances ----
+    for(uint32_t i = 1; i <= instCount; i++) {
+        amxd_object_t* inst = amxd_object_get_instance(templateObject, NULL, i);
+        if(inst == NULL) {
+            SAH_TRACEZ_INFO(ME, "APMLD instance is NULL");
+            continue;
+        }
+
+        uint32_t mld_id = 0;
+        mld_id = amxd_object_get_uint32_t(inst, "MLDID", NULL);
+        if(mld_id == mld_unit) {
+            object = inst;
+            SAH_TRACEZ_INFO(ME, "Found existing APMLD instance for MLDID=%u", mld_unit);
+            break;
+        }
+    }
+
+
+    if(object == NULL) {
+        SAH_TRACEZ_INFO(ME, "APMLD instance not found. Proceeding with creation");
+        amxd_trans_t trans;
+        ASSERT_TRANSACTION_INIT(templateObject, &trans, NULL, ME, "%s: Failed to init transaction for APMLD %u creation", ME, mld_unit);
+        amxd_trans_add_inst(&trans, 0, NULL);
+        ASSERT_TRANSACTION_LOCAL_DM_END(&trans, NULL, ME, "%s: Failed to apply transaction for APMLD %u creation", ME, mld_unit);
+        instCount = amxd_object_get_instance_count(templateObject);
+        object = amxd_object_get_instance(templateObject, NULL, instCount);
+        ASSERT_NOT_NULL(object, NULL, ME, "%s: Failed to retrieve newly created APMLD instance %u after transaction.", ME, mld_unit);
+        SAH_TRACEZ_INFO(ME, "New APMLD instance created for MLDUnit %u", mld_unit);
+    }
+    pMld_internal->object = object;
+    pMld_internal->unit = (uint8_t) mld_unit;
+    object->priv = pMld_internal;
+    return object;
+}

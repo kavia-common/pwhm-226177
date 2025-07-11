@@ -362,6 +362,7 @@ include "wld_radio.odl";
 include "wld_ssid.odl";
 include "wld_accesspoint.odl";
 include "wld_endpoint.odl";
+include "wld_mld.odl";
 
 %populate {
 	on event "app:start" call app_start;
