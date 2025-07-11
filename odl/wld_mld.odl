@@ -103,6 +103,64 @@
 				}
 				%persistent %read-only int8 LinkID {
 				}
+				%read-only object Stats {
+					on action read call wld_affAP_getMloStats_orf;
+
+					/**
+					 * The number of packets transmitted to the Affiliated AP.
+					 * Note: this counter counts only MLD traffic through this BSSID, not legacy (non-MLD) traffic.
+					 */
+					%volatile %read-only uint32 PacketsSent;
+
+					/**
+					 * The total number of packets received from the associated client MLD.
+					 */
+					%volatile %read-only uint32 PacketsReceived;
+
+					/**
+					 * Total number of unicast bytes transmitted to MLD STAs associated with the affiliated AP.
+					 * [EasyMesh] source: Affiliated AP Metrics TLV.
+					 */
+					%volatile %read-only uint32 UnicastBytesSent;
+
+					/**
+					 * Total number of unicast bytes received from MLD STAs associated with the affiliated AP.
+					 * [EasyMesh] source: Affiliated AP Metrics TLV.
+					 */
+					%volatile %read-only uint32 UnicastBytesReceived;
+
+					/**
+					 * The number of packets which could not be transmitted by the Affiliated AP due to errors.
+					 * This counter counts only MLD traffic through this BSSID, not legacy (non-MLD) traffic.
+					 * [EasyMesh] source: Affiliated AP Metrics TLV.
+					 */
+					%volatile %read-only uint32 ErrorsSent;
+
+					/**
+					 * Total multicast bytes transmitted to MLD STAs associated with the affiliated AP.
+					 * [EasyMesh] source: Affiliated AP Metrics TLV.
+					 */
+					%volatile %read-only uint32 MulticastBytesSent;
+
+					/**
+					 * Total multicast bytes received from MLD STAs associated with the affiliated AP.
+					 * [EasyMesh] source: Affiliated AP Metrics TLV.
+					 */
+					%volatile %read-only uint32 MulticastBytesReceived;
+
+					/**
+					 * Total broadcast bytes transmitted to MLD STAs associated with the affiliated AP.
+					 * [EasyMesh] source: Affiliated AP Metrics TLV.
+					 */
+					%volatile %read-only uint32 BroadcastBytesSent;
+
+					/**
+					 * Total broadcast bytes received from MLD STAs associated with the affiliated AP.
+					 * [EasyMesh] source: Affiliated AP Metrics TLV.
+					 */
+					%volatile %read-only uint32 BroadcastBytesReceived;
+
+				}
 			}
 
 		}

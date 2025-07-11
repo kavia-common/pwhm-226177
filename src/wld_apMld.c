@@ -495,3 +495,65 @@ amxd_status_t wld_apMld_clearMld(wld_mld_t* pMld_internal) {
     SAH_TRACEZ_INFO(ME, "Cleared DMs inside APMLD instance %u", instance_id);
     return amxd_status_ok;
 }
+
+/**
+ * @brief Update AffiliatedAP MLO statistics parameters in the Data Model.
+ *
+ * This helper function sets the Packets, Bytes, and Error counters
+ * under the given AffiliatedAP object based on the provided MLO stats.
+ *
+ * @param obj   AffiliatedAP object in the Data Model.
+ * @param stats Pointer to the collected MLO statistics structure.
+ */
+static void s_update_affAP_MloStats(amxd_object_t* const obj, wld_mloStats_t* stats) {
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "PacketsSent", stats->txPackets);
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "PacketsReceived", stats->rxPackets);
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "UnicastBytesSent", stats->txUbyte);
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "UnicastBytesReceived", stats->rxUbyte);
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "ErrorsSent", stats->txEbyte);
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "MulticastBytesSent", stats->txMbyte);
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "MulticastBytesReceived", stats->rxMbyte);
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "BroadcastBytesSent", stats->txBbyte);
+    SWLA_OBJECT_SET_PARAM_UINT32(obj, "BroadcastBytesReceived", stats->rxBbyte);
+}
+
+/**
+ * @brief ORF callback to retrieve MLO statistics for an AffiliatedAP object.
+ *
+ * This function is invoked when reading parameters under
+ * Device.WiFi.APMLD.{i}.AffiliatedAP.{i}. It collects per-link MLO
+ * statistics via the driver hook and updates the DM object.
+ *
+ * @param object         Target AffiliatedAP object being read.
+ * @param param          DM parameter being accessed.
+ * @param reason         Action reason (must be read).
+ * @param args           Optional input arguments.
+ * @param action_retval  Action return value.
+ * @param priv           Private context (unused).
+ *
+ * @return amxd_status_t
+ *         - amxd_status_ok if handled successfully
+ *         - amxd_status_function_not_implemented if not a read action
+ *         - amxd_status_object_not_found if the parent link is missing
+ */
+amxd_status_t _wld_affAP_getMloStats_orf(amxd_object_t* const object,
+                                         amxd_param_t* const param,
+                                         amxd_action_t reason,
+                                         const amxc_var_t* const args,
+                                         amxc_var_t* const action_retval,
+                                         void* priv) {
+    SAH_TRACEZ_IN(ME);
+    if(reason != action_object_read) {
+        return amxd_status_function_not_implemented;
+    }
+    wld_mldLink_t* pLink = (wld_mldLink_t*) amxd_object_get_parent(object)->priv;
+    ASSERT_NOT_NULL(pLink, amxd_status_object_not_found, ME, "AffiliatedAP object not found!");
+    wld_mloStats_t mloStats;
+    T_SSID* pSSID = pLink->pSSID;
+    T_AccessPoint* pAP = pSSID->AP_HOOK;
+    memset(&mloStats, 0, sizeof(wld_mloStats_t));
+    if(pAP->pFA->mfn_wvap_getMloStats(pAP, &mloStats) >= SWL_RC_OK) {
+        s_update_affAP_MloStats(object, &mloStats);
+    }
+    return amxd_action_object_read(object, param, reason, args, action_retval, priv);
+}
