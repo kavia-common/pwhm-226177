@@ -182,4 +182,5 @@ swl_rc_ne wld_vap_unregisterExtModData(T_AccessPoint* pAP, uint32_t extModId);
 bool wld_vap_isDummyVap(T_AccessPoint* pAP);
 void wld_vap_setNetdevIndex(T_AccessPoint* pAP, int32_t netDevIndex);
 
+void wld_ap_updateMld(T_SSID* pSSID);
 #endif /* __WLD_ACCESSPOINT_H__ */

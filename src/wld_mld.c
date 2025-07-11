@@ -207,7 +207,7 @@ static void s_deinitMld(wld_mld_t* pMld);
 static wld_mldLink_t* s_takeLink(wld_mldLink_t* pLink) {
     ASSERTS_NOT_NULL(pLink, NULL, ME, "NULL");
     wld_mld_t* pMld = pLink->pMld;
-    wld_ap_deleteAffiliatedAPObjects(pLink);
+    wld_apMld_deleteAffiliatedAPObjects(pLink);
     wld_mld_resetLinkId(pLink);
     amxc_llist_it_take(&pLink->it);
     pLink->configured = false;
@@ -217,6 +217,7 @@ static wld_mldLink_t* s_takeLink(wld_mldLink_t* pLink) {
         if(amxc_llist_is_empty(&pMld->links)) {
             wld_mldGroup_t* pGroup = pMld->pGroup;
             uint8_t unit = pMld->unit;
+            wld_apMld_clearMld(pMld);
             s_deinitMld(pMld);
             if(pGroup != NULL) {
                 s_sendChangeEvent(WLD_MLD_EVT_DEL, pGroup->type, unit, pLink->pSSID);
@@ -490,7 +491,7 @@ swl_rc_ne wld_mld_setLinkId(wld_mldLink_t* pLink, int32_t linkId) {
     }
     if(linkId >= 0) {
         wld_mld_saveLinkConfigured(pLink, true);
-        wld_ap_createAffiliatedAPObjects(pLink, linkId);
+        wld_apMld_createAffiliatedAPObject(pLink, linkId);
     }
     ASSERTS_NOT_EQUALS(pLink->linkId, linkId, SWL_RC_OK, ME, "same value");
     if(linkId == NO_LINK_ID) {

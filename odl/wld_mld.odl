@@ -61,8 +61,53 @@
 ****************************************************************************/
 
 %define {
-    select WiFi {
-    %persistent object APMLD[]{
-    }
-    }
+	select WiFi {
+		/**
+		 * Maximum number of MLDs supported by the platform.
+		 */
+		%persistent %read-only uint32 MaxNumMLDs {
+			default 3;
+		}
+
+		/**
+		 * Maximum number of affiliated APs (links) per MLD supported by the platform.
+		 */
+		%persistent %read-only uint32 APMLDMaxLinks {
+			default 4;
+		}
+
+		/**
+		 * APMLD table representing Multi-Link Device instances.
+		 */
+		%persistent object APMLD[] {
+
+			/**
+			 * The MAC address identifying this MLD.
+			 */
+			%persistent %read-only string MLDMACAddress {
+				default "00:00:00:00:00:00";
+			}
+
+			/**
+			 * Number of affiliated APs (links) under this MLD.
+			 */
+			%persistent %read-only uint32 AffiliatedAPNumberOfEntries {
+				default 0;
+			}
+			%persistent %read-only int32 MLDID {
+			}
+
+			%persistent object AffiliatedAP[] {
+				%persistent %read-only string BSSID {
+					default "";
+				}
+				%persistent %read-only int8 LinkID {
+				}
+			}
+
+		}
+
+	}
+
+
 }

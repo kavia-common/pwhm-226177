@@ -310,7 +310,6 @@ amxd_object_t* wld_apMld_getOrCreateDmObject(uint32_t mld_unit, wld_ssidType_e m
     return object;
 }
 
-
 /**
  * @brief Create AffiliatedAP objects for a given MLD link.
  *
@@ -334,7 +333,7 @@ amxd_object_t* wld_apMld_getOrCreateDmObject(uint32_t mld_unit, wld_ssidType_e m
  * @note Updates the `AffObj` pointer in the provided `pLink` to the newly
  *       created DM object.
  */
-amxd_object_t* wld_ap_createAffiliatedAPObjects(wld_mldLink_t* pLink, uint32_t dm_instance) {
+amxd_object_t* wld_apMld_createAffiliatedAPObject(wld_mldLink_t* pLink, uint32_t dm_instance) {
 
     ASSERTS_NOT_NULL(pLink, NULL, ME, "pLink is NULL can't create Affiliated AP");
     uint32_t dm_instance_id = 0;
@@ -343,7 +342,7 @@ amxd_object_t* wld_ap_createAffiliatedAPObjects(wld_mldLink_t* pLink, uint32_t d
     amxd_object_t* CurrObj = pLink->AffObj;
     if(CurrObj) {
         SAH_TRACEZ_INFO(ME, "linkId (%d): current Affiliated object exists so deleting all the instances below", dm_instance);
-        wld_ap_deleteAffiliatedAPObjects(pTempLink);
+        wld_apMld_deleteAffiliatedAPObjects(pTempLink);
         pLink->linkId = -1;
     } else {
         SAH_TRACEZ_INFO(ME, "linkId (%d): current Affiliated object don't exists", dm_instance);
@@ -396,7 +395,7 @@ amxd_object_t* wld_ap_createAffiliatedAPObjects(wld_mldLink_t* pLink, uint32_t d
  *       deleting each AffiliatedAP DM instance and updating the `linkId` and
  *       `AffObj` fields of each link accordingly.
  */
-amxd_status_t wld_ap_deleteAffiliatedAPObjects(wld_mldLink_t* pStartLink) {
+amxd_status_t wld_apMld_deleteAffiliatedAPObjects(wld_mldLink_t* pStartLink) {
     if((pStartLink == NULL) || (pStartLink->pMld == NULL)) {
         SAH_TRACEZ_ERROR(ME, "Invalid start link or parent MLD");
         return amxd_status_unknown_error;
@@ -427,7 +426,7 @@ amxd_status_t wld_ap_deleteAffiliatedAPObjects(wld_mldLink_t* pStartLink) {
         if(pLink->AffObj != NULL) {
             uint32_t instance_id = amxd_object_get_index(pLink->AffObj);
             SAH_TRACEZ_INFO(ME, "Deleting DM instance %u for %s", instance_id, pLink->pSSID->Name);
-            ASSERT_TRUE(instance_id > 0, false, ME, "wrong instance index");
+            ASSERT_TRUE(instance_id > 0, amxd_status_unknown_error, ME, "wrong instance index");
 
             // Clear private pointer before applying
             pLink->AffObj->priv = NULL;
@@ -452,4 +451,47 @@ amxd_status_t wld_ap_deleteAffiliatedAPObjects(wld_mldLink_t* pStartLink) {
     }
 
     return status;
+}
+
+/**
+ * @brief Clear runtime fields stored in an APMLD DM instance.
+ *
+ * Clears runtime information kept inside the APMLD object referenced by
+ * pMld_internal while keeping the APMLD instance itself (persistent
+ * configuration) intact. Typical use-case: the last SSID was unlinked
+ * from an MLD and the runtime values must be sanitized.
+ *
+ * Actions performed:
+ *  - sets MLDMACAddress to the zero MAC string "00:00:00:00:00:00",
+ *  - updates AffiliatedAPNumberOfEntries to the current number of links,
+ *  - logs the performed operations.
+ *
+ * @param pMld_internal Pointer to the internal MLD structure whose DM fields will be cleared.
+ *
+ * @return amxd_status_ok on success, amxd_status_unknown_error on failure.
+ */
+amxd_status_t wld_apMld_clearMld(wld_mld_t* pMld_internal) {
+
+    ASSERTS_NOT_NULL(pMld_internal, amxd_status_object_not_found, ME, "pMld is NULL nothing to clear");
+    ASSERTS_NOT_NULL(pMld_internal->object, amxd_status_object_not_found, ME, "pMld->object is NULL nothing to clear from DM");
+    uint32_t instance_id = amxd_object_get_index(pMld_internal->object);
+    wld_mld_t* pMld = pMld_internal;
+    amxd_object_t* obj = pMld->object;
+    const char* mldMacStr = "00:00:00:00:00:00";
+    uint32_t numLinks = amxc_llist_size(&pMld->links);
+    SAH_TRACEZ_INFO(ME, "Clearing DMs inside APMLD instance %u", instance_id);
+
+    if(amxd_object_set_cstring_t(obj, "MLDMACAddress", mldMacStr) != amxd_status_ok) {
+        SAH_TRACEZ_ERROR(ME, "Failed to clear MLDMACAddress in DM for unit %u", pMld->unit);
+    } else {
+        SAH_TRACEZ_INFO(ME, "Cleared MLDMACAddress=%s for APMLD unit %u", mldMacStr, pMld->unit);
+    }
+    if(amxd_object_set_uint32_t(obj, "AffiliatedAPNumberOfEntries", numLinks) != amxd_status_ok) {
+        SAH_TRACEZ_ERROR(ME, "Failed to set AffiliatedAPNumberOfEntries=%u", numLinks);
+    } else {
+        SAH_TRACEZ_INFO(ME, "Updated AffiliatedAPNumberOfEntries=%u for APMLD unit %u", numLinks, pMld->unit);
+    }
+
+    SAH_TRACEZ_INFO(ME, "Cleared DMs inside APMLD instance %u", instance_id);
+    return amxd_status_ok;
 }
