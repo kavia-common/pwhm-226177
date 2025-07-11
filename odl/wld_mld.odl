@@ -62,6 +62,7 @@
 
 %define {
 	select WiFi {
+
 		/**
 		 * Maximum number of MLDs supported by the platform.
 		 */
@@ -94,15 +95,64 @@
 			%persistent %read-only uint32 AffiliatedAPNumberOfEntries {
 				default 0;
 			}
-			%persistent %read-only int32 MLDID {
+			%persistent %read-only int32 MLDID;
+
+			%persistent object APMLDConfig {
+				on event "*" call wld_ap_setMLDConfig_ocf;
+
+				/**
+				 * Configure if the Enhanced Multi-Link Multi-Radio (EMLMR) operation is enabled on this AP MLD.
+				 * Note that this shall only be applied if EMLMRSupport is present.
+				 * 0 disable.
+				 * 1 enable.
+				 * -1 driver default.
+				 */
+				%persistent int8 EMLMREnabled {
+					on action validate call check_range { min = -1, max = 1 };
+					default -1;
+				}
+
+				/**
+				 * Configure if Enhanced Multi-Link Single-Radio (EMLSR) operation is enabled on this AP MLD.
+				 * Note that this shall only be applied if EMLSRSupport is present.
+				 * 0 disable.
+				 * 1 enable.
+				 * -1 driver default.
+				 */
+				%persistent int8 EMLSREnabled {
+					on action validate call check_range { min = -1, max = 1 };
+					default -1;
+				}
+
+				/**
+				 * Configure if Simultaneous Transmit and Receive (STR) operation is enabled on this AP MLD.
+				 * 0 disable.
+				 * 1 enable.
+				 * -1 driver default.
+				 */
+				%persistent int8 STREnabled {
+					on action validate call check_range { min = -1, max = 1 };
+					default -1;
+				}
+
+				/**
+				 * Configure if Non-Simultaneous Transmit and Receive (NSTR) operation is enabled on this AP MLD.
+				 * 0 disable.
+				 * 1 enable.
+				 * -1 driver default.
+				 */
+				%persistent int8 NSTREnabled {
+					on action validate call check_range { min = -1, max = 1 };
+					default -1;
+				}
 			}
 
 			%persistent object AffiliatedAP[] {
 				%persistent %read-only string BSSID {
 					default "";
 				}
-				%persistent %read-only int8 LinkID {
-				}
+				%persistent %read-only int8 LinkID;
+
 				%read-only object Stats {
 					on action read call wld_affAP_getMloStats_orf;
 
@@ -166,6 +216,5 @@
 		}
 
 	}
-
 
 }

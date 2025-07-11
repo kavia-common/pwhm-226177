@@ -67,6 +67,13 @@
 
 #define NO_LINK_ID (-1)
 
+typedef struct {
+    swl_trl_e emlmrEnable;
+    swl_trl_e emlsrEnable;
+    swl_trl_e strEnable;
+    swl_trl_e nstrEnable;
+} wld_apMldCfg_t;
+
 /**
  * @brief Group of MLD instances per SSID type.
  */

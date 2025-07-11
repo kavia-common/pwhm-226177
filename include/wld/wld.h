@@ -1830,12 +1830,6 @@ typedef struct {
     char qosMapSet[QOS_MAP_SET_MAX_LEN];
 } wld_cfg11u_t;
 
-typedef struct {
-    swl_trl_e emlmrEnable;
-    swl_trl_e emlsrEnable;
-    swl_trl_e strEnable;
-    swl_trl_e nstrEnable;
-} wld_apMldCfg_t;
 
 struct S_ACCESSPOINT {
     int debug;                       /* FIX ME */

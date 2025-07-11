@@ -557,3 +557,60 @@ amxd_status_t _wld_affAP_getMloStats_orf(amxd_object_t* const object,
     }
     return amxd_action_object_read(object, param, reason, args, action_retval, priv);
 }
+
+/**
+ * @brief Retrieve the MLD instance from its Data Model object.
+ *
+ * Ensures the object hierarchy is correct and safely returns the
+ * internal MLD structure associated with the given DM object.
+ *
+ * @param mldObj   MLD DM object instance.
+ * @return Pointer to the MLD structure, or NULL if validation fails.
+ */
+wld_mld_t* wld_apMld_getMldfromObj(amxd_object_t* mldObj) {
+    ASSERTS_EQUALS(amxd_object_get_type(mldObj), amxd_object_instance, NULL, ME, "Not instance");
+    amxd_object_t* parentObj = amxd_object_get_parent(mldObj);
+    ASSERT_EQUALS(get_wld_object(), amxd_object_get_parent(parentObj), NULL, ME, "wrong location");
+    const char* parentName = amxd_object_get_name(parentObj, AMXD_OBJECT_NAMED);
+    ASSERT_TRUE(swl_str_matches(parentName, "APMLD"), NULL, ME, "invalid parent obj(%s)", parentName);
+    wld_mld_t* pMld = (wld_mld_t*) mldObj->priv;
+    ASSERTS_TRUE(pMld, NULL, ME, "NULL");
+    return pMld;
+}
+
+/**
+ * @brief Update runtime fields in an AffiliatedAP DM instance.
+ *
+ * Updates the "BSSID" and "LinkID" fields in the AffiliatedAP object
+ * associated with the given MLD link. Typically used when link runtime
+ * information (MAC address or link ID) changes.
+ *
+ * Actions performed:
+ * - Retrieves AffiliatedAP DM object from the given link.
+ * - Updates BSSID and LinkID fields via a local DM transaction.
+ * - Logs the performed operations.
+ *
+ * @param pLink Pointer to the internal MLD link whose AffiliatedAP DM fields need to be updated.
+ *
+ * @return amxd_status_ok on success, amxd_status_object_not_found if the link or object is NULL.
+ */
+amxd_status_t wld_apMld_updateAffAP(wld_mldLink_t* pLink) {
+    ASSERT_NOT_NULL(pLink, amxd_status_object_not_found, ME, "AffiliatedAP object not found!");
+    amxd_object_t* affObj = pLink->AffObj;
+    if(affObj != NULL) {
+        const char* bssidStr = swl_typeMacBin_toBuf32Ref((swl_macBin_t*) pLink->pSSID->MACAddress).buf;
+        amxd_trans_t trans;
+        ASSERT_TRANSACTION_INIT(affObj, &trans, , ME, "Failed to init transaction for AffiliatedAP fields update");
+
+        amxd_trans_set_cstring_t(&trans, "BSSID", bssidStr);
+        amxd_trans_set_int8_t(&trans, "LinkID", pLink->linkId);
+
+        ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "Failed to apply transaction for AffiliatedAP fields update %s and %d", bssidStr, pLink->linkId);
+
+        SAH_TRACEZ_INFO(ME, "Updated AffiliatedAP fields: BSSID=%s, LinkID=%d", bssidStr, pLink->linkId);
+    } else {
+        SAH_TRACEZ_ERROR(ME, "AffiliatedAP object is NULL; cannot update fields");
+        return amxd_status_object_not_found;
+    }
+    return amxd_status_ok;
+}

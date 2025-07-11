@@ -96,6 +96,7 @@
 #include "wld_nl80211.h"
 #include "wld_ssid_nl80211_priv.h"
 #include "wld_nl80211_types.h"
+#include "wld_apMld.h"
 
 #define ME "ap"
 
@@ -1928,10 +1929,9 @@ static void s_setApEnable_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_pa
  * updating the latest MLD link information. It ensures that the SSID reflects
  * the current MLD configuration and link associations maintained by the system.
  *
- * @param ssid Pointer to the SSID structure for which the MLD data is to be updated.
+ * @param pSSID Pointer to the SSID structure for which the MLD data is to be updated.
  *
- * @return swl_rc_ne Returns SWL_RC_OK if the update succeeds, or an appropriate
- *         error code otherwise.
+ * @return void.
  */
 void wld_ap_updateMld(T_SSID* pSSID) {
     if((pSSID == NULL) || (pSSID->pMldLink == NULL) || (pSSID->pMldLink->pMld == NULL)) {
@@ -1943,6 +1943,7 @@ void wld_ap_updateMld(T_SSID* pSSID) {
     wld_mldLink_t* pLink = pSSID->pMldLink;
     amxd_object_t* obj = pMld->object;
     amxd_object_t* affObj = pSSID->pMldLink->AffObj;
+    T_AccessPoint* pAP = pSSID->AP_HOOK;
 
     if(obj == NULL) {
         SAH_TRACEZ_WARNING(ME, "No DM object associated with MLD unit %u", pMld->unit);
@@ -1968,32 +1969,54 @@ void wld_ap_updateMld(T_SSID* pSSID) {
         SAH_TRACEZ_WARNING(ME, "Failed to get MLD iface info or no MLO links for SSID %s", pSSID->Name);
     }
 
+    amxd_trans_t trans;
+    ASSERT_TRANSACTION_INIT(obj, &trans, , ME, "Failed to init transaction for APMLD fields update");
     uint32_t numLinks = amxc_llist_size(&pMld->links);
+    amxd_trans_set_uint32_t(&trans, "AffiliatedAPNumberOfEntries", numLinks);
+    amxd_trans_set_uint32_t(&trans, "MLDID", pMld->unit);
 
-    if(amxd_object_set_uint32_t(obj, "AffiliatedAPNumberOfEntries", numLinks) != amxd_status_ok) {
-        SAH_TRACEZ_ERROR(ME, "Failed to set AffiliatedAPNumberOfEntries=%u", numLinks);
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "Failed to apply transaction for APMLD fields update AffiliatedAPNumberOfEntries %d and MLDID %d", numLinks, pMld->unit);
+
+    SAH_TRACEZ_INFO(ME, "Updated APMLD fields: AffiliatedAPNumberOfEntries=%d and MLDID=%d", numLinks, pMld->unit);
+    //------APMLD Config-----------
+    bool cfg_changed = false;
+    if(pMld->Cfg.emlmrEnable != pAP->mldCfg.emlmrEnable) {
+        pAP->mldCfg.emlmrEnable = pMld->Cfg.emlmrEnable;
+        cfg_changed = true;
+        SAH_TRACEZ_INFO(ME, "Updated : %s emlmr_enable: new value %d", pSSID->Name, pAP->mldCfg.emlmrEnable);
     } else {
-        SAH_TRACEZ_INFO(ME, "Updated AffiliatedAPNumberOfEntries=%u for APMLD unit %u", numLinks, pMld->unit);
+        SAH_TRACEZ_INFO(ME, "%s emlmr_enable value : %d same as parent mld", pSSID->Name, pAP->mldCfg.emlmrEnable);
+    }
+    if(pMld->Cfg.emlsrEnable != pAP->mldCfg.emlsrEnable) {
+        pAP->mldCfg.emlsrEnable = pMld->Cfg.emlsrEnable;
+        cfg_changed = true;
+        SAH_TRACEZ_INFO(ME, "Updated : %s emlsr_enable: new value %d", pSSID->Name, pAP->mldCfg.emlsrEnable);
+    } else {
+        SAH_TRACEZ_INFO(ME, "%s emlsr_enable value : %d same as parent mld", pSSID->Name, pAP->mldCfg.emlsrEnable);
+    }
+    if(pMld->Cfg.strEnable != pAP->mldCfg.strEnable) {
+        pAP->mldCfg.strEnable = pMld->Cfg.strEnable;
+        cfg_changed = true;
+        SAH_TRACEZ_INFO(ME, "Updated : %s str_enable: new value %d", pSSID->Name, pAP->mldCfg.strEnable);
+    } else {
+        SAH_TRACEZ_INFO(ME, "%s str_enable value : %d same as parent mld", pSSID->Name, pAP->mldCfg.strEnable);
+    }
+    if(pMld->Cfg.nstrEnable != pAP->mldCfg.nstrEnable) {
+        pAP->mldCfg.nstrEnable = pMld->Cfg.nstrEnable;
+        cfg_changed = true;
+        SAH_TRACEZ_INFO(ME, "Updated : %s nstr_enable: new value %d", pSSID->Name, pAP->mldCfg.nstrEnable);
+    } else {
+        SAH_TRACEZ_INFO(ME, "%s nstr_enable value : %d same as parent mld", pSSID->Name, pAP->mldCfg.nstrEnable);
     }
 
-    if(amxd_object_set_uint32_t(obj, "MLDID", pMld->unit) != amxd_status_ok) {
-        SAH_TRACEZ_ERROR(ME, "Failed to set MLDID=%u", pMld->unit);
-    } else {
-        SAH_TRACEZ_INFO(ME, "Updated MLDID=%u", pMld->unit);
+    if(cfg_changed) {
+        pAP->pFA->mfn_wvap_setMldCfg(pAP);
+        SAH_TRACEZ_INFO(ME, "LinkID: %d, SSID Name: %s Updated Config", pLink->linkId, pSSID->Name);
     }
+
 
     if(numLinks > 0) {
-
-        if(affObj != NULL) {
-            const char* bssidStr = swl_typeMacBin_toBuf32Ref((swl_macBin_t*) pLink->pSSID->MACAddress).buf;
-            if(amxd_object_set_cstring_t(affObj, "BSSID", bssidStr) != amxd_status_ok) {
-                SAH_TRACEZ_ERROR(ME, "Failed to set BSSID=%s", bssidStr);
-            }
-            if(amxd_object_set_uint32_t(affObj, "LinkID", pLink->linkId) != amxd_status_ok) {
-                SAH_TRACEZ_ERROR(ME, "Failed to set LinkID=%d", pLink->linkId);
-            }
-            SAH_TRACEZ_INFO(ME, "Updated fields for AffiliatedAP");
-        }
+        wld_apMld_updateAffAP(pLink);
     }
 }
 

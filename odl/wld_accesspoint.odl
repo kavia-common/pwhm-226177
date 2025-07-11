@@ -2472,7 +2472,6 @@ define rrm_t{
 		 * [EasyMesh] Source: Affiliated AP Metrics TLV [Section 17.2.101/EasyMesh].
 		 */
 		%read-only object MLOStats {
-			on action read call wld_ap_getMloStats_orf;
 
 			/**
 			 * None / Primary / Auxiliary
