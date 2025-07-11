@@ -207,6 +207,7 @@ static void s_deinitMld(wld_mld_t* pMld);
 static wld_mldLink_t* s_takeLink(wld_mldLink_t* pLink) {
     ASSERTS_NOT_NULL(pLink, NULL, ME, "NULL");
     wld_mld_t* pMld = pLink->pMld;
+    wld_ap_deleteAffiliatedAPObjects(pLink);
     wld_mld_resetLinkId(pLink);
     amxc_llist_it_take(&pLink->it);
     pLink->configured = false;
@@ -489,6 +490,7 @@ swl_rc_ne wld_mld_setLinkId(wld_mldLink_t* pLink, int32_t linkId) {
     }
     if(linkId >= 0) {
         wld_mld_saveLinkConfigured(pLink, true);
+        wld_ap_createAffiliatedAPObjects(pLink, linkId);
     }
     ASSERTS_NOT_EQUALS(pLink->linkId, linkId, SWL_RC_OK, ME, "same value");
     if(linkId == NO_LINK_ID) {
@@ -504,6 +506,10 @@ swl_rc_ne wld_mld_setLinkId(wld_mldLink_t* pLink, int32_t linkId) {
      * then a notification for MLDPrimaryChange must be sent so that other MLD Links update the primary link
      */
     pLink->linkId = linkId;
+    if(!pLink->AffObj) {
+        pLink->linkId = -1;
+        SAH_TRACEZ_INFO(ME, "%s: Since AffObj null, linkId changed to %d instead of %d", s_getLinkName(pLink), pLink->linkId, linkId);
+    }
     return SWL_RC_OK;
 }
 

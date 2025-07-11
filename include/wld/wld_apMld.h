@@ -77,6 +77,9 @@ bool wld_apMld_getActiveApAffiliatedStaInfo(wld_apMld_afStaInfo_t* info, T_Acces
 void wld_apMld_notifyChange(wld_mld_t* pMld, wld_mldChangeEvent_e event, const char* reason);
 amxd_object_t* wld_apMld_getOrCreateDmObject(uint32_t mld_unit, wld_ssidType_e mld_type, wld_mld_t* pMld_internal);
 
+
+amxd_object_t* wld_ap_createAffiliatedAPObjects(wld_mldLink_t* pLink, uint32_t dm_instance);
+amxd_status_t wld_ap_deleteAffiliatedAPObjects(wld_mldLink_t* pStartLink);
 /*
  * @brief check whether one APMLD link have applicable and shared
  * ssid and security configurations (secMode, keypass) values
