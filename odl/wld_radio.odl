@@ -336,6 +336,23 @@ define probelist_t{
 		 */
 		list getScanResults(%in int32 minRssi);
 
+		/**
+		 * Return a list of chanSurveyReport_t
+		 * Each containing a channel and its corresponding interference factor.
+		 * Example "chanSurveyReport_t" structure:
+		 *   [
+		 *     {
+		 *       "channel": 1,
+		 *       "interferenceFactor": 240312,
+		 *     },
+		 *     {
+		 *       "channel": 2,
+		 *       "interferenceFactor": 341453,
+		 *     }
+		 *   ]
+		 */
+		list getChanSurveyReport();
+
 		/* event ScanComplete is sent on the radio instance when scan results are received */
 		/* event NOTIFY_SCAN_DONE name = "ScanComplete"
 		{

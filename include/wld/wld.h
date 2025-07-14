@@ -1182,6 +1182,17 @@ typedef struct wld_scanResults {
     amxc_llist_t ssids;
 } wld_scanResults_t;
 
+typedef struct wld_chanSurveyReportEntry {
+    amxc_llist_it_t it;
+    uint32_t frequencyMHz;          // Center frequency of channel
+    int32_t interferenceFactor;     /* Interference Factor is a float value between 0 and 1,
+                                       For easy computation converting this factor to int by multiplying with 10^6.*/
+} wld_chanSurveyReportEntry_t;
+
+typedef struct wld_surveyReport {
+    amxc_llist_t surveyReport;
+} wld_surveyReport_t;
+
 typedef struct wld_scanArgs {
     char ssid[SSID_NAME_LEN];
     swl_macBin_t bssid;               /*particular BSSID MAC address to scan*/
@@ -1225,6 +1236,7 @@ typedef struct {
     wld_scan_config_t cfg;
     swl_timeMono_t lastScanTime;
     wld_scanResults_t lastScanResults;
+    wld_surveyReport_t lastSurveyReport;
     amxc_llist_t spectrumResults;   /*!< results of the getSpectrum */
 } T_ScanState;
 

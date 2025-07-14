@@ -332,6 +332,32 @@ typedef struct {
     bool measDurationMandatory;    //flag to force considering the provided measurement duration for the scan
 } wld_nl80211_scanParams_t;
 
+/*
+ * define survey data has NL80211_SURVEY_INFO_NOISE info for that channel, if Noise Floor is available.
+ * @NL80211_SURVEY_INFO_NOISE: radio noise level on the channel in dBm.
+ */
+#define SURVEY_HAS_NF SWL_BIT_SHIFT(0)
+/*
+ * define survey data has NL80211_SURVEY_INFO_CHANNEL_TIME for that channel, if Channel Total Time is available.
+ * @NL80211_SURVEY_INFO_CHANNEL_TIME: amount of time (in ms) that the radio was turned on.
+ */
+#define SURVEY_HAS_CHAN_TIME SWL_BIT_SHIFT(1)
+/*
+ * define survey data has NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY for that channel, if Channel Time Busy is available.
+ * @NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY: amount of the time (in ms) the primary channel was sensed busy.
+ */
+#define SURVEY_HAS_CHAN_TIME_BUSY SWL_BIT_SHIFT(2)
+/*
+ * define survey data has NL80211_SURVEY_INFO_CHANNEL_TIME_RX for that channel, if Channel Rx is available.
+ * @NL80211_SURVEY_INFO_CHANNEL_TIME_RX:  amount of time (in ms) the radio spent receiving data on channel.
+ */
+#define SURVEY_HAS_CHAN_TIME_RX SWL_BIT_SHIFT(3)
+/*
+ * define survey data has NL80211_SURVEY_INFO_CHANNEL_TIME_TX for that channel, if Channel Tx is available.
+ * @NL80211_SURVEY_INFO_CHANNEL_TIME_TX:  amount of time (in ms) the radio spent transmitting data on channel.
+ */
+#define SURVEY_HAS_CHAN_TIME_TX SWL_BIT_SHIFT(4)
+
 struct wld_nl80211_channelSurveyInfo {
     uint32_t frequencyMHz; // Center frequency of channel
     uint64_t timeOn;       // Amount of time (in ms) that the radio was turned on (on channel or globally)
@@ -344,6 +370,7 @@ struct wld_nl80211_channelSurveyInfo {
     uint64_t timeRxInBss;  // time the radio spent receiving frames destined to the local BSS
     bool inUse;            // Channel is currently being used.
     int8_t noiseDbm;       // Noise level of channel (u8, dBm).
+    uint32_t filled;       //bitmask indicating which fields have been reported, see SURVEY_HAS_* defines.
 };
 
 /*

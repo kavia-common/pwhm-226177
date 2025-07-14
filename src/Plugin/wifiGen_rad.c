@@ -1143,6 +1143,10 @@ swl_rc_ne wifiGen_rad_getSpectrumInfo(T_Radio* rad, bool update, amxc_llist_t* l
     wld_nl80211_channelSurveyInfo_t* pChanSurveyInfoList = NULL;
     rc = wld_rad_nl80211_getSurveyInfo(rad, &pChanSurveyInfoList, &nChanSurveyInfo);
     ASSERT_FALSE(rc < SWL_RC_OK, rc, ME, "%s: fail to get survey info", rad->Name);
+    rc = wld_rad_nl80211_updateChanSurveyReportFromSurveyInfo(rad, pChanSurveyInfoList, nChanSurveyInfo);
+    if(rc < SWL_RC_OK) {
+        SAH_TRACEZ_ERROR(ME, "%s: fail to update survey report", rad->Name);
+    }
     rc = wld_rad_nl80211_updateUsageStatsFromSurveyInfo(rad, llSpectrumChannelInfo, pChanSurveyInfoList, nChanSurveyInfo);
     free(pChanSurveyInfoList);
     ASSERT_FALSE(rc < SWL_RC_OK, rc, ME, "%s: fail to update usage stats", rad->Name);

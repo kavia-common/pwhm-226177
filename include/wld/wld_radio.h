@@ -168,6 +168,7 @@ swl_rc_ne wld_scan_stop(T_Radio* pRad);
 swl_rc_ne wld_scan_updateChanimInfo(T_Radio* pRad);
 void wld_scan_cleanupScanResultSSID(wld_scanResultSSID_t* ssid);
 void wld_scan_cleanupScanResults(wld_scanResults_t* res);
+void wld_cleanupSurveyReport(wld_surveyReport_t* res);
 void wld_spectrum_cleanupResults(T_Radio* pR);
 T_Radio* wld_getRadioByFrequency(swl_freqBand_e freqBand);
 uint32_t wld_getNrApMldLinksById(int32_t id);

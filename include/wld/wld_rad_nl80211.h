@@ -231,6 +231,19 @@ swl_rc_ne wld_rad_nl80211_getSurveyInfo(T_Radio* pRadio, wld_nl80211_channelSurv
  */
 swl_rc_ne wld_rad_nl80211_getAirStatsFromSurveyInfo(T_Radio* pRadio, wld_airStats_t* pStats, wld_nl80211_channelSurveyInfo_t* pChanSurveyInfo);
 
+
+/*
+ * @brief Retrieves the channel survey report, calculates the interference factor
+ * for each channel, and updates the lastSurveyReport structure.
+ *
+ * @param pRad Pointer to the radio context.
+ * @param pChanSurveyInfoList array of channel survey info
+ * @param nChanSurveyInfo count of channel survey array entries
+ *
+ * @return SWL_RC_OK on success, SWL_RC_ERROR on failure.
+ */
+swl_rc_ne wld_rad_nl80211_updateChanSurveyReportFromSurveyInfo(T_Radio* rad, wld_nl80211_channelSurveyInfo_t* pChanSurveyInfoList, uint32_t nChanSurveyInfo);
+
 /*
  * @brief update radio usage statistics (spectrum info list)
  * based on retrieved channel survey results

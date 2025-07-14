@@ -555,6 +555,7 @@ void wld_deleteRadioObj(T_Radio* pRad) {
     free(pRad->scanState.cfg.fastScanReasons);
     pRad->scanState.cfg.fastScanReasons = NULL;
     wld_scan_cleanupScanResults(&pRad->scanState.lastScanResults);
+    wld_cleanupSurveyReport(&pRad->scanState.lastSurveyReport);
     wld_spectrum_cleanupResults(pRad);
     wld_sensing_cleanup(pRad);
 

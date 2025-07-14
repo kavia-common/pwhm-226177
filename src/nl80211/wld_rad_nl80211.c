@@ -63,6 +63,7 @@
  * This file implements wrapper functions to use nl80211 generic apis with T_Radio context
  */
 
+#include <math.h>
 #include "wld_rad_nl80211.h"
 #include "wld_ap_nl80211.h"
 #include "wld_ep_nl80211.h"
@@ -75,7 +76,68 @@
 #include "wld_util.h"
 
 #define ME "nlRad"
+#define MAX_FACTOR            1
+#define DEFAULT_NOISE_DB     -95
+#define DEFAULT_TIME_BUSY    0
+#define NOISE_SCALE_DIV      5.0f
+#define DBM_TO_POWER_DIV     10.0f
+#define LN_10                2.3025851f
+#define LN_2                 0.6931472f
+#define TEN_POW_6            1000000.0
+static inline float pow10_approx(float x) {
+    return expf(x * LN_10); // Computes 10^x
+}
 
+static inline float pow2_approx(float x) {
+    return expf(x * LN_2);  // Computes 2^x
+}
+/* The survey interference factor is defined as the ratio of the
+ * observed busy time over the time we spent on the channel,
+ * this value is then amplified by the observed noise floor on
+ * the channel in comparison to the lowest noise floor observed
+ * on the entire band.
+ *
+ * This corresponds to:
+ * ---
+ * (busy time - tx time) / (active time - tx time) * 2^(chan_nf + band_min_nf)
+ * ---
+ *
+ * The coefficient of 2 reflects the way power in "far-field"
+ * radiation decreases as the square of distance from the antenna [1].
+ * What this does is it decreases the observed busy time ratio if the
+ * noise observed was low but increases it if the noise was high,
+ * proportionally to the way "far field" radiation changes over
+ * distance.
+ *
+ * If channel busy time is not available the fallback is to use channel RX time.
+ *
+ * Since noise floor is in dBm it is necessary to convert it into Watts so that
+ * combined channel interference (e.g., HT40, which uses two channels) can be
+ * calculated easily.
+ * ---
+ * (busy time - tx time) / (active time - tx time) *
+ *    2^(10^(chan_nf/10) + 10^(band_min_nf/10))
+ * ---
+ *
+ * However to account for cases where busy/rx time is 0 (channel load is then
+ * 0%) channel noise floor signal power is combined into the equation so a
+ * channel with lower noise floor is preferred. The equation becomes:
+ * ---
+ * 10^(chan_nf/5) + (busy time - tx time) / (active time - tx time) *
+ *    2^(10^(chan_nf/10) + 10^(band_min_nf/10))
+ * ---
+ */
+#define NOISE_FACTOR(noise_dbm) \
+    (pow10_approx(((float) (noise_dbm)) / NOISE_SCALE_DIV))
+
+#define NOISE_POWER_DIFF(noise_dbm, min_noise_dbm) \
+    (pow10_approx(((float) (noise_dbm)) / DBM_TO_POWER_DIV) - \
+     pow10_approx(((float) (min_noise_dbm)) / DBM_TO_POWER_DIV))
+
+#define INTERFERENCE_FACTOR(noise_dbm, busy_time, total_time, min_noise_dbm) \
+    (NOISE_FACTOR((noise_dbm)) + \
+     (((float) (total_time)) > 0.0f ? ((float) (busy_time) / (float) (total_time)) : 0) * \
+     pow2_approx(NOISE_POWER_DIFF((noise_dbm), (min_noise_dbm))))
 
 swl_rc_ne wld_rad_nl80211_setEvtListener(T_Radio* pRadio, void* pData, const wld_nl80211_evtHandlers_cb* const handlers) {
     ASSERT_NOT_NULL(pRadio, SWL_RC_INVALID_PARAM, ME, "NULL");
@@ -367,6 +429,122 @@ swl_rc_ne wld_rad_nl80211_getAirstats(T_Radio* pRadio, wld_airStats_t* pStats) {
     }
     free(pChanSurveyInfoList);
     return retVal;
+}
+
+static wld_nl80211_chanStatus_e s_findChannelStatus(wld_nl80211_bandDef_t* band, uint32_t channelFreq) {
+    for(uint32_t i = 0; i < band->nChans; i++) {
+        if(band->chans[i].ctrlFreq == channelFreq) {
+            return band->chans[i].status;
+        }
+    }
+    return WLD_NL80211_CHAN_STATUS_UNKNOWN;
+}
+
+static bool s_isChanSurveyInfoSufficient(wld_nl80211_channelSurveyInfo_t* pChanSurveyInfo) {
+    if(!(pChanSurveyInfo->filled & SURVEY_HAS_NF)) {
+        pChanSurveyInfo->noiseDbm = DEFAULT_NOISE_DB;
+        SAH_TRACEZ_WARNING(ME, "Survey for freq %d is missing noise floor", pChanSurveyInfo->frequencyMHz);
+    }
+    if(!(pChanSurveyInfo->filled & SURVEY_HAS_CHAN_TIME)) {
+        pChanSurveyInfo->timeBusy = DEFAULT_TIME_BUSY;
+        SAH_TRACEZ_WARNING(ME, "Survey for freq %d is missing channel time", pChanSurveyInfo->frequencyMHz);
+    }
+    if(!(pChanSurveyInfo->filled & SURVEY_HAS_CHAN_TIME_BUSY) && !(pChanSurveyInfo->filled & SURVEY_HAS_CHAN_TIME_RX)) {
+        SAH_TRACEZ_WARNING(ME, "Survey for freq %d is missing RX and busy time (at least one is required)", pChanSurveyInfo->frequencyMHz);
+        return false;
+    }
+    return true;
+}
+
+static float s_computeInterferenceFactor(wld_nl80211_channelSurveyInfo_t* pChanSurveyInfo, int8_t min_nf) {
+    float factor = MAX_FACTOR, busy, total;
+    if(!s_isChanSurveyInfoSufficient(pChanSurveyInfo)) {
+        SAH_TRACEZ_WARNING(ME, "%d: insufficient data", pChanSurveyInfo->frequencyMHz);
+        return factor;
+    }
+    if(pChanSurveyInfo->filled & SURVEY_HAS_CHAN_TIME_BUSY) {
+        busy = pChanSurveyInfo->timeBusy;
+    } else if(pChanSurveyInfo->filled & SURVEY_HAS_CHAN_TIME_RX) {
+        busy = pChanSurveyInfo->timeRx;
+    } else {
+        SAH_TRACEZ_WARNING(ME, "Survey data missing");
+        return factor;
+    }
+    total = pChanSurveyInfo->timeOn;
+    if(pChanSurveyInfo->filled & SURVEY_HAS_CHAN_TIME_TX) {
+        if((busy >= pChanSurveyInfo->timeTx) && (total >= pChanSurveyInfo->timeTx)) {
+            busy -= pChanSurveyInfo->timeTx;
+            total -= pChanSurveyInfo->timeTx;
+        } else {
+            SAH_TRACEZ_ERROR(ME, "Tx time is bigger that busy or total time");
+            return factor;
+        }
+    }
+    factor = INTERFERENCE_FACTOR(pChanSurveyInfo->noiseDbm, busy, total, min_nf);
+    return factor;
+}
+
+static float s_getChanSurveyModeInterferenceFactor(T_Radio* rad, wld_nl80211_channelSurveyInfo_t* pChanSurveyInfo, int8_t min_nf) {
+    wld_nl80211_wiphyInfo_t wiphyInfo;
+    swl_rc_ne rc;
+
+    rc = wld_rad_nl80211_getWiphyInfo(rad, &wiphyInfo);
+    ASSERT_FALSE(rc < SWL_RC_OK, rc, ME, "Fail to get nl80211 wiphy info");
+    wld_nl80211_bandDef_t* pOperBand = &wiphyInfo.bands[rad->operatingFrequencyBand];
+
+    swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
+    swl_chanspec_channelFromMHz(&chanSpec, pChanSurveyInfo->frequencyMHz);
+    if(s_findChannelStatus(pOperBand, pChanSurveyInfo->frequencyMHz) == WLD_NL80211_CHAN_DISABLED) {
+        SAH_TRACEZ_WARNING(ME, "channel %d (%d MHz) is disabled", chanSpec.channel, pChanSurveyInfo->frequencyMHz);
+        return MAX_FACTOR;
+    }
+    if(s_findChannelStatus(pOperBand, pChanSurveyInfo->frequencyMHz) == WLD_NL80211_CHAN_UNAVAILABLE) {
+        SAH_TRACEZ_WARNING(ME, "channel %d (%d MHz) is unavailable", chanSpec.channel, pChanSurveyInfo->frequencyMHz);
+        return MAX_FACTOR;
+    }
+    if(!wld_rad_hasChannel(rad, chanSpec.channel)) {
+        SAH_TRACEZ_WARNING(ME, "channel %d (%d MHz) not found", chanSpec.channel, pChanSurveyInfo->frequencyMHz);
+        return MAX_FACTOR;
+    }
+    return s_computeInterferenceFactor(pChanSurveyInfo, min_nf);
+}
+
+static int8_t s_updateLowestNF(wld_nl80211_channelSurveyInfo_t* pChanSurveyInfoList, uint32_t nChanSurveyInfo) {
+    int8_t lowest_nf = 0;
+    for(uint32_t i = 0; i < nChanSurveyInfo; i++) {
+        wld_nl80211_channelSurveyInfo_t* pChanSurveyInfo = &pChanSurveyInfoList[i];
+        if(pChanSurveyInfo->noiseDbm < lowest_nf) {
+            lowest_nf = pChanSurveyInfo->noiseDbm;
+        }
+    }
+    return lowest_nf;
+}
+
+swl_rc_ne wld_rad_nl80211_updateChanSurveyReportFromSurveyInfo(T_Radio* rad, wld_nl80211_channelSurveyInfo_t* pChanSurveyInfoList, uint32_t nChanSurveyInfo) {
+    swl_rc_ne rc;
+    ASSERT_NOT_NULL(rad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_NOT_NULL(pChanSurveyInfoList, SWL_RC_OK, ME, "Empty");
+
+    int8_t lowest_nf = s_updateLowestNF(pChanSurveyInfoList, nChanSurveyInfo);
+
+    wld_cleanupSurveyReport(&rad->scanState.lastSurveyReport);
+
+    for(uint32_t i = 0; i < nChanSurveyInfo; i++) {
+        wld_nl80211_channelSurveyInfo_t* pChanSurveyInfo = &pChanSurveyInfoList[i];
+        wld_chanSurveyReportEntry_t* pSrEntry = calloc(1, sizeof(wld_chanSurveyReportEntry_t));
+        if(pSrEntry == NULL) {
+            wld_cleanupSurveyReport(&rad->scanState.lastSurveyReport);
+            return SWL_RC_ERROR;
+        }
+        pSrEntry->frequencyMHz = pChanSurveyInfo->frequencyMHz;
+        pSrEntry->interferenceFactor = (int32_t) (s_getChanSurveyModeInterferenceFactor(rad, pChanSurveyInfo, lowest_nf) * TEN_POW_6);
+        SAH_TRACEZ_INFO(ME, "updateChanSurveyReport: Result : freq=%d timeOn=%lu timeBusy=%lu timeTx=%lu timeRx=%lu noiseDbm= %d lowest_nf= %d dBm inUse=%d interferenceFactor=%d",
+                        pChanSurveyInfo->frequencyMHz, pChanSurveyInfo->timeOn, pChanSurveyInfo->timeBusy, pChanSurveyInfo->timeTx,
+                        pChanSurveyInfo->timeRx, pChanSurveyInfo->noiseDbm, lowest_nf, pChanSurveyInfo->inUse, pSrEntry->interferenceFactor);
+        amxc_llist_it_init(&pSrEntry->it);
+        amxc_llist_append(&rad->scanState.lastSurveyReport.surveyReport, &pSrEntry->it);
+    }
+    return SWL_RC_OK;
 }
 
 swl_rc_ne wld_rad_nl80211_updateUsageStatsFromSurveyInfo(T_Radio* pRadio, amxc_llist_t* pOutSpectrumResults,

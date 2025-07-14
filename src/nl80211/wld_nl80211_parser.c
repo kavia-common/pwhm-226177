@@ -1399,6 +1399,21 @@ swl_rc_ne wld_nl80211_parseChanSurveyInfo(struct nlattr* tb[], wld_nl80211_chann
     NLA_GET_VAL(pChanSurveyInfo->timeTx, nla_get_u64, pSinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX]);
     NLA_GET_VAL(pChanSurveyInfo->timeScan, nla_get_u64, pSinfo[NL80211_SURVEY_INFO_TIME_SCAN]);
     NLA_GET_VAL(pChanSurveyInfo->timeRxInBss, nla_get_u64, pSinfo[NL80211_SURVEY_INFO_TIME_BSS_RX]);
+    if(pSinfo[NL80211_SURVEY_INFO_NOISE]) {
+        pChanSurveyInfo->filled |= SURVEY_HAS_NF;
+    }
+    if(pSinfo[NL80211_SURVEY_INFO_CHANNEL_TIME]) {
+        pChanSurveyInfo->filled |= SURVEY_HAS_CHAN_TIME;
+    }
+    if(pSinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY]) {
+        pChanSurveyInfo->filled |= SURVEY_HAS_CHAN_TIME_BUSY;
+    }
+    if(pSinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_RX]) {
+        pChanSurveyInfo->filled |= SURVEY_HAS_CHAN_TIME_RX;
+    }
+    if(pSinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX]) {
+        pChanSurveyInfo->filled |= SURVEY_HAS_CHAN_TIME_TX;
+    }
     return rc;
 }
 
