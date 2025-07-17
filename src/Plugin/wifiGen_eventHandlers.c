@@ -1331,8 +1331,8 @@ static void s_stationDisconnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBs
     if((pEP->currentProfile != NULL) &&
        ((pEP->connectionStatus == EPCS_CONNECTING) ||
         (pEP->connectionStatus == EPCS_CONNECTED))) {
-        wld_epError_e epErr = s_getEpErrFromDeauthReason(reason);
-        wld_endpoint_sync_connection(pEP, false, epErr ? : pEP->error);
+        wld_epError_e epErr = s_getEpErrFromDeauthReason(reason) ? : pEP->error;
+        wld_endpoint_setConnectionStatus(pEP, wld_endpoint_connStatusFromEpError(epErr), epErr);
         CALL_MGR_I_EXT(pEP->wpaCtrlInterface, fSyncOnEpDisconnected, false);
     }
 }
@@ -1389,7 +1389,7 @@ static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssid
     }
 
     SAH_TRACEZ_INFO(ME, "%s: station connected to ssid(%s) bssid(%s)", pEP->Name, tmpSsid, tmpBssidStr.cMac);
-    wld_endpoint_sync_connection(pEP, true, EPE_NONE);
+    wld_endpoint_setConnectionStatus(pEP, EPCS_CONNECTED, EPE_NONE);
 
     // update radio datamodel
     wld_rad_updateState(pRad, false);
@@ -1420,8 +1420,8 @@ static void s_stationScanFailedEvt(void* pRef, char* ifName, int error) {
 
     SAH_TRACEZ_INFO(ME, "%s: scan Failed with error(%d)", pEP->Name, error);
     if(pEP->connectionStatus == EPCS_DISCOVERING) {
-        wld_epError_e epErr = s_getEpErrFromSysErr(error);
-        wld_endpoint_sync_connection(pEP, false, epErr ? : pEP->error);
+        wld_epError_e epErr = s_getEpErrFromSysErr(error) ? : pEP->error;
+        wld_endpoint_setConnectionStatus(pEP, wld_endpoint_connStatusFromEpError(epErr), epErr);
     }
 }
 
@@ -1496,7 +1496,7 @@ static void s_stationWpsOverlap(void* userData, char* ifName _UNUSED) {
     T_EndPoint* pEP = (T_EndPoint*) userData;
     ASSERTS_NOT_NULL(pEP, , ME, "NULL");
     ASSERTS_TRUE(pEP->wpsSessionInfo.WPS_PairingInProgress, , ME, "%s: no wps session ongoing", pEP->Name);
-    wld_endpoint_sync_connection(pEP, false, EPE_NONE);
+    wld_endpoint_setConnectionStatus(pEP, EPCS_IDLE, EPE_NONE);
     wld_endpoint_sendPairingNotification(pEP, NOTIFY_PAIRING_DONE, WPS_CAUSE_OVERLAP, NULL);
 }
 
@@ -1504,7 +1504,7 @@ static void s_stationWpsFail(void* userData, char* ifName _UNUSED) {
     T_EndPoint* pEP = (T_EndPoint*) userData;
     ASSERTS_NOT_NULL(pEP, , ME, "NULL");
     ASSERTS_TRUE(pEP->wpsSessionInfo.WPS_PairingInProgress, , ME, "%s: no wps session ongoing", pEP->Name);
-    wld_endpoint_sync_connection(pEP, false, EPE_NONE);
+    wld_endpoint_setConnectionStatus(pEP, EPCS_IDLE, EPE_NONE);
     wld_endpoint_sendPairingNotification(pEP, NOTIFY_PAIRING_DONE, WPS_CAUSE_FAILURE, NULL);
 }
 

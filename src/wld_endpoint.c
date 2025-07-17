@@ -1363,7 +1363,7 @@ void wld_endpoint_sync_connection(T_EndPoint* pEP, bool connected, wld_epError_e
     if(!wld_endpoint_hasStackEnabled(pEP)) {
         connectionStatus = EPCS_DISABLED;
     } else if(error) {
-        connectionStatus = (error == EPE_SSID_NOT_FOUND) || (error == EPE_ERROR_MISCONFIGURED) ? EPCS_IDLE : EPCS_ERROR;
+        connectionStatus = wld_endpoint_connStatusFromEpError(error);
     } else if(connected) {
         connectionStatus = EPCS_CONNECTED;
     } else {
@@ -1373,6 +1373,15 @@ void wld_endpoint_sync_connection(T_EndPoint* pEP, bool connected, wld_epError_e
     wld_endpoint_setConnectionStatus(pEP, connectionStatus, error);
 }
 
+wld_epConnectionStatus_e wld_endpoint_connStatusFromEpError(wld_epError_e error) {
+    switch(error) {
+    case EPE_SSID_NOT_FOUND:
+    case EPE_ERROR_MISCONFIGURED:
+        return EPCS_IDLE;
+    default:
+        return EPCS_ERROR;
+    }
+}
 
 void wld_endpoint_sendPairingNotification(T_EndPoint* pEP, uint32_t type, const char* reason, T_WPSCredentials* credentials) {
     wld_wps_sendPairingNotification(pEP->pBus, type, reason, swl_typeMacBin_toBuf32Ref(&pEP->wpsSessionInfo.peerMac).buf, credentials);

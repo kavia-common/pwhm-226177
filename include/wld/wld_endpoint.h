@@ -82,6 +82,7 @@ void wld_endpoint_resetStats(T_EndPoint* pEP);
 bool wld_endpoint_validate_profile(const T_EndPointProfile* Profile);
 void wld_endpoint_setConnectionStatus(T_EndPoint* pEP, wld_epConnectionStatus_e connectionStatus, wld_epError_e error);
 void wld_endpoint_sync_connection(T_EndPoint* pEP, bool connected, wld_epError_e error);
+wld_epConnectionStatus_e wld_endpoint_connStatusFromEpError(wld_epError_e error);
 void wld_endpoint_sendPairingNotification(T_EndPoint* pEP, uint32_t type, const char* reason, T_WPSCredentials* credentials);
 
 amxd_status_t _EndPoint_WPS_pushButton(amxd_object_t* obj,
