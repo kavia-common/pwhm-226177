@@ -67,5 +67,6 @@
 
 swl_rc_ne wld_epProfile_delete(T_EndPoint* pEP, T_EndPointProfile* pProfile);
 T_EndPointProfile* wld_epProfile_fromIt(amxc_llist_it_t* it);
+bool wld_epProfile_hasValidConf(T_EndPointProfile* pEpProf);
 
 #endif /* SRC_INCLUDE_WLD_WLD_EPPROFILE_H_ */

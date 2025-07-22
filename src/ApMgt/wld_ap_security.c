@@ -115,57 +115,50 @@ static swl_security_apMode_e s_getFinalModeEnabled(swl_security_apMode_m modesAv
     return modeEnabledId;
 }
 
-amxd_status_t _wld_ap_validateSecurity_ovf(amxd_object_t* object,
-                                           amxd_param_t* param _UNUSED,
-                                           amxd_action_t reason _UNUSED,
-                                           const amxc_var_t* const args _UNUSED,
-                                           amxc_var_t* const retval _UNUSED,
-                                           void* priv _UNUSED) {
+bool wld_ap_sec_checkSecConfigParams(const char* oname, amxc_var_t* pParams, swl_security_apMode_m defModesSupported, T_Radio* pRad) {
     SAH_TRACEZ_IN(ME);
-    amxd_object_t* parentObj = amxd_object_get_parent(object);
-    ASSERTS_EQUALS(amxd_object_get_type(parentObj), amxd_object_instance, amxd_status_ok, ME, "Not instance");
-    T_AccessPoint* pAP = wld_ap_fromObj(parentObj);
-    const char* oname = ((pAP != NULL) ? pAP->alias : amxd_object_get_name(amxd_object_get_parent(object), AMXD_OBJECT_NAMED));
     int ret;
 
-    amxc_var_t params;
-    amxc_var_init(&params);
-    amxc_var_set_type(&params, AMXC_VAR_ID_HTABLE);
-    swla_object_paramsToMap(&params, object);
+    swl_security_apMode_m modesSupportedMask = 0;
+    const char* modesSupportedStr = GET_CHAR(pParams, "ModesSupported");
+    if(!swl_str_isEmpty(modesSupportedStr)) {
+        modesSupportedMask = swl_security_apModeMaskFromString(modesSupportedStr);
+    }
+    swl_security_apMode_m modesAvailableMask = 0;
+    const char* modesAvailableStr = GET_CHAR(pParams, "ModesAvailable");
+    if(!swl_str_isEmpty(modesAvailableStr)) {
+        modesAvailableMask = swl_security_apModeMaskFromString(modesAvailableStr);
+    }
+    swl_security_apMode_e modeEnabledId = SWL_SECURITY_APMODE_UNKNOWN;
+    const char* modeEnabled = GET_CHAR(pParams, "ModeEnabled");
+    if(!swl_str_isEmpty(modeEnabled)) {
+        modeEnabledId = swl_security_apModeFromString((char*) modeEnabled);
+    }
+    const char* wepKey = GET_CHAR(pParams, "WEPKey");
+    const char* preSharedKey = GET_CHAR(pParams, "PreSharedKey");
+    const char* keyPassPhrase = GET_CHAR(pParams, "KeyPassPhrase");
+    const char* saePassphrase = GET_CHAR(pParams, "SAEPassphrase");
+    const char* radiusSecret = GET_CHAR(pParams, "RadiusSecret");
 
-    const char* modesSupportedStr = GET_CHAR(&params, "ModesSupported");
-    swl_security_apMode_m modesSupportedMask = swl_security_apModeMaskFromString(modesSupportedStr);
-    const char* modesAvailableStr = GET_CHAR(&params, "ModesAvailable");
-    swl_security_apMode_m modesAvailableMask = swl_security_apModeMaskFromString(modesAvailableStr);
-    const char* modeEnabled = GET_CHAR(&params, "ModeEnabled");
-    swl_security_apMode_e modeEnabledId = swl_security_apModeFromString((char*) modeEnabled);
-    const char* wepKey = GET_CHAR(&params, "WEPKey");
-    const char* preSharedKey = GET_CHAR(&params, "PreSharedKey");
-    const char* keyPassPhrase = GET_CHAR(&params, "KeyPassPhrase");
-    const char* saePassphrase = GET_CHAR(&params, "SAEPassphrase");
-    const char* radiusSecret = GET_CHAR(&params, "RadiusSecret");
-
-    if((!modesSupportedMask) && (pAP != NULL)) {
-        modesSupportedMask = pAP->secModesSupported;
+    if(!modesSupportedMask) {
+        modesSupportedMask = defModesSupported;
     }
 
     modesAvailableMask = s_getFinalModesAvailable(modesSupportedMask, modesAvailableMask);
     if(modesAvailableMask == 0) {
         SAH_TRACEZ_ERROR(ME, "%s: ModesAvailable (%s) not supported", oname, modesAvailableStr);
-        amxc_var_clean(&params);
-        if((pAP == NULL) || (pAP->pRadio == NULL)) {
-            SAH_TRACEZ_WARNING(ME, "%s: ModesAvailable (%s) conf can not be processed as AP is not mapped to any Radio", oname, modesAvailableStr);
-            return amxd_status_ok;
+        if(pRad == NULL) {
+            SAH_TRACEZ_WARNING(ME, "%s: ModesAvailable (%s) conf can not be processed as Security obj is not mapped to any Radio", oname, modesAvailableStr);
+            return true;
         } else {
-            return amxd_status_invalid_value;
+            return false;
         }
     }
 
     modeEnabledId = s_getFinalModeEnabled(modesAvailableMask, modeEnabledId);
     if(modeEnabledId == SWL_SECURITY_APMODE_UNKNOWN) {
         SAH_TRACEZ_WARNING(ME, "%s: ModeEnabled (%s) not available, can not revert to any WPAx", oname, modeEnabled);
-        amxc_var_clean(&params);
-        return amxd_status_invalid_value;
+        return false;
     } else if(modeEnabledId != swl_security_apModeFromString((char*) modeEnabled)) {
         SAH_TRACEZ_WARNING(ME, "%s: ModeEnabled (%s) not available: assume reverting to (%s)", oname, modeEnabled, swl_security_apMode_str[modeEnabledId]);
     }
@@ -238,10 +231,38 @@ amxd_status_t _wld_ap_validateSecurity_ovf(amxd_object_t* object,
         valid = false;
         break;
     }
+
+    SAH_TRACEZ_OUT(ME);
+    return valid;
+}
+
+amxd_status_t _wld_ap_validateSecurity_ovf(amxd_object_t* object,
+                                           amxd_param_t* param _UNUSED,
+                                           amxd_action_t reason _UNUSED,
+                                           const amxc_var_t* const args _UNUSED,
+                                           amxc_var_t* const retval _UNUSED,
+                                           void* priv _UNUSED) {
+    SAH_TRACEZ_IN(ME);
+    amxd_object_t* parentObj = amxd_object_get_parent(object);
+    ASSERTS_EQUALS(amxd_object_get_type(parentObj), amxd_object_instance, amxd_status_ok, ME, "Not instance");
+    T_AccessPoint* pAP = wld_ap_fromObj(parentObj);
+    T_Radio* pRad = pAP ? pAP->pRadio : NULL;
+    const char* oname = ((pAP != NULL) ? pAP->alias : amxd_object_get_name(amxd_object_get_parent(object), AMXD_OBJECT_NAMED));
+    swl_security_apMode_m defModesSupported = (pAP ? pAP->secModesSupported : 0);
+    int ret;
+
+    amxc_var_t params;
+    amxc_var_init(&params);
+    amxc_var_set_type(&params, AMXC_VAR_ID_HTABLE);
+    swla_object_paramsToMap(&params, object);
+
+    bool valid = wld_ap_sec_checkSecConfigParams(oname, &params, defModesSupported, pRad);
+    amxd_status_t status = (valid ? amxd_status_ok : amxd_status_invalid_value);
+
     amxc_var_clean(&params);
 
     SAH_TRACEZ_OUT(ME);
-    return (valid ? amxd_status_ok : amxd_status_invalid_value);
+    return status;
 }
 
 amxd_status_t _wld_ap_validateWEPKey_pvf(amxd_object_t* object _UNUSED,

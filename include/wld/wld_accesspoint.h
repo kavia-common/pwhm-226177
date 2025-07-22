@@ -106,6 +106,7 @@ void wld_vap_syncNrDev(T_AccessPoint* pAP);
 bool wld_vap_sync_assoclist(T_AccessPoint* pAP);
 void wld_ap_sec_doSync(T_AccessPoint* pAP);
 bool wld_ap_sec_checkSharedSecConfigs(T_AccessPoint* pAP1, T_AccessPoint* pAP2);
+bool wld_ap_sec_checkSecConfigParams(const char* oname, amxc_var_t* pParams, swl_security_apMode_m defModesSupported, T_Radio* pRad);
 
 amxd_status_t kickStation(amxd_object_t* obj_AP,
                           amxd_function_t* func,

@@ -76,6 +76,7 @@
 #include "wld_assocdev.h"
 #include "wld_wpaSupp_cfgFile.h"
 #include "wld_wpaSupp_cfgManager.h"
+#include "wld_accesspoint.h"
 
 #define ME "wldEPrf"
 
@@ -230,4 +231,36 @@ void _wld_ep_setProfileSecurityConf_ocf(const char* const sig_name,
     swla_dm_procObjEvtOfLocalDm(&sEpProfileSecDmHdlrs, sig_name, data, priv);
 }
 
+static bool s_checkEpProfileSecConf(T_EndPointProfile* pEpProf) {
+    ASSERTS_NOT_NULL(pEpProf, false, ME, "NULL");
+    T_EndPoint* pEP = pEpProf->endpoint;
+    T_Radio* pRad = pEP ? pEP->pRadio : NULL;
+    swl_security_apMode_m modesSupported = (pEP ? pEP->secModesSupported : 0);
+
+    amxc_var_t params;
+    amxc_var_init(&params);
+    amxc_var_set_type(&params, AMXC_VAR_ID_HTABLE);
+    char TBuf[256];
+
+    swl_security_apModeMaskToString(TBuf, sizeof(TBuf), SWL_SECURITY_APMODEFMT_LEGACY, modesSupported);
+    amxc_var_add_key(cstring_t, &params, "ModesSupported", TBuf);
+    amxc_var_add_key(cstring_t, &params, "ModeEnabled", swl_security_apModeToString(pEpProf->secModeEnabled, SWL_SECURITY_APMODEFMT_LEGACY));
+    amxc_var_add_key(cstring_t, &params, "WEPKey", pEpProf->WEPKey);
+    amxc_var_add_key(cstring_t, &params, "PreSharedKey", pEpProf->preSharedKey);
+    amxc_var_add_key(cstring_t, &params, "KeyPassPhrase", pEpProf->keyPassPhrase);
+    amxc_var_add_key(cstring_t, &params, "SAEPassphrase", pEpProf->saePassphrase);
+    amxc_var_add_key(cstring_t, &params, "MFPConfig", swl_security_mfpModeToString(pEpProf->mfpConfig));
+
+    bool valid = wld_ap_sec_checkSecConfigParams(pEpProf->alias, &params, modesSupported, pRad);
+    amxc_var_clean(&params);
+
+    return valid;
+}
+
+bool wld_epProfile_hasValidConf(T_EndPointProfile* pEpProf) {
+    ASSERTS_NOT_NULL(pEpProf, false, ME, "NULL");
+    ASSERTI_FALSE(swl_str_isEmpty(pEpProf->SSID), false, ME, "%s: profile has no SSID", pEpProf->alias);
+    ASSERTI_TRUE(s_checkEpProfileSecConf(pEpProf), false, ME, "%s: profile security is invalid", pEpProf->alias);
+    return true;
+}
 

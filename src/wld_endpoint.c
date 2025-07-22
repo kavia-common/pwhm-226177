@@ -587,13 +587,17 @@ static void s_setDefaults(T_EndPoint* pEP, const char* endpointname) {
 
     pEP->WPS_ConfigMethodsSupported = (M_WPS_CFG_MTHD_LABEL | M_WPS_CFG_MTHD_DISPLAY_ALL | M_WPS_CFG_MTHD_PBC_ALL | M_WPS_CFG_MTHD_PIN);
     pEP->WPS_ConfigMethodsEnabled = (M_WPS_CFG_MTHD_PBC | M_WPS_CFG_MTHD_DISPLAY);
-    pEP->secModesSupported = 0;
+    pEP->secModesSupported = M_SWL_SECURITY_APMODE_NONE;
     pEP->secModesSupported |= (pEP->pFA->mfn_misc_has_support(pEP->pRadio, NULL, "WEP", 0)) ?
         (M_SWL_SECURITY_APMODE_WEP64 | M_SWL_SECURITY_APMODE_WEP128 | M_SWL_SECURITY_APMODE_WEP128IV) : 0;
     pEP->secModesSupported |= (pEP->pFA->mfn_misc_has_support(pEP->pRadio, NULL, "AES", 0)) ?
         (M_SWL_SECURITY_APMODE_WPA_P | M_SWL_SECURITY_APMODE_WPA2_P | M_SWL_SECURITY_APMODE_WPA_WPA2_P) : 0;
-    pEP->secModesSupported |= (pEP->pFA->mfn_misc_has_support(pEP->pRadio, NULL, "SAE", 0)) ?
-        (M_SWL_SECURITY_APMODE_WPA3_P | M_SWL_SECURITY_APMODE_WPA2_WPA3_P) : 0;
+    if(pEP->pFA->mfn_misc_has_support(pEP->pRadio, NULL, "SAE", 0)) {
+        pEP->secModesSupported |= M_SWL_SECURITY_APMODE_WPA3_P;
+        if(pEP->secModesSupported & M_SWL_SECURITY_APMODE_WPA2_P) {
+            pEP->secModesSupported |= M_SWL_SECURITY_APMODE_WPA2_WPA3_P;
+        }
+    }
 }
 
 static void s_sendChangeEvent(T_EndPoint* pEP, wld_ep_changeEvent_e changeType, void* data) {
@@ -712,7 +716,6 @@ bool syncData_Object2EndPointProfile(amxd_object_t* object) {
     if(tmpBool != pProfile->enable) {
         changed = true;
         pProfile->enable = tmpBool;
-        s_setProfileStatus(pProfile);
     }
 
     tmp_priority = amxd_object_get_uint8_t(object, "Priority", NULL);
@@ -822,6 +825,10 @@ bool syncData_Object2EndPointProfile(amxd_object_t* object) {
         }
     }
     free(mfp);
+
+    if(changed) {
+        s_setProfileStatus(pProfile);
+    }
 
     return changed;
 }
@@ -963,6 +970,7 @@ void _wld_ep_setWpsConf_ocf(const char* const sig_name,
  * * Radio enabled
  * * Profile present
  * * Profile Enabled
+ * * Profile Valid Conf
  */
 bool wld_endpoint_isReady(T_EndPoint* pEP) {
     ASSERT_NOT_NULL(pEP, false, ME, "NULL");
@@ -973,6 +981,7 @@ bool wld_endpoint_isReady(T_EndPoint* pEP) {
     W_SWL_BIT_WRITE(mask, 2, pEP->currentProfile == NULL);
     if(pEP->currentProfile != NULL) {
         W_SWL_BIT_WRITE(mask, 3, !pEP->currentProfile->enable);
+        W_SWL_BIT_WRITE(mask, 4, !wld_epProfile_hasValidConf(pEP->currentProfile));
     }
     SAH_TRACEZ_INFO(ME, "%s: check ready 0x%2x", pEP->Name, mask);
 
@@ -1199,7 +1208,7 @@ void wld_endpoint_setConnectionStatus(T_EndPoint* pEP, wld_epConnectionStatus_e 
                     connectionStatus, pEP->connectionStatus,
                     error, status, pEP->status, connected);
 
-    if((pEP->currentProfile != NULL) && connected) {
+    if(connected && (pEP->currentProfile != NULL) && !swl_str_isEmpty(pEP->currentProfile->SSID)) {
         //update enpoint's SSID  with the current connected profile.
         swl_str_copy(pEP->pSSID->SSID, sizeof(pEP->pSSID->SSID), pEP->currentProfile->SSID);
     }
@@ -1639,14 +1648,21 @@ static void s_setProfileStatus(T_EndPointProfile* profile) {
     T_EndPoint* pEP = profile->endpoint;
     bool connected = (pEP != NULL) ?
         (pEP->currentProfile == profile) ?
-        (pEP->connectionStatus == EPCS_CONNECTED) : false
+        ((pEP->connectionStatus == EPCS_CONNECTED) &&
+         (swl_str_matches(pEP->pSSID->SSID, profile->SSID))) : false
             : false;
 
     SAH_TRACEZ_INFO(ME, "enable %d; profile->status %d; connected %d",
                     profile->enable, profile->status, connected);
 
     if(profile->enable) {
-        status = connected ? EPPS_ACTIVE : EPPS_AVAILABLE;
+        if(connected) {
+            status = EPPS_ACTIVE;
+        } else if(!wld_epProfile_hasValidConf(profile)) {
+            status = EPPS_ERROR;
+        } else {
+            status = EPPS_AVAILABLE;
+        }
     } else {
         status = EPPS_DISABLED;
     }
@@ -1771,6 +1787,10 @@ void wld_endpoint_reconfigure(T_EndPoint* pEP) {
         error = EPE_ERROR_MISCONFIGURED;
     } else if(!wld_endpoint_isReady(pEP)) {
         SAH_TRACEZ_INFO(ME, "%s: endpoint not ready", pEP->alias);
+        if(pEP->currentProfile->status == EPPS_ERROR) {
+            SAH_TRACEZ_INFO(ME, "%s: endpoint current profile has invalid conf.", pEP->alias);
+            error = EPE_ERROR_MISCONFIGURED;
+        }
         enabled = false;
     }
 
