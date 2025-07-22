@@ -487,14 +487,6 @@
 			%read-only string ModesSupported {
 				default "";
 			}
-			/*
-			 * Indicates which security mode is enabled.
-			 * Usefull in case Auto detection is active
-			 * @version 6.1
-			 */
-			%persistent %read-only string ModeEnabled {
-				default "";
-			}
 		}
 		/** EndPoint Profile table.
 		 *  At most one entry in this table (regardless of whether or
