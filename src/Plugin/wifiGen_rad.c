@@ -264,6 +264,7 @@ static void s_initialiseCapabilities(T_Radio* pRad, wld_nl80211_wiphyInfo_t* pWi
             }
             if(pWiphyInfo->suppFeatures.sae) {
                 wld_rad_addSuppDrvCap(pRad, pBand->freqBand, "SAE");
+                wld_rad_addSuppDrvCap(pRad, pBand->freqBand, "OWE");
             }
             if(pWiphyInfo->suppFeatures.sae_pwe) {
                 wld_rad_addSuppDrvCap(pRad, pBand->freqBand, "SAE_PWE");

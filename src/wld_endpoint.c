@@ -598,6 +598,9 @@ static void s_setDefaults(T_EndPoint* pEP, const char* endpointname) {
             pEP->secModesSupported |= M_SWL_SECURITY_APMODE_WPA2_WPA3_P;
         }
     }
+    if(pEP->pFA->mfn_misc_has_support(pEP->pRadio, NULL, "OWE", 0)) {
+        pEP->secModesSupported |= M_SWL_SECURITY_APMODE_OWE;
+    }
 }
 
 static void s_sendChangeEvent(T_EndPoint* pEP, wld_ep_changeEvent_e changeType, void* data) {
