@@ -125,6 +125,7 @@ static swl_rc_ne s_setWpaSuppGlobalConfig(T_EndPoint* pEP, wld_wpaSupp_config_t*
     if(!swl_str_isEmpty(freqListStr)) {
         swl_mapChar_add(global, "freq_list", freqListStr);
     }
+    swl_mapChar_add(global, "ignore_old_scan_res", "1");
 
     return SWL_RC_OK;
 }
