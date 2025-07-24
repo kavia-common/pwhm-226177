@@ -176,6 +176,15 @@ amxd_status_t _wld_endpoint_deleteProfileInstance_odf(amxd_object_t* object,
     return amxd_status_ok;
 }
 
+static void s_doEpReconfigure(void* data) {
+    int32_t epIfIndex = (int32_t) (uintptr_t) data;
+    ASSERTS_TRUE(epIfIndex > 0, , ME, "invalid");
+    T_SSID* pSSID = wld_ssid_getSsidByIfIndex(epIfIndex);
+    T_EndPoint* pEP = (pSSID ? pSSID->ENDP_HOOK : NULL);
+    ASSERTI_NOT_NULL(pEP, , ME, "Not found ep ifindex %d", epIfIndex);
+    wld_endpoint_reconfigure(pEP);
+}
+
 swl_rc_ne wld_epProfile_delete(T_EndPoint* pEP, T_EndPointProfile* pProfile) {
     ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pProfile, SWL_RC_INVALID_PARAM, ME, "NULL");
@@ -184,10 +193,7 @@ swl_rc_ne wld_epProfile_delete(T_EndPoint* pEP, T_EndPointProfile* pProfile) {
     if(pEP->currentProfile == pProfile) {
         pEP->currentProfile = NULL;
         SAH_TRACEZ_WARNING(ME, "Current Active EndpointProfile gets deleted !!!");
-        pEP->internalChange = true;
-        swl_typeCharPtr_commitObjectParam(pEP->pBus, "ProfileReference", "");
-        pEP->internalChange = false;
-        wld_endpoint_reconfigure(pEP);
+        swla_delayExec_add((swla_delayExecFun_cbf) s_doEpReconfigure, (void*) (uintptr_t) pEP->index);
     }
 
     if(pProfile->pBus != NULL) {
@@ -200,7 +206,6 @@ swl_rc_ne wld_epProfile_delete(T_EndPoint* pEP, T_EndPointProfile* pProfile) {
 
     return SWL_RC_OK;
 }
-
 
 T_EndPointProfile* wld_epProfile_fromIt(amxc_llist_it_t* it) {
     ASSERTS_NOT_NULL(it, NULL, ME, "NULL");
