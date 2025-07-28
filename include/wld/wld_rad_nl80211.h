@@ -155,6 +155,20 @@ swl_rc_ne wld_rad_nl80211_set4Mac(T_Radio* pRadio, bool use4Mac);
 swl_rc_ne wld_rad_nl80211_addInterface(T_Radio* pRadio, const char* ifname, swl_macBin_t* mac, bool isSta, wld_nl80211_ifaceInfo_t* pOutIfInfo);
 
 /*
+ * @brief create interface on the radio device
+ *
+ * @param pRadio pointer to radio context
+ * @param ifname interface name
+ * @param pIfaceConf new virtual interface conf
+ *                   (type (AP, EP or monitor), mac address, use4Mac)
+ * @param pOutIfInfo output interface info
+ *
+ * @return SWL_RC_OK in case of success
+ *         <= SWL_RC_ERROR otherwise
+ */
+swl_rc_ne wld_rad_nl80211_addInterfaceExt(T_Radio* pRadio, const char* ifname, wld_nl80211_newIfaceConf_t* pIfaceConf, wld_nl80211_ifaceInfo_t* pOutIfInfo);
+
+/*
  * @brief create/set AP interface on top of radio device
  * AP.alias (expected net dev name) must be provided as input.
  *

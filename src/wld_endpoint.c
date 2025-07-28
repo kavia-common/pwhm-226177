@@ -2290,6 +2290,7 @@ static bool s_finalizeEpCreation(T_EndPoint* pEP) {
     int epIfIndex = -1;
     int ret = -1;
     if(wld_endpoint_needCreateIface(pEP)) {
+        pEP->multiAPEnable = amxd_object_get_bool(pEP->pBus, "MultiAPEnable", NULL);
         swl_str_copy(epIfName, sizeof(epIfName), pRad->Name);
         epIfIndex = pRad->index;
         int ret = pRad->pFA->mfn_wrad_addendpointif(pRad, epIfName, sizeof(epIfName));

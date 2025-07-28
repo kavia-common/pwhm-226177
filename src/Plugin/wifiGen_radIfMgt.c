@@ -402,16 +402,22 @@ int wifiGen_rad_addEndpointIf(T_Radio* pRad, char* buf, int bufsize) {
     memset(&ifaceInfo, 0, sizeof(ifaceInfo));
     swl_macBin_t epMacAddr = SWL_MAC_BIN_NEW();
     wld_ssid_generateMac(pRad, pSSID, 0, &epMacAddr);
+    bool use4Mac = (pEP != NULL) ? pEP->multiAPEnable : true;
     wld_linuxIfUtils_setState(wld_rad_getSocket(pRad), pRad->Name, false);
     if((pRad->isSTA) && (swl_str_matches(pRad->Name, epIfname))) {
         wld_rad_nl80211_setSta(pRad);
+        wld_nl80211_setInterfaceUse4Mac(wld_nl80211_getSharedState(), pRad->index, use4Mac);
         wld_nl80211_getInterfaceInfo(wld_nl80211_getSharedState(), pRad->index, &ifaceInfo);
     } else {
-        swl_rc_ne rc = wld_nl80211_newInterface(wld_nl80211_getSharedState(), pRad->index, epIfname, NULL, false, true, &ifaceInfo);
+        wld_nl80211_newIfaceConf_t newIfaceConf = {
+            .type = NL80211_IFTYPE_STATION,
+            .mac = epMacAddr,
+            .use4Mac = use4Mac,
+        };
+        swl_rc_ne rc = wld_nl80211_newInterfaceExt(wld_nl80211_getSharedState(), pRad->index, epIfname, &newIfaceConf, &ifaceInfo);
         ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to create new ep iface %s", pRad->Name, epIfname);
         wld_linuxIfUtils_setMac(wld_rad_getSocket(pRad), epIfname, &epMacAddr);
     }
-    wld_nl80211_setInterfaceUse4Mac(wld_nl80211_getSharedState(), ifaceInfo.ifIndex, (pEP != NULL) ? pEP->multiAPEnable : false);
     if(pEP != NULL) {
         pEP->index = ifaceInfo.ifIndex;
         pEP->wDevId = ifaceInfo.wDevId;

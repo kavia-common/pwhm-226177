@@ -268,6 +268,9 @@ static swl_rc_ne s_newInterfaceExt(wld_nl80211_state_t* state, uint32_t ifIndex,
     if(!ifIndex) {
         NL_ATTRS_ADD(&attribs, NL_ATTR_VAL(NL80211_ATTR_WIPHY, wiphyId));
     }
+    if(pIfaceConf->use4Mac) {
+        NL_ATTRS_ADD(&attribs, NL_ATTR_VAL(NL80211_ATTR_4ADDR, pIfaceConf->use4Mac));
+    }
     struct getWirelessIfacesData_s requestData = {
         .nrIfacesMax = 1,
         .nrIfaces = 0,
@@ -336,19 +339,20 @@ static uint32_t s_getWlIfacesByWiphy(uint32_t wiphy, const uint32_t maxWiphys, c
     return count;
 }
 
-static swl_rc_ne s_createNewVapIface(wld_nl80211_wiphyInfo_t* pWiphy, const char* ifname, wld_nl80211_ifaceInfo_t* pOutVapInfo) {
+static swl_rc_ne s_createNewDefaultIface(wld_nl80211_wiphyInfo_t* pWiphy, const char* ifname, wld_nl80211_ifaceInfo_t* pOutIntfInfo) {
     wld_nl80211_newIfaceConf_t ifaceConf;
     memset(&ifaceConf, 0, sizeof(ifaceConf));
-    ifaceConf.type = NL80211_IFTYPE_AP;
-    wld_nl80211_ifaceInfo_t newVapInfo;
-    wld_nl80211_ifaceInfo_t* pNewVapInfo = (pOutVapInfo ? : &newVapInfo);
-    memset(pNewVapInfo, 0, sizeof(newVapInfo));
-    swl_rc_ne rc = wld_nl80211_newWiphyInterface(wld_nl80211_getSharedState(), pWiphy->wiphy, ifname, &ifaceConf, pNewVapInfo);
+    ifaceConf.type = NL80211_IFTYPE_STATION;
+    ifaceConf.use4Mac = true;
+    wld_nl80211_ifaceInfo_t newIntfInfo;
+    wld_nl80211_ifaceInfo_t* pNewIntfInfo = (pOutIntfInfo ? : &newIntfInfo);
+    memset(pNewIntfInfo, 0, sizeof(newIntfInfo));
+    swl_rc_ne rc = wld_nl80211_newWiphyInterface(wld_nl80211_getSharedState(), pWiphy->wiphy, ifname, &ifaceConf, pNewIntfInfo);
     ASSERT_FALSE(rc < SWL_RC_OK, rc, ME, "fail to create vap iface %s on wiphy (%d:%s) (%d:%s)",
                  ifname, pWiphy->wiphy, pWiphy->name, errno, strerror(errno));
     SAH_TRACEZ_WARNING(ME, "created default iface %s netdevIdx %d mac %s on wiphy (%d:%s)",
-                       pNewVapInfo->name, pNewVapInfo->ifIndex, swl_typeMacBin_toBuf32(pNewVapInfo->mac).buf,
-                       pNewVapInfo->wiphy, pWiphy->name);
+                       pNewIntfInfo->name, pNewIntfInfo->ifIndex, swl_typeMacBin_toBuf32(pNewIntfInfo->mac).buf,
+                       pNewIntfInfo->wiphy, pWiphy->name);
     return rc;
 }
 
@@ -388,11 +392,14 @@ swl_rc_ne wld_nl80211_addDefaultWiphyInterfacesExt(const char* custIfNamePfx,
             wld_nl80211_ifaceInfo_t* pExWl = s_getWlIfaceByName(wlIfName, maxWiphys, maxWlIfaces, wlIfacesInfo);
             if(pExWl != NULL) {
                 if(pExWl->wiphy == pWiphy->wiphy) {
+                    if(pExWl->isSta) {
+                        wld_nl80211_setInterfaceUse4Mac(wld_nl80211_getSharedState(), pExWl->ifIndex, true);
+                    }
                     continue;
                 }
                 swl_str_catFormat(wlIfName, sizeof(wlIfName), "p%d", pWiphy->wiphy);
             }
-            s_createNewVapIface(pWiphy, wlIfName, &pWiphyWlIfaces[nrWiphyWlIfaces++]);
+            s_createNewDefaultIface(pWiphy, wlIfName, &pWiphyWlIfaces[nrWiphyWlIfaces++]);
         }
     }
     return rc;

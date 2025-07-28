@@ -154,6 +154,7 @@ typedef struct {
 typedef struct {
     swl_macBin_t mac;                //interface mac address
     uint32_t type;                   //nl80211 interface type: from enum nl80211_iftype"
+    bool use4Mac;                    //4addr mode, for station only
 } wld_nl80211_newIfaceConf_t;
 
 typedef enum {
