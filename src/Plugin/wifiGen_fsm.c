@@ -1126,6 +1126,12 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
         swl_macBin_t* bssid = (swl_macBin_t*) pEP->pSSID->BSSID;
         swl_chanspec_t tgtChspec = s_getEpBssTgtChanspec(pEP, bssid);
 
+        if((curChspec.channel == tgtChspec.channel) &&
+           (curChspec.bandwidth >= tgtChspec.bandwidth)) {
+            tgtChspec.bandwidth = curChspec.bandwidth;
+            tgtChspec.extensionHigh = curChspec.extensionHigh;
+        }
+
         /*
          * proceed to reconnect using the scan tgt chanspec, if:
          *    - mismatching the current ep connection chanspe
