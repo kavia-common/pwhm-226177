@@ -2543,6 +2543,31 @@ swl_rc_ne wld_util_copyScanInfoFromIEs(wld_scanResultSSID_t* pResult, swl_wirele
     return SWL_RC_OK;
 }
 
+swl_rc_ne wld_util_copyStaCapsInfoFromIEs(wld_assocDev_capabilities_t* cap, swl_wirelessDevice_infoElements_t* pWirelessDevIE) {
+    ASSERTS_NOT_NULL(cap, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_NOT_NULL(pWirelessDevIE, SWL_RC_INVALID_PARAM, ME, "NULL");
+    cap->freqCapabilities = pWirelessDevIE->freqCapabilities;
+    memcpy(&cap->vendorOUI, &pWirelessDevIE->vendorOUI, sizeof(swl_oui_list_t));
+    cap->htCapabilities = pWirelessDevIE->htCapabilities;
+    cap->vhtCapabilities = pWirelessDevIE->vhtCapabilities;
+    cap->heCapabilities = pWirelessDevIE->heCapabilities;
+    cap->ehtCapabilities = pWirelessDevIE->ehtCapabilities;
+    cap->rrmCapabilities = pWirelessDevIE->rrmCapabilities;
+    cap->rrmOnChannelMaxDuration = pWirelessDevIE->rrmOnChannelMaxDuration;
+    cap->rrmOffChannelMaxDuration = pWirelessDevIE->rrmOffChannelMaxDuration;
+    cap->currentSecurity = pWirelessDevIE->secModeEnabled;
+    memcpy(&cap->supportedMCS, &pWirelessDevIE->supportedMCS, sizeof(swl_mcs_supMCS_t));
+    memcpy(&cap->supportedHtMCS, &pWirelessDevIE->supportedHtMCS, sizeof(swl_mcs_supMCS_t));
+    memcpy(&cap->supportedVhtMCS, &pWirelessDevIE->supportedVhtMCS, sizeof(pWirelessDevIE->supportedVhtMCS));
+    memcpy(&cap->supportedHeMCS, &pWirelessDevIE->supportedHeMCS, sizeof(pWirelessDevIE->supportedHeMCS));
+    memcpy(&cap->supportedHe160MCS, &pWirelessDevIE->supportedHe160MCS, sizeof(pWirelessDevIE->supportedHe160MCS));
+    memcpy(&cap->supportedHe80x80MCS, &pWirelessDevIE->supportedHe80x80MCS, sizeof(pWirelessDevIE->supportedHe80x80MCS));
+    if((pWirelessDevIE->operChanInfo.channel > 0) && (pWirelessDevIE->operChanInfo.bandwidth != SWL_BW_AUTO)) {
+        cap->linkBandwidth = pWirelessDevIE->operChanInfo.bandwidth;
+    }
+    return SWL_RC_OK;
+}
+
 swl_80211_ehtOpIE_t wld_util_buildEhtOperationIE(swl_chanspec_t tgtChspec, swl_bit32_t bitmap, uint32_t nTx, uint32_t nRx) {
     swl_80211_ehtOpIE_t ehtOperationIE;
     memset(&ehtOperationIE, 0, sizeof(ehtOperationIE));

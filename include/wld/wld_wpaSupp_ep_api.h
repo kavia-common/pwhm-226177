@@ -64,6 +64,7 @@
 #define __WLD_WPA_SUPPLICANT_API_H__
 
 #include "wld_wps.h"
+#include "swl/swl_genericFrameParser.h"
 
 swl_rc_ne wld_wpaSupp_ep_disconnect(T_EndPoint* pEP);
 swl_rc_ne wld_wpaSupp_ep_getBssid(T_EndPoint* pEP, swl_macChar_t* bssid);
@@ -71,6 +72,9 @@ swl_rc_ne wld_wpaSupp_ep_getScanResults(T_EndPoint* pEP, wld_scanResults_t* res)
 swl_rc_ne wld_wpaSupp_ep_startWpsPbc(T_EndPoint* pEP, swl_macChar_t* bssid);
 swl_rc_ne wld_wpaSupp_ep_startWpsPin(T_EndPoint* pEP, char* pin, swl_macChar_t* bssid);
 swl_rc_ne wld_wpaSupp_ep_cancelWps(T_EndPoint* pEP);
+swl_rc_ne wld_wpaSupp_getBssidFromStatusDetails(const char* statusInfo, swl_macBin_t* pBssid);
+swl_rc_ne wld_wpaSupp_getOperStdFromStatusDetails(const char* statusInfo, swl_radStd_e* pRes);
+swl_rc_ne wld_wpaSupp_getConnStatusFromStatusDetails(const char* statusInfo, wld_epConnectionStatus_e* pRes);
 swl_rc_ne wld_wpaSupp_ep_getAllStatusDetails(T_EndPoint* pEP, char* reply, size_t replySize);
 swl_rc_ne wld_wpaSupp_ep_getOneStatusDetail(T_EndPoint* pEP, const char* key, char* valStr, size_t valStrSize);
 swl_rc_ne wld_wpaSupp_ep_getSsid(T_EndPoint* pEP, char* ssid, size_t ssidSize);
@@ -79,5 +83,7 @@ swl_rc_ne wld_wpaSupp_ep_reconfigure(T_EndPoint* pEP);
 swl_rc_ne wld_wpaSupp_ep_increaseSecurityModeInCreds(T_EndPoint* pEP, T_WPSCredentials* creds);
 swl_rc_ne wld_wpaSupp_ep_getBssScanInfo(T_EndPoint* pEP, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult);
 swl_rc_ne wld_wpaSupp_getBssScanInfo(wld_wpaCtrlInterface_t* pInterface, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult);
+swl_rc_ne wld_wpaSupp_ep_getBssScanInfoExt(T_EndPoint* pEP, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult, swl_wirelessDevice_infoElements_t* pWirelessDevIE);
+swl_rc_ne wld_wpaSupp_getBssScanInfoExt(wld_wpaCtrlInterface_t* pInterface, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult, swl_wirelessDevice_infoElements_t* pWirelessDevIE);
 
 #endif /* __WLD_WPA_SUPPLICANT_API_H__ */

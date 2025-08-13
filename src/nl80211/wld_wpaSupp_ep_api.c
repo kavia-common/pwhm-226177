@@ -237,10 +237,11 @@ swl_rc_ne wld_wpaSupp_ep_getScanResults(T_EndPoint* pEP, wld_scanResults_t* res)
  * @param pInterface Wpa ctrl interface used to send command
  * @param pMacBin the bssid bin value
  * @param[out] pResult pointer to output result struct
+ * @param pWirelessDevIE optional pointer to fetched wireless dev IEs from last ProbeResp/Beacon
  * @return - SWL_RC_OK when the value is retrieved successfully (valid)
  *         - Otherwise SWL_RC_ERROR
  */
-swl_rc_ne wld_wpaSupp_getBssScanInfo(wld_wpaCtrlInterface_t* pInterface, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult) {
+swl_rc_ne wld_wpaSupp_getBssScanInfoExt(wld_wpaCtrlInterface_t* pInterface, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult, swl_wirelessDevice_infoElements_t* pWirelessDevIE) {
     ASSERTS_NOT_NULL(pMacBin, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERTS_FALSE(swl_mac_binIsNull(pMacBin), SWL_RC_INVALID_PARAM, ME, "invalid mac");
     char buf[2048] = {0};
@@ -277,6 +278,7 @@ swl_rc_ne wld_wpaSupp_getBssScanInfo(wld_wpaCtrlInterface_t* pInterface, swl_mac
             }
             if(parsedLen > 0) {
                 wld_util_copyScanInfoFromIEs(&result, &wirelessDevIE);
+                W_SWL_SETPTR(pWirelessDevIE, wirelessDevIE);
             }
         }
     }
@@ -301,6 +303,34 @@ swl_rc_ne wld_wpaSupp_getBssScanInfo(wld_wpaCtrlInterface_t* pInterface, swl_mac
 /**
  * @brief get the scanned bss details
  *
+ * @param pInterface Wpa ctrl interface used to send command
+ * @param pMacBin the bssid bin value
+ * @param pResult pointer to output result struct
+ * @return - SWL_RC_OK when the value is retrieved successfully (valid)
+ *         - Otherwise SWL_RC_ERROR
+ */
+swl_rc_ne wld_wpaSupp_getBssScanInfo(wld_wpaCtrlInterface_t* pInterface, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult) {
+    return wld_wpaSupp_getBssScanInfoExt(pInterface, pMacBin, pResult, NULL);
+}
+
+/**
+ * @brief get the scanned bss details
+ *
+ * @param pEP endpoint
+ * @param pMacBin the bssid bin value
+ * @param pResult pointer to output result struct
+ * @param pWirelessDevIE optional pointer to fetched wireless dev IEs from last ProbeResp/Beacon
+ * @return - SWL_RC_OK when the value is retrieved successfully (valid)
+ *         - Otherwise SWL_RC_ERROR
+ */
+swl_rc_ne wld_wpaSupp_ep_getBssScanInfoExt(T_EndPoint* pEP, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult, swl_wirelessDevice_infoElements_t* pWirelessDevIE) {
+    ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    return wld_wpaSupp_getBssScanInfoExt(pEP->wpaCtrlInterface, pMacBin, pResult, pWirelessDevIE);
+}
+
+/**
+ * @brief get the scanned bss details
+ *
  * @param pEP endpoint
  * @param pMacBin the bssid bin value
  * @param[out] pResult pointer to output result struct
@@ -308,8 +338,43 @@ swl_rc_ne wld_wpaSupp_getBssScanInfo(wld_wpaCtrlInterface_t* pInterface, swl_mac
  *         - Otherwise SWL_RC_ERROR
  */
 swl_rc_ne wld_wpaSupp_ep_getBssScanInfo(T_EndPoint* pEP, swl_macBin_t* pMacBin, wld_scanResultSSID_t* pResult) {
-    ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
-    return wld_wpaSupp_getBssScanInfo(pEP->wpaCtrlInterface, pMacBin, pResult);
+    return wld_wpaSupp_ep_getBssScanInfoExt(pEP, pMacBin, pResult, NULL);
+}
+
+swl_rc_ne wld_wpaSupp_getBssidFromStatusDetails(const char* statusInfo, swl_macBin_t* pBssid) {
+    swl_macChar_t bssidStr = SWL_MAC_CHAR_NEW();
+    swl_macBin_t bssid = SWL_MAC_BIN_NEW();
+    if((wld_wpaCtrl_getValueStr(statusInfo, "bssid", bssidStr.cMac, SWL_MAC_CHAR_LEN) <= 0) ||
+       (!swl_mac_charIsValidStaMac(&bssidStr)) ||
+       (!swl_mac_charToBin(&bssid, &bssidStr))) {
+        SAH_TRACEZ_INFO(ME, "no remote bssid");
+        return SWL_RC_INVALID_STATE;
+    }
+    SAH_TRACEZ_INFO(ME, "bssid(%s)", bssidStr.cMac);
+    W_SWL_SETPTR(pBssid, bssid);
+    return SWL_RC_OK;
+}
+
+SWL_TABLE(sWifiGenOperStdMaps,
+          ARR(char* wifiGenStr; swl_radStd_e operStd; ),
+          ARR(swl_type_charPtr, swl_type_uint32, ),
+          ARR({"4", SWL_RADSTD_N},
+              {"5", SWL_RADSTD_AC},
+              {"6", SWL_RADSTD_AX},
+              {"7", SWL_RADSTD_BE},
+              ));
+swl_rc_ne wld_wpaSupp_getOperStdFromStatusDetails(const char* statusInfo, swl_radStd_e* pRes) {
+    ASSERTS_STR(statusInfo, SWL_RC_INVALID_PARAM, ME, "empty");
+    char wifiGeneration[16] = {0};
+    if(wld_wpaCtrl_getValueStr(statusInfo, "wifi_generation", wifiGeneration, sizeof(wifiGeneration)) <= 0) {
+        SAH_TRACEZ_INFO(ME, "no wifi_gen");
+        return SWL_RC_ERROR;
+    }
+    swl_radStd_e* pOperStd = (swl_radStd_e*) swl_table_getMatchingValue(&sWifiGenOperStdMaps, 1, 0, wifiGeneration);
+    ASSERTI_NOT_NULL(pOperStd, SWL_RC_INVALID_PARAM, ME, "unknown wifi_gen (%s)", wifiGeneration);
+    SAH_TRACEZ_INFO(ME, "wifiGeneration(%s) -> operStd(%s)", wifiGeneration, swl_radStd_unknown_str[*pOperStd]);
+    W_SWL_SETPTR(pRes, *pOperStd);
+    return SWL_RC_OK;
 }
 
 /**
@@ -356,6 +421,20 @@ SWL_TABLE(sWpaStateDescMaps,
               {"GROUP_HANDSHAKE", EPCS_CONNECTING},
               {"COMPLETED", EPCS_CONNECTED},
               ));
+
+swl_rc_ne wld_wpaSupp_getConnStatusFromStatusDetails(const char* statusInfo, wld_epConnectionStatus_e* pRes) {
+    ASSERTS_STR(statusInfo, SWL_RC_INVALID_PARAM, ME, "empty");
+    char state[64] = {0};
+    if(wld_wpaCtrl_getValueStr(statusInfo, "wpa_state", state, sizeof(state)) <= 0) {
+        return SWL_RC_ERROR;
+    }
+    wld_epConnectionStatus_e* pConnSt = (wld_epConnectionStatus_e*) swl_table_getMatchingValue(&sWpaStateDescMaps, 1, 0, state);
+    ASSERTI_NOT_NULL(pConnSt, SWL_RC_INVALID_PARAM, ME, "unknown wpa_state (%s)", state);
+    SAH_TRACEZ_INFO(ME, "state(%s) -> connState(%s)", state, cstr_EndPoint_connectionStatus[*pConnSt]);
+    W_SWL_SETPTR(pRes, *pConnSt);
+    return SWL_RC_OK;
+}
+
 /**
  * @brief get the EP's current connection status
  * "DISCONNECTED", "INACTIVE", "INTERFACE_DISABLED", "SCANNING", "AUTHENTICATING",
@@ -369,14 +448,10 @@ swl_rc_ne wld_wpaSupp_ep_getConnState(T_EndPoint* pEP, wld_epConnectionStatus_e*
     ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERTI_TRUE(wld_wpaCtrlInterface_isReady(pEP->wpaCtrlInterface), SWL_RC_ERROR,
                  ME, "%s: main wpactrl iface is not ready", pEP->Name);
-    char state[64] = {0};
-    swl_rc_ne rc = wld_wpaSupp_ep_getOneStatusDetail(pEP, "wpa_state", state, sizeof(state));
-    ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: failed to get endpoint wpa_state", pEP->Name);
-    wld_epConnectionStatus_e* pConnDetState = (wld_epConnectionStatus_e*) swl_table_getMatchingValue(&sWpaStateDescMaps, 1, 0, state);
-    ASSERTI_NOT_NULL(pConnDetState, SWL_RC_ERROR, ME, "%s: unknown conn state(%s)", pEP->Name, state);
-    W_SWL_SETPTR(pEPConnState, *pConnDetState);
-    SAH_TRACEZ_INFO(ME, "%s: ep state(%s) -> connState(%d)", pEP->Name, state, *pConnDetState);
-    return SWL_RC_OK;
+    char reply[1024] = {0};
+    swl_rc_ne rc = wld_wpaSupp_ep_getAllStatusDetails(pEP, reply, sizeof(reply));
+    ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: failed to get global ep status", pEP->Name);
+    return wld_wpaSupp_getConnStatusFromStatusDetails(reply, pEPConnState);
 }
 
 /**

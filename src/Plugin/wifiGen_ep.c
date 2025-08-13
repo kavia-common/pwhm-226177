@@ -341,18 +341,36 @@ swl_rc_ne wifiGen_ep_wpsCancel(T_EndPoint* pEP) {
 swl_rc_ne wifiGen_ep_stats(T_EndPoint* pEP, T_EndPointStats* stats) {
     ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pEP->pRadio, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERT_NOT_NULL(pEP->pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERTI_EQUALS(pEP->connectionStatus, EPCS_CONNECTED, SWL_RC_INVALID_STATE, ME, "%s: not connected %u", pEP->Name, pEP->connectionStatus);
+    ASSERTI_TRUE(wifiGen_wpaSupp_isAlive(pEP), SWL_RC_INVALID_STATE, ME, "%s: wpa_supp not connected", pEP->Name);
     ASSERT_NOT_NULL(stats, SWL_RC_INVALID_PARAM, ME, "NULL");
 
+    wld_epConnectionStatus_e connSt = EPCS_DISABLED;
+    swl_macBin_t bssid = SWL_MAC_BIN_NEW();
+
+    char reply[1024] = {0};
+    if((wld_wpaSupp_ep_getAllStatusDetails(pEP, reply, sizeof(reply)) < SWL_RC_OK) ||
+       (wld_wpaSupp_getConnStatusFromStatusDetails(reply, &connSt) < SWL_RC_OK) ||
+       (connSt != EPCS_CONNECTED)) {
+        SAH_TRACEZ_INFO(ME, "%s: not connected", pEP->Name);
+        return SWL_RC_INVALID_STATE;
+    }
+
+    if(wld_wpaSupp_getBssidFromStatusDetails(reply, &bssid) < SWL_RC_OK) {
+        SAH_TRACEZ_INFO(ME, "%s: no remote bssid", pEP->Name);
+        return SWL_RC_INVALID_STATE;
+    }
+
     // interface station dump
-    swl_macBin_t bssid;
-    memcpy(bssid.bMac, pEP->pSSID->BSSID, SWL_MAC_BIN_LEN);
-    ASSERTI_FALSE(swl_mac_binIsNull(&bssid), SWL_RC_INVALID_STATE, ME, "%s: no remote bssid", pEP->Name);
     wld_nl80211_stationInfo_t stationInfo;
     if(wld_ep_nl80211_getStationInfo(pEP, &bssid, &stationInfo) < SWL_RC_OK) {
         SAH_TRACEZ_INFO(ME, "get stats for %s fail", pEP->Name);
         return SWL_RC_ERROR;
+    }
+
+    if(wld_wpaSupp_getOperStdFromStatusDetails(reply, &stats->operatingStandard) < SWL_RC_OK) {
+        stats->operatingStandard = SWL_MAX(
+            swl_mcs_radStdFromMcsStd(stationInfo.txRate.mcsInfo.standard, pEP->pRadio->operatingFrequencyBand),
+            swl_mcs_radStdFromMcsStd(stationInfo.rxRate.mcsInfo.standard, pEP->pRadio->operatingFrequencyBand));
     }
 
     wld_rad_getCurrentNoise(pEP->pRadio, &pEP->pRadio->stats.noise);
@@ -375,13 +393,10 @@ swl_rc_ne wifiGen_ep_stats(T_EndPoint* pEP, T_EndPointStats* stats) {
     } else {
         stats->Retransmissions = 0;
     }
-    stats->operatingStandard = SWL_MAX(
-        swl_mcs_radStdFromMcsStd(stationInfo.txRate.mcsInfo.standard, pEP->pRadio->operatingFrequencyBand),
-        swl_mcs_radStdFromMcsStd(stationInfo.rxRate.mcsInfo.standard, pEP->pRadio->operatingFrequencyBand));
     stats->LastDataUplinkRate = stationInfo.rxRate.bitrate;
-    stats->maxRxStream = (uint16_t) stationInfo.rxRate.mcsInfo.numberOfSpatialStream;
+    stats->maxRxStream = SWL_MAX(pEP->stats.maxRxStream, (uint16_t) stationInfo.rxRate.mcsInfo.numberOfSpatialStream);
     stats->LastDataDownlinkRate = stationInfo.txRate.bitrate;
-    stats->maxTxStream = (uint16_t) stationInfo.txRate.mcsInfo.numberOfSpatialStream;
+    stats->maxTxStream = SWL_MAX(pEP->stats.maxTxStream, (uint16_t) stationInfo.txRate.mcsInfo.numberOfSpatialStream);
 
     stats->assocCaps.linkBandwidth = swl_chanspec_intToBw(
         SWL_MAX(swl_chanspec_bwToInt(stationInfo.txRate.mcsInfo.bandwidth),
@@ -389,7 +404,9 @@ swl_rc_ne wifiGen_ep_stats(T_EndPoint* pEP, T_EndPointStats* stats) {
     if(pEP->currentProfile && (stationInfo.flags.authorized == SWL_TRL_TRUE)) {
         stats->assocCaps.currentSecurity = pEP->currentProfile->secModeEnabled;
     }
-    stats->assocCaps.freqCapabilities = pEP->pRadio->supportedFrequencyBands;
+    if(!stats->assocCaps.freqCapabilities) {
+        stats->assocCaps.freqCapabilities = pEP->pRadio->supportedFrequencyBands;
+    }
 
     SAH_TRACEZ_INFO(ME, "get stats for %s OK", pEP->Name);
 

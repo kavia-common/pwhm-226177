@@ -2190,19 +2190,11 @@ void wld_ad_listRecentDisconnects(T_AccessPoint* pAP, amxc_var_t* variant) {
 }
 
 void wld_assocDev_copyAssocDevInfoFromIEs(T_Radio* pRad, T_AssociatedDevice* pDev, wld_assocDev_capabilities_t* cap, swl_wirelessDevice_infoElements_t* pWirelessDevIE) {
+    wld_util_copyStaCapsInfoFromIEs(cap, pWirelessDevIE);
+
     pDev->capabilities |= pWirelessDevIE->capabilities;
     pDev->vendorCapabilities |= pWirelessDevIE->vendorCapabilities;
     pDev->uniiBandsCapabilities |= pWirelessDevIE->uniiBandsCapabilities;
-    cap->freqCapabilities = pWirelessDevIE->freqCapabilities;
-    memcpy(&cap->vendorOUI, &pWirelessDevIE->vendorOUI, sizeof(swl_oui_list_t));
-    cap->htCapabilities = pWirelessDevIE->htCapabilities;
-    cap->vhtCapabilities = pWirelessDevIE->vhtCapabilities;
-    cap->heCapabilities = pWirelessDevIE->heCapabilities;
-    cap->ehtCapabilities = pWirelessDevIE->ehtCapabilities;
-    cap->rrmCapabilities = pWirelessDevIE->rrmCapabilities;
-    cap->rrmOnChannelMaxDuration = pWirelessDevIE->rrmOnChannelMaxDuration;
-    cap->rrmOffChannelMaxDuration = pWirelessDevIE->rrmOffChannelMaxDuration;
-    cap->currentSecurity = pWirelessDevIE->secModeEnabled;
     if(pWirelessDevIE->maxRxSpatialStreamsSupported > 0) {
         pDev->MaxRxSpatialStreamsSupported = pWirelessDevIE->maxRxSpatialStreamsSupported;
     }
@@ -2215,12 +2207,6 @@ void wld_assocDev_copyAssocDevInfoFromIEs(T_Radio* pRad, T_AssociatedDevice* pDe
     if(pWirelessDevIE->maxUplinkRateSupported > 0) {
         pDev->MaxUplinkRateSupported = pWirelessDevIE->maxUplinkRateSupported;
     }
-    memcpy(&cap->supportedMCS, &pWirelessDevIE->supportedMCS, sizeof(swl_mcs_supMCS_t));
-    memcpy(&cap->supportedHtMCS, &pWirelessDevIE->supportedHtMCS, sizeof(swl_mcs_supMCS_t));
-    memcpy(&cap->supportedVhtMCS, &pWirelessDevIE->supportedVhtMCS, sizeof(pWirelessDevIE->supportedVhtMCS));
-    memcpy(&cap->supportedHeMCS, &pWirelessDevIE->supportedHeMCS, sizeof(pWirelessDevIE->supportedHeMCS));
-    memcpy(&cap->supportedHe160MCS, &pWirelessDevIE->supportedHe160MCS, sizeof(pWirelessDevIE->supportedHe160MCS));
-    memcpy(&cap->supportedHe80x80MCS, &pWirelessDevIE->supportedHe80x80MCS, sizeof(pWirelessDevIE->supportedHe80x80MCS));
 
     if(pWirelessDevIE->operatingStandards > 0) {
         if(pDev->operatingStandard == SWL_RADSTD_AUTO) {

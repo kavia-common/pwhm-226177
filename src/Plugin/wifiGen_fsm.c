@@ -1078,14 +1078,14 @@ static bool s_doStopWpaSupp(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
     return true;
 }
 
-static swl_chanspec_t s_getEpBssTgtChanspec(T_EndPoint* pEP, swl_macBin_t* bssid) {
+static swl_chanspec_t s_getEpBssTgtChanspec(T_EndPoint* pEP, swl_macBin_t* bssid, swl_wirelessDevice_infoElements_t* pWirelessDevIE) {
     swl_chanspec_t chanSpec = SWL_CHANSPEC_EMPTY;
     if(!pEP || !bssid || swl_mac_binIsNull(bssid) || swl_mac_binIsBroadcast(bssid)) {
         return chanSpec;
     }
     wld_scanResultSSID_t result;
     memset(&result, 0, sizeof(result));
-    if(swl_rc_isOk(wld_wpaSupp_ep_getBssScanInfo(pEP, bssid, &result))) {
+    if(swl_rc_isOk(wld_wpaSupp_ep_getBssScanInfoExt(pEP, bssid, &result, pWirelessDevIE))) {
         swl_chanspec_fromFreqCtrlCentre(&chanSpec, swl_chanspec_operClassToFreq(result.operClass), result.channel, result.centreChannel);
         if(chanSpec.band == SWL_FREQ_BAND_EXT_2_4GHZ) {
             //only pre-connect to 2g/20MHz
@@ -1093,6 +1093,30 @@ static swl_chanspec_t s_getEpBssTgtChanspec(T_EndPoint* pEP, swl_macBin_t* bssid
         }
     }
     return chanSpec;
+}
+
+static bool s_doSyncEpRemoteOperStd(T_EndPoint* pEP, swl_wirelessDevice_infoElements_t* pIEs) {
+    ASSERTS_NOT_NULL(pEP, false, ME, "NULL");
+    T_Radio* pRad = pEP->pRadio;
+    ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
+    ASSERTI_TRUE(pIEs && pIEs->operChanInfo.channel > 0, false, ME, "%s: missing remote AP info", pEP->Name);
+
+    bool enableRad11beRemote = false;
+    if(pEP->connectionStatus == EPCS_CONNECTED) {
+        enableRad11beRemote = (pEP->stats.operatingStandard == SWL_RADSTD_BE);
+    } else {
+        enableRad11beRemote = (SWL_BIT_IS_SET(pRad->supportedStandards, SWL_RADSTD_BE) && SWL_BIT_IS_SET(pIEs->operatingStandards, SWL_RADSTD_BE));
+    }
+    bool enableRad11beLocal = (wld_rad_hostapd_getCmdReplyParam32Def(pEP->pRadio, "STATUS", "ieee80211be", 0) != 0);
+    if(enableRad11beRemote > enableRad11beLocal) {
+        SAH_TRACEZ_WARNING(ME, "%s: need cold apply of 11be operStd to align radio phy conf (ft,bk) with remote", pRad->Name);
+        wld_rad_hostapd_setMiscParams(pRad);
+        wld_rad_hostapd_setChannel(pRad);
+        wifiGen_hapd_writeConfig(pRad);
+        return true;
+    }
+
+    return false;
 }
 
 static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
@@ -1124,13 +1148,22 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
         swl_chanspec_t curChspec = SWL_CHANSPEC_EMPTY;
         wld_nl80211_chanSpecNlToSwl(&curChspec, (wld_nl80211_chanSpec_t*) pNlChspec);
         swl_macBin_t* bssid = (swl_macBin_t*) pEP->pSSID->BSSID;
-        swl_chanspec_t tgtChspec = s_getEpBssTgtChanspec(pEP, bssid);
+        swl_wirelessDevice_infoElements_t remoteApProbRespIEs;
+        memset(&remoteApProbRespIEs, 0, sizeof(remoteApProbRespIEs));
+        swl_chanspec_t tgtChspec = s_getEpBssTgtChanspec(pEP, bssid, &remoteApProbRespIEs);
 
         if((curChspec.channel == tgtChspec.channel) &&
            (curChspec.bandwidth >= tgtChspec.bandwidth)) {
             tgtChspec.bandwidth = curChspec.bandwidth;
             tgtChspec.extensionHigh = curChspec.extensionHigh;
         }
+
+        /* get remote AP caps from last scan probeResp frame, as wps_s does not provide the assocResp frame */
+        wld_util_copyStaCapsInfoFromIEs(&pEP->stats.assocCaps, &remoteApProbRespIEs);
+        /* early update of EP stats, to get current connection operStd */
+        pEP->pFA->mfn_wendpoint_stats(pEP, &pEP->stats);
+
+        s_doSyncEpRemoteOperStd(pEP, &remoteApProbRespIEs);
 
         /*
          * proceed to reconnect using the scan tgt chanspec, if:
@@ -1264,7 +1297,7 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
     ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
     if(error == -EBUSY) {
         swl_macBin_t* bssid = &pEP->currConnBssid;
-        swl_chanspec_t chanSpec = s_getEpBssTgtChanspec(pEP, bssid);
+        swl_chanspec_t chanSpec = s_getEpBssTgtChanspec(pEP, bssid, NULL);
         if((chanSpec.channel != 0) && (chanSpec.band != wld_chanmgt_getCurChspec(pRad).band)) {
             SAH_TRACEZ_WARNING(ME, "%s: ignore target ep chanspec %s out of current band",
                                pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf);
