@@ -331,6 +331,26 @@ static swl_rc_ne s_radarEvtCb(swl_unLiList_t* pListenerList, struct nlmsghdr* nl
     return SWL_RC_DONE;
 }
 
+static swl_rc_ne s_regChangeEvtCb(swl_unLiList_t* pListenerList, struct nlmsghdr* nlh, struct nlattr* tb[]) {
+    swl_rc_ne rc = s_commonEvtCb(pListenerList, nlh, tb);
+    ASSERTS_EQUALS(rc, SWL_RC_OK, rc, ME, "abort evt parsing");
+    if((nlh->nlmsg_type != g_nl80211DriverIDs.family_id) &&
+       (nlh->nlmsg_type != g_nl80211DriverIDs.reg_grp_id)) {
+        SAH_TRACEZ_INFO(ME, "skip msgtype %d", nlh->nlmsg_type);
+        return SWL_RC_OK;
+    }
+    wld_nl80211_regChangeInfo_t regChangeInfo;
+    memset(&regChangeInfo, 0, sizeof(regChangeInfo));
+    regChangeInfo.wiphy = WLD_NL80211_ID_UNDEF;
+    rc = wld_nl80211_parseRegChangeInfo(tb, &regChangeInfo);
+    ASSERTS_FALSE(rc < SWL_RC_OK, rc, ME, "parsing failed");
+    SAH_TRACEZ_INFO(ME, "new reg domain change notified on w:%d,c:%s", regChangeInfo.wiphy, regChangeInfo.alpha2);
+    FOR_EACH_LISTENER(pListener, pListenerList, {
+        pListener->handlers.fRegChangedCb(pListener->pRef, pListener->pData, &regChangeInfo);
+    });
+    return SWL_RC_DONE;
+}
+
 #define OFFSET_UNDEF (-1)
 #define MSG_ID_NAME(x) x, #x
 
@@ -401,6 +421,9 @@ SWL_TABLE(sNl80211Msgs,
               {MSG_ID_NAME(NL80211_CMD_PROBE_CLIENT), s_commonEvtCb, OFFSET_UNDEF},
               {MSG_ID_NAME(NL80211_CMD_FT_EVENT), s_commonEvtCb, OFFSET_UNDEF},
               {MSG_ID_NAME(NL80211_CMD_STOP_AP), s_commonEvtCb, OFFSET_UNDEF},
+              /* NL80211_MCGRP_REGULATORY */
+              {MSG_ID_NAME(NL80211_CMD_REG_CHANGE), s_regChangeEvtCb, offsetof(wld_nl80211_evtHandlers_cb, fRegChangedCb)},
+              {MSG_ID_NAME(NL80211_CMD_WIPHY_REG_CHANGE), s_regChangeEvtCb, offsetof(wld_nl80211_evtHandlers_cb, fRegChangedCb)},
               /* unicast */
               {MSG_ID_NAME(NL80211_CMD_UNEXPECTED_FRAME), s_commonEvtCb, OFFSET_UNDEF},
               {MSG_ID_NAME(NL80211_CMD_UNEXPECTED_4ADDR_FRAME), s_commonEvtCb, OFFSET_UNDEF},
@@ -452,6 +475,7 @@ swl_rc_ne wld_nl80211_updateEventHandlers(wld_nl80211_listener_t* pListener, con
     pListener->handlers.fCheckTgtCb = handlers->fCheckTgtCb;
     pListener->handlers.fNewWiphyCb = handlers->fNewWiphyCb;
     pListener->handlers.fDelWiphyCb = handlers->fDelWiphyCb;
+    pListener->handlers.fRegChangedCb = handlers->fRegChangedCb;
     return SWL_RC_OK;
 }
 

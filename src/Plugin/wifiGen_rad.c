@@ -838,9 +838,6 @@ swl_rc_ne wifiGen_rad_regDomain(T_Radio* pRad, char* val, int bufsize, int set) 
         if(set & DIRECT) {
             return wld_rad_nl80211_setRegDomain(pRad, countryName);
         }
-        if(wifiGen_hapd_isAlive(pRad)) {
-            wld_ap_hostapd_setParamValue(wld_rad_hostapd_getCfgMainVap(pRad), "country_code", pRad->regulatoryDomain, "updating regulatory domain");
-        }
         setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_MOD_COUNTRYCODE);
     } else {
         swl_str_copy(val, bufsize, pRad->regulatoryDomain);

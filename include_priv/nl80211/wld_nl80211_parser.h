@@ -188,4 +188,15 @@ swl_rc_ne wld_nl80211_parseMgmtFrameTxStatus(struct nlattr* tb[], wld_nl80211_mg
  */
 swl_rc_ne wld_nl80211_parseRadarInfo(struct nlattr* tb[], wld_nl80211_radarEvtInfo_t* pRadarEvtInfo);
 
+/*
+ * @brief parse nl msg attributes into reg domain change event struct
+ *
+ * @param tb array of attributes from parsed nl msg
+ * @param pRegChangeInfo pointer to reg domain changed event struct to be filled
+ *
+ * @return SWL_RC_OK parsing done successfully
+ *         <= SWL_RC_ERROR parsing error
+ */
+swl_rc_ne wld_nl80211_parseRegChangeInfo(struct nlattr* tb[], wld_nl80211_regChangeInfo_t* pRegChangeInfo);
+
 #endif /* INCLUDE_PRIV_NL80211_WLD_NL80211_PARSER_H_ */

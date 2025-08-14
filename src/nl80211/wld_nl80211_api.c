@@ -1044,7 +1044,7 @@ swl_rc_ne wld_nl80211_setRegDomain(wld_nl80211_state_t* state, uint32_t wiphy, c
         NL_ATTRS_ADD(&attribs, NL_ATTR_VAL(NL80211_ATTR_WIPHY, wiphy));
     }
     NL_ATTRS_ADD(&attribs, NL_ATTR_DATA(NL80211_ATTR_REG_ALPHA2, swl_str_len(alpha2) + 1, alpha2));
-    rc = wld_nl80211_sendCmdSyncWithAck(state, NL80211_CMD_REQ_SET_REG, 0, 0, &attribs);
+    rc = wld_nl80211_sendCmdAsyncWithAck(state, NL80211_CMD_REQ_SET_REG, 0, 0, &attribs);
     NL_ATTRS_CLEAR(&attribs);
     return rc;
 }

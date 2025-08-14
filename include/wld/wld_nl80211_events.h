@@ -174,6 +174,18 @@ typedef void (* wld_nl80211_mgmtFrameTxStatusEvtCb_f)(void* pRef, void* pData, s
 typedef void (* wld_nl80211_radarEvtCb_f)(void* pRef, void* pData, wld_nl80211_radarEvtInfo_t* dfsEvtInfo);
 
 /*
+ * @brief callback for changed reg domain info
+ *
+ * @param pRef user private reference provided when registering handlers
+ * @param pData user private data provided when registering handlers
+ * @param pRegChangeInfo: pointer to reg domain change info struct
+ *
+ * @return void
+ *
+ */
+typedef void (* wld_nl80211_regChangedEvtCb_f)(void* pRef, void* pData, wld_nl80211_regChangeInfo_t* pRegChangeInfo);
+
+/*
  * @brief structure of event handlers
  */
 typedef struct {
@@ -190,6 +202,7 @@ typedef struct {
     wld_nl80211_checkTgtCb_f fCheckTgtCb;                         // handler to check target listener
     wld_nl80211_wiphyInfoEvtCb_f fNewWiphyCb;                     // created wiphy device
     wld_nl80211_wiphyInfoEvtCb_f fDelWiphyCb;                     // deleted wiphy device
+    wld_nl80211_regChangedEvtCb_f fRegChangedCb;                  // changed regulatory info
 } wld_nl80211_evtHandlers_cb;
 
 /*

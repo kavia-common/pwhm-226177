@@ -513,8 +513,9 @@ static bool s_doRadEnable(T_Radio* pRad) {
 
 static bool s_doRadSync(T_Radio* pRad) {
     SAH_TRACEZ_INFO(ME, "%s: sync rad conf", pRad->Name);
+    pRad->pFA->mfn_wrad_poschans(pRad, NULL, 0);
     pRad->pFA->mfn_wrad_sync(pRad, SET | DIRECT);
-    if(wifiGen_hapd_isAlive(pRad)) {
+    if(wld_wpaCtrlMngr_isReady(wld_secDmn_getWpaCtrlMgr(pRad->hostapd))) {
         wld_rad_hostapd_setMiscParams(pRad);
         wld_rad_hostapd_setChannel(pRad);
     }
@@ -689,7 +690,7 @@ static void s_syncOnRadUp(void* userData, char* ifName, bool state) {
     }
 
     if(!pRad->autoChannelEnable
-       && (pRad->userChanspec.channel != 0)
+       && (wld_channel_is_band_available(pRad->userChanspec))
        && pRad->externalAcsMgmt && !pRad->autoChannelSetByUser
        && ((pRad->channelShowing == CHANNEL_INTERNAL_STATUS_SYNC) || (pRad->channelShowing == CHANNEL_INTERNAL_STATUS_TARGET))) {
         chanspecInfo_t* userChanspec = calloc(1, sizeof(chanspecInfo_t));
@@ -901,18 +902,9 @@ static bool s_doEnableHostapd(T_Radio* pRad) {
 }
 
 static bool s_doSetCountryCode(T_Radio* pRad) {
+    wifiGen_zwdfs_deinit(pRad);
+    wifiGen_zwdfs_init(pRad);
     pRad->pFA->mfn_wrad_regdomain(pRad, NULL, 0, SET | DIRECT);
-    //Here radio shall be down: so toggle shortly to force reloading nl80211 wiphy channels
-    if(wld_linuxIfUtils_getState(wld_rad_getSocket(pRad), pRad->Name) == 0) {
-        wld_linuxIfUtils_setState(wld_rad_getSocket(pRad), pRad->Name, 1);
-        wld_linuxIfUtils_setState(wld_rad_getSocket(pRad), pRad->Name, 0);
-    }
-    pRad->pFA->mfn_wrad_poschans(pRad, NULL, 0);
-    if(pRad->operatingChannelBandwidth == SWL_RAD_BW_AUTO) {
-        SAH_TRACEZ_INFO(ME, "%s: refresh target chanspec with autobw after regdomain setting", pRad->Name);
-        swl_chanspec_t chanspec = swl_chanspec_fromDm(wld_chanmgt_getTgtChannel(pRad), pRad->operatingChannelBandwidth, pRad->operatingFrequencyBand);
-        wld_chanmgt_setTargetChanspec(pRad, chanspec, true, pRad->targetChanspec.reason, pRad->targetChanspec.reasonExt);
-    }
     return true;
 }
 
@@ -1033,6 +1025,22 @@ static bool s_doSyncState(T_Radio* pRad) {
         }
     }
     wifiGen_hapd_syncVapStates(pRad);
+
+    T_EndPoint* pEP = wld_rad_getEnabledEndpoint(pRad);
+    if(pEP && !wifiGen_wpaSupp_isRunning(pEP)) {
+        chanmgt_rad_state fhDetSta = CM_RAD_UNKNOWN;
+        if(!wld_secDmn_isEnabled(pRad->hostapd)) {
+            fhDetSta = CM_RAD_DOWN;
+        } else {
+            wifiGen_hapd_getRadState(pRad, &fhDetSta);
+        }
+        if((fhDetSta == CM_RAD_DOWN) || (fhDetSta == CM_RAD_UP)) {
+            SAH_TRACEZ_WARNING(ME, "%s: restore wpa_s startup after hostapd", pEP->Name);
+            setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_WPASUPP);
+            setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_WPASUPP);
+        }
+    }
+
     return true;
 }
 
@@ -1119,6 +1127,35 @@ static bool s_doSyncEpRemoteOperStd(T_EndPoint* pEP, swl_wirelessDevice_infoElem
     return false;
 }
 
+static bool s_doSyncEpRemoteRegDom(T_EndPoint* pEP, swl_wirelessDevice_infoElements_t* pIEs) {
+    ASSERTS_NOT_NULL(pEP, false, ME, "NULL");
+    T_Radio* pRad = pEP->pRadio;
+    ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
+    ASSERTI_TRUE(pIEs && pIEs->operChanInfo.channel > 0, false, ME, "%s: missing remote AP info", pEP->Name);
+
+    char newRegDom[3] = {0};
+    swl_str_ncopy(newRegDom, sizeof(newRegDom), pIEs->country, 2);
+    if(!swl_str_nmatches(pRad->regulatoryDomain, newRegDom, 2)) {
+        swl_opClassCountry_e curCountryZone = getCountryZone(pRad->regulatoryDomainIdx);
+        int newRegDomIdx = -1;
+        int newCC = getCountryParam(newRegDom, 0, &newRegDomIdx);
+        if((newRegDomIdx != -1) &&
+           ((pRad->regulatoryDomainIdx != newRegDomIdx) || (!newCC && (pIEs->operClassRegion != curCountryZone)))) {
+            SAH_TRACEZ_WARNING(ME, "%s: mismatch remote country:%s/zone:%d/localIdx:%d vs curr country:%s/zone:%d/localIdx:%d",
+                               pRad->Name,
+                               pIEs->country, pIEs->operClassRegion, newRegDomIdx,
+                               pRad->regulatoryDomain, curCountryZone, pRad->regulatoryDomainIdx);
+            SAH_TRACEZ_WARNING(ME, "%s: need cold apply of new regdomain %s (cur:%s) to align radio phy conf (ft,bk) with remote", pRad->Name, newRegDom, pRad->regulatoryDomain);
+            pRad->regulatoryDomainIdx = newRegDomIdx;
+            pRad->pFA->mfn_wrad_regdomain(pRad, NULL, 0, SET);
+            wld_rad_doCommitIfUnblocked(pRad);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     ASSERTS_TRUE(state, , ME, "not connected");
     T_Radio* pRad = (T_Radio*) userData;
@@ -1196,6 +1233,13 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
                      */
                     SAH_TRACEZ_WARNING(ME, "%s: reconnect ep to sync chanspec", pEP->Name);
                     wld_endpoint_reconfigure(pEP);
+                    return;
+                }
+            }
+            //when trying to connect, only sync regDom is tgt chanspec is not available
+            if(!wld_channel_is_band_available(tgtChspec)) {
+                if(s_doSyncEpRemoteRegDom(pEP, &remoteApProbRespIEs)) {
+                    SAH_TRACEZ_WARNING(ME, "%s: reconnect ep to sync regDomain with remote AP", pEP->Name);
                     return;
                 }
             }
@@ -1297,7 +1341,9 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
     ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
     if(error == -EBUSY) {
         swl_macBin_t* bssid = &pEP->currConnBssid;
-        swl_chanspec_t chanSpec = s_getEpBssTgtChanspec(pEP, bssid, NULL);
+        swl_wirelessDevice_infoElements_t remoteApProbRespIEs;
+        memset(&remoteApProbRespIEs, 0, sizeof(remoteApProbRespIEs));
+        swl_chanspec_t chanSpec = s_getEpBssTgtChanspec(pEP, bssid, &remoteApProbRespIEs);
         if((chanSpec.channel != 0) && (chanSpec.band != wld_chanmgt_getCurChspec(pRad).band)) {
             SAH_TRACEZ_WARNING(ME, "%s: ignore target ep chanspec %s out of current band",
                                pEP->Name, swl_typeChanspecExt_toBuf32(chanSpec).buf);
@@ -1327,6 +1373,10 @@ static void s_syncOnEpStartConnFail(void* userData, char* ifName, int error) {
                (pRad->targetChanspec.isApplied == SWL_TRL_TRUE)) {
                 return;
             }
+        }
+        //when trying to connect, only sync regDom is tgt chanspec is not available
+        if((chanSpec.channel > 0) && (!wld_channel_is_band_available(chanSpec))) {
+            s_doSyncEpRemoteRegDom(pEP, &remoteApProbRespIEs);
         }
         // disable BSSs to allow wpa_supplicant to do start connection
         SAH_TRACEZ_INFO(ME, "%s: disable fronthaul to allow wpa_supplicant to connect on chspec %s to %s",
@@ -1368,6 +1418,14 @@ static void s_registerWpaSuppRadEvtHandlers(wld_secDmn_t* wpaSupp) {
 static bool s_doStartWpaSupp(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
     bool enaConds = (pRad->enable && pEP->enable && (pEP->index > 0));
     ASSERTS_TRUE(enaConds, true, ME, "%d: ep not ready", pEP->Name);
+    if(wld_secDmn_isEnabled(pRad->hostapd)) {
+        chanmgt_rad_state fhDetSta = CM_RAD_UNKNOWN;
+        wifiGen_hapd_getRadState(pRad, &fhDetSta);
+        if((fhDetSta != CM_RAD_DOWN) && (fhDetSta != CM_RAD_UP)) {
+            SAH_TRACEZ_WARNING(ME, "%s: wait for hostapd finish startup (St:%d) before starting wpa_supp", pEP->Name, fhDetSta);
+            return true;
+        }
+    }
     SAH_TRACEZ_INFO(ME, "%s: start wpa_supplicant", pEP->Name);
     wifiGen_wpaSupp_startDaemon(pEP);
     s_registerWpaSuppRadEvtHandlers(pEP->wpaSupp);
@@ -1481,7 +1539,7 @@ static void s_checkRadDependency(T_Radio* pRad) {
         if(!isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_HOSTAPD)) {
             s_schedNextAction(SECDMN_ACTION_OK_NEED_TOGGLE, NULL, pRad);
         }
-        setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_DISABLE_RAD);
+        setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_SYNC_RAD);
         setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_MOD_HOSTAPD);
     }
 
@@ -1511,8 +1569,8 @@ wld_fsmMngr_action_t actions[GEN_FSM_MAX] = {
     {FSM_ACTION(GEN_FSM_REMOVE_HOSTAPD), .doRadFsmAction = s_doRemoveHostapd},
     {FSM_ACTION(GEN_FSM_DISABLE_HOSTAPD), .doRadFsmAction = s_doDisableHostapd},
     {FSM_ACTION(GEN_FSM_DISABLE_RAD), .doRadFsmAction = s_doRadDisable},
-    {FSM_ACTION(GEN_FSM_SYNC_RAD), .doRadFsmAction = s_doRadSync, .doVapFsmAction = s_doSetApSec},
     {FSM_ACTION(GEN_FSM_MOD_COUNTRYCODE), .doRadFsmAction = s_doSetCountryCode},
+    {FSM_ACTION(GEN_FSM_SYNC_RAD), .doRadFsmAction = s_doRadSync, .doVapFsmAction = s_doSetApSec},
     {FSM_ACTION(GEN_FSM_MOD_BSSID), .doVapFsmAction = s_doSetBssid},
     {FSM_ACTION(GEN_FSM_MOD_MLD), .doVapFsmAction = s_doSetApMld},
     {FSM_ACTION(GEN_FSM_MOD_SEC), .doVapFsmAction = s_doSetApSec},
@@ -1618,6 +1676,39 @@ static void s_radioChange(wld_rad_changeEvent_t* event) {
     } else if(event->changeType == WLD_RAD_CHANGE_DESTROY) {
         wld_event_remove_callback(gWld_queue_vap_onStatusChange, &s_vapStatusCbContainer);
         wifiGen_zwdfs_deinit(pRad);
+    } else if(event->changeType == WLD_RAD_CHANGE_REGDOM) {
+        wld_rad_changeRegDomEventData_t* pData = (wld_rad_changeRegDomEventData_t*) event->changeData;
+        char* regDom = (pData && !swl_str_isEmpty(pData->alpha2)) ? (char*) pData->alpha2 : "unspec";
+        SAH_TRACEZ_NOTICE(ME, "%s: country changed to %s", pRad->Name, regDom);
+        T_Radio* pTmpRad;
+        wld_for_eachRad(pTmpRad) {
+            if(pTmpRad && (pTmpRad->wiphy == pRad->wiphy)) {
+                char savedRegDom[8] = {0};
+                if(!(swl_rc_isOk(wifiGen_hapd_getConfiguredCountryCode(pTmpRad, savedRegDom, sizeof(savedRegDom))) &&
+                     swl_str_matches(savedRegDom, regDom)) &&
+                   (getCountryParam(regDom, 0, &pTmpRad->regulatoryDomainIdx) != -1)) {
+                    SAH_TRACEZ_INFO(ME, "%s: applying country %s (wiphy %d)", pTmpRad->Name, regDom, pTmpRad->wiphy);
+
+                    /* phyX has active interface: bring down to set country code */
+                    if(wifiGen_hapd_isAlive(pTmpRad) && !s_checkHapdDown(pTmpRad)) {
+                        wld_rad_hostapd_disable(pTmpRad);
+                    }
+                    T_EndPoint* pTmpEp = wld_rad_getEnabledEndpoint(pTmpRad);
+                    if(wifiGen_wpaSupp_isRunning(pTmpEp)) {
+                        wifiGen_wpaSupp_stopDaemon(pTmpEp);
+                    }
+
+                    bool needCommit = (pTmpRad->fsmRad.FSM_State != FSM_RUN);
+                    unsigned long* actionArray = (needCommit ? pTmpRad->fsmRad.FSM_BitActionArray : pTmpRad->fsmRad.FSM_AC_BitActionArray);
+                    setBitLongArray(actionArray, FSM_BW, GEN_FSM_MOD_COUNTRYCODE);
+                    setBitLongArray(actionArray, FSM_BW, GEN_FSM_SYNC_RAD);
+                    setBitLongArray(actionArray, FSM_BW, GEN_FSM_MOD_HOSTAPD);
+                    if(needCommit) {
+                        wld_rad_doCommitIfUnblocked(pTmpRad);
+                    }
+                }
+            }
+        }
     }
 }
 

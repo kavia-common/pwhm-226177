@@ -77,6 +77,7 @@ wld_nl80211_driverIds_t g_nl80211DriverIDs = {
     .config_mcgrp_id = -1,
     .mlme_mcgrp_id = -1,
     .vendor_grp_id = -1,
+    .reg_grp_id = -1,
 };
 
 swl_rc_ne s_learnDriverIDs(struct nl_sock* pNlSock) {
@@ -96,6 +97,9 @@ swl_rc_ne s_learnDriverIDs(struct nl_sock* pNlSock) {
     }
     if(g_nl80211DriverIDs.vendor_grp_id < 0) {
         g_nl80211DriverIDs.vendor_grp_id = genl_ctrl_resolve_grp(pNlSock, NL80211_GENL_NAME, NL80211_MULTICAST_GROUP_VENDOR);
+    }
+    if(g_nl80211DriverIDs.reg_grp_id < 0) {
+        g_nl80211DriverIDs.reg_grp_id = genl_ctrl_resolve_grp(pNlSock, NL80211_GENL_NAME, NL80211_MULTICAST_GROUP_REG);
     }
     return SWL_RC_OK;
 }
@@ -648,6 +652,7 @@ wld_nl80211_listener_t* wld_nl80211_addEvtListener(wld_nl80211_state_t* state,
         //here, add membership for nl80211 multicast groups related to wiphy (SCAN, CONFIG)
         nl_socket_add_membership(state->nl_sock, g_nl80211DriverIDs.scan_mcgrp_id);
         nl_socket_add_membership(state->nl_sock, g_nl80211DriverIDs.config_mcgrp_id);
+        nl_socket_add_membership(state->nl_sock, g_nl80211DriverIDs.reg_grp_id);
     }
     if(ifIndex != WLD_NL80211_ID_UNDEF) {
         //here, add membership for nl80211 multicast groups related to iface (MLME, CONFIG)
@@ -1067,5 +1072,10 @@ static swl_rc_ne s_defaultAckCb(swl_rc_ne rc _UNUSED, struct nlmsghdr* nlh, void
 swl_rc_ne wld_nl80211_sendCmdSyncWithAck(wld_nl80211_state_t* state, uint32_t cmd, uint32_t flags,
                                          uint32_t ifIndex, wld_nl80211_nlAttrList_t* const pAttrList) {
     return wld_nl80211_sendCmdSync(state, cmd, flags, ifIndex, pAttrList, s_defaultAckCb, NULL);
+}
+
+swl_rc_ne wld_nl80211_sendCmdAsyncWithAck(wld_nl80211_state_t* state, uint32_t cmd, uint32_t flags,
+                                          uint32_t ifIndex, wld_nl80211_nlAttrList_t* const pAttrList) {
+    return wld_nl80211_sendCmd(false, state, cmd, flags, ifIndex, pAttrList, s_defaultAckCb, NULL, NULL);
 }
 

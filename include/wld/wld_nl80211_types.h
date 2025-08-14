@@ -157,6 +157,14 @@ typedef struct {
     bool use4Mac;                    //4addr mode, for station only
 } wld_nl80211_newIfaceConf_t;
 
+typedef struct {
+    uint32_t wiphy;                  //wiphy id (UNDEF, ANY, valid)
+    uint8_t initiator;               //regulatory domain change initiator id
+    uint8_t type;                    //regulatory domain change type
+    char alpha2[3];                  //new regulatory domain ALPHA2
+    bool selfManaged;                //flag for self managed regulatory conf
+} wld_nl80211_regChangeInfo_t;
+
 typedef enum {
     WLD_NL80211_CHAN_STATUS_UNKNOWN, //unknown status
     WLD_NL80211_CHAN_DISABLED,       //channel disabled for this regulatory domain

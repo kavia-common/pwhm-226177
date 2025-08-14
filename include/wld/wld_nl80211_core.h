@@ -109,6 +109,7 @@ typedef struct {
     int32_t config_mcgrp_id; //nl80211 CONFIG multicast group id
     int32_t mlme_mcgrp_id;   //nl80211 MLME multicast group id
     int32_t vendor_grp_id;   //nl80211 vendor evt group id
+    int32_t reg_grp_id;      //nl80211 regulatory group id
 } wld_nl80211_driverIds_t;
 
 /*

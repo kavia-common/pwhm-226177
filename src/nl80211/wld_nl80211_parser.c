@@ -1638,3 +1638,20 @@ swl_rc_ne wld_nl80211_parseRadarInfo(struct nlattr* tb[], wld_nl80211_radarEvtIn
     return SWL_RC_OK;
 }
 
+swl_rc_ne wld_nl80211_parseRegChangeInfo(struct nlattr* tb[], wld_nl80211_regChangeInfo_t* pRegChangeInfo) {
+    ASSERT_NOT_NULL(pRegChangeInfo, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_NOT_NULL(tb, SWL_RC_INVALID_PARAM, ME, "NULL");
+    if(tb[NL80211_ATTR_WIPHY]) {
+        pRegChangeInfo->wiphy = nla_get_u32(tb[NL80211_ATTR_WIPHY]);
+    } else {
+        pRegChangeInfo->wiphy = WLD_NL80211_ID_ANY;
+    }
+    pRegChangeInfo->type = nla_get_u8(tb[NL80211_ATTR_REG_TYPE]);
+    pRegChangeInfo->initiator = nla_get_u8(tb[NL80211_ATTR_REG_INITIATOR]);
+    if(tb[NL80211_ATTR_REG_ALPHA2]) {
+        swl_str_copy(pRegChangeInfo->alpha2, sizeof(pRegChangeInfo->alpha2), nla_get_string(tb[NL80211_ATTR_REG_ALPHA2]));
+    }
+    pRegChangeInfo->selfManaged = tb[NL80211_ATTR_WIPHY_SELF_MANAGED_REG];
+    return SWL_RC_OK;
+}
+

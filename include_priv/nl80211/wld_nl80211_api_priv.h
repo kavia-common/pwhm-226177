@@ -142,6 +142,22 @@ swl_rc_ne wld_nl80211_sendCmdSyncWithAck(wld_nl80211_state_t* state, uint32_t cm
                                          uint32_t ifIndex, wld_nl80211_nlAttrList_t* const pAttrList);
 
 /*
+ * @brief common function to send asynchronous request
+ * and handle differed acknowledgment
+ *
+ * @param state nl80211 socket manager context
+ * @param cmd nl80211 command to send
+ * @param flags optional nl80211 msg flags
+ * @param ifIndex interface net dev index (ignored if ifIndex is null)
+ * @param pAttrList netlink attribute list to add to message
+ *
+ * @return SWL_RC_OK on success
+ *         <= SWL_RC_ERROR otherwise
+ */
+swl_rc_ne wld_nl80211_sendCmdAsyncWithAck(wld_nl80211_state_t* state, uint32_t cmd, uint32_t flags,
+                                          uint32_t ifIndex, wld_nl80211_nlAttrList_t* const pAttrList);
+
+/*
  * @brief cleans up expired requests of all socket managers
  *
  * @return void

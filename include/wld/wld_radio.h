@@ -76,8 +76,14 @@ typedef enum {
     WLD_RAD_CHANGE_DESTROY,
     WLD_RAD_CHANGE_POSCHAN,
     WLD_RAD_CHANGE_CHANSPEC,
+    WLD_RAD_CHANGE_REGDOM,
     WLD_RAD_CHANGE_MAX
 } wld_rad_changeEvent_e;
+
+typedef struct {
+    bool isGlobal;                   //global regulatory domain change
+    char alpha2[3];                  //new regulatory domain ALPHA2
+} wld_rad_changeRegDomEventData_t;
 
 typedef struct {
     wld_rad_changeEvent_e changeType;

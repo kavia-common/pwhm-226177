@@ -69,8 +69,8 @@ typedef enum {
     GEN_FSM_REMOVE_HOSTAPD,       /* Remove config of hostapd iface */
     GEN_FSM_DISABLE_HOSTAPD,      /* disable hostapd main interface*/
     GEN_FSM_DISABLE_RAD,          /* Disable Radio device */
-    GEN_FSM_SYNC_RAD,             /* Sync Radio conf (cold.down(wt nl80211) / hot.up(wt secDmn))*/
     GEN_FSM_MOD_COUNTRYCODE,      /* Modify the country code */
+    GEN_FSM_SYNC_RAD,             /* Sync Radio conf (cold.down(wt nl80211) / hot.up(wt secDmn))*/
     GEN_FSM_MOD_BSSID,            /* Modify the BSSID */
     GEN_FSM_MOD_MLD,              /* Sync MLD params */
     GEN_FSM_MOD_SEC,              /* Set AP Security */

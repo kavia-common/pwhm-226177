@@ -80,6 +80,7 @@ swl_rc_ne wifiGen_zwdfs_init(T_Radio* pRad) {
 swl_rc_ne wifiGen_zwdfs_deinit(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: Denit ZWDFS FSM", pRad->Name);
+    wld_zwdfs_stop(pRad);
     return wld_zwdfs_deinit(pRad);
 }
 

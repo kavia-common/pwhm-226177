@@ -1202,7 +1202,7 @@ static void s_setCountryCode_pwf(void* priv _UNUSED, amxd_object_t* object, amxd
     //to have up to date possible channels asap
     bool initOngoing = (!wld_rad_areAllVapsDone(pR));
     if(s_setCountryCode(pR, CC, initOngoing) == SWL_RC_OK) {
-        wld_autoCommitMgr_notifyRadEdit(pR);
+        wld_rad_doCommitIfUnblocked(pR);
     }
 
     SAH_TRACEZ_OUT(ME);
@@ -2252,15 +2252,6 @@ void syncData_Radio2OBJ(amxd_object_t* object, T_Radio* pR, int set) {
             wld_rad_setAllMldLinksUnconfigured(pR);
             commit = true;
         }
-
-        char* regulatoryDomain = amxd_object_get_cstring_t(object, "RegulatoryDomain", NULL);
-        if(!swl_str_matches(regulatoryDomain, pR->regulatoryDomain)) {
-            if(s_setCountryCode(pR, regulatoryDomain, false) == SWL_RC_OK) {
-                commit = true;
-            }
-        }
-        free(regulatoryDomain);
-        regulatoryDomain = NULL;
 
         if(commit) {
             wld_autoCommitMgr_notifyRadEdit(pR);

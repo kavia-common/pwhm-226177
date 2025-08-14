@@ -202,6 +202,37 @@ void s_filterEntries(swl_mapChar_t* configMap, const char* keys[], uint32_t nKey
     }
 }
 
+static swl_chanspec_t s_getCfgTgtChspec(T_Radio* pRad) {
+    swl_chanspec_t tgtChspec = wld_chanmgt_getTgtChspec(pRad);
+    swl_chanspec_t defChspec = SWL_CHANSPEC_NEW(wld_chanmgt_getDefaultSupportedChannel(pRad), wld_chanmgt_getDefaultSupportedBandwidth(pRad), pRad->operatingFrequencyBand);
+
+    /* force AcsBootChannel when Radio is down to the next up */
+    if(!wld_rad_isUpExt(pRad) &&
+       (pRad->autoChannelEnable || (pRad->externalAcsMgmt && pRad->autoChannelSetByUser)) &&
+       (pRad->acsBootChannel != -1) &&
+       ((tgtChspec.band != SWL_FREQ_BAND_EXT_5GHZ) || (swl_chanspec_isDfs(tgtChspec)))) {
+        tgtChspec = defChspec;
+        if(pRad->acsBootChannel > 0) {
+            tgtChspec.channel = pRad->acsBootChannel;
+        }
+        SAH_TRACEZ_INFO(ME, "%s: radio is starting, force ACS Boot chspec %s",
+                        pRad->Name,
+                        swl_typeChanspecExt_toBuf32(tgtChspec).buf);
+    }
+    if(!wld_channel_is_band_available(tgtChspec)) {
+        SAH_TRACEZ_WARNING(ME, "%s: tgt chspec %s is not available",
+                           pRad->Name, swl_typeChanspecExt_toBuf32(tgtChspec).buf);
+        tgtChspec.channel = defChspec.channel;
+        if(!wld_channel_is_band_usable(tgtChspec)) {
+            tgtChspec = defChspec;
+        }
+        SAH_TRACEZ_WARNING(ME, "%s: fallback to default usable chspec %s",
+                           pRad->Name, swl_typeChanspecExt_toBuf32(tgtChspec).buf);
+    }
+
+    return tgtChspec;
+}
+
 /**
  * @brief set the radio parameters
  *
@@ -218,16 +249,7 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
     } else {
         swl_mapChar_add(radConfigMap, "hw_mode", "a");
     }
-    swl_chanspec_t tgtChspec = wld_chanmgt_getTgtChspec(pRad);
-
-    /* force AcsBootChannel when Radio is down to the next up */
-    if(!wld_rad_isUpExt(pRad) &&
-       (pRad->autoChannelEnable || (pRad->externalAcsMgmt && pRad->autoChannelSetByUser)) &&
-       (pRad->acsBootChannel != -1) &&
-       ((tgtChspec.band != SWL_FREQ_BAND_EXT_5GHZ) || (swl_chanspec_isDfs(tgtChspec)))) {
-        tgtChspec.channel = pRad->acsBootChannel ? : wld_chanmgt_getDefaultSupportedChannel(pRad);
-        tgtChspec.bandwidth = wld_chanmgt_getDefaultSupportedBandwidth(pRad);
-    }
+    swl_chanspec_t tgtChspec = s_getCfgTgtChspec(pRad);
 
     bool enableRad11be = wld_rad_is11beUsable(pRad);
     /*

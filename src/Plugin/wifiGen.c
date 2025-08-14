@@ -236,7 +236,7 @@ int wifiGen_addRadios() {
 
 static struct globWiphyMonCtx_s {
     wld_nl80211_listener_t* listener;
-    wifiGen_wiphyDevReadyCb_f fcb;
+    wifiGen_wiphyDevReadyCb_f fWiphyDevReadyCb;
     void* userdata;
     amxp_timer_t* pTimer;
 } gGlobWiphyMoniCtx = {NULL, NULL, NULL, NULL};
@@ -246,7 +246,7 @@ static void s_handleNewWiphy(amxp_timer_t* timer _UNUSED, void* userdata) {
     ASSERT_NOT_NULL(ctx, , ME, "NULL");
     if(!wld_countRadios()) {
         SAH_TRACEZ_WARNING(ME, "first wiphy detection: start adding gen radios");
-        SWL_CALL(ctx->fcb, ctx->userdata);
+        SWL_CALL(ctx->fWiphyDevReadyCb, ctx->userdata);
     } else {
         SAH_TRACEZ_INFO(ME, "other radios are registered");
     }
@@ -262,21 +262,41 @@ static void s_newWiphyInfoEvtCb(void* pRef, void* pData _UNUSED, wld_nl80211_wip
     amxp_timer_start(ctx->pTimer, NEW_WIPHY_HANDLE_DELAY);
 }
 
-swl_rc_ne wifiGen_waitForGenRadios(void* userData, wifiGen_wiphyDevReadyCb_f fcb) {
-    if((wld_nl80211_countWiphyFromFS() > 0) || (wld_countRadios() > 0)) {
-        SWL_CALL(fcb, userData);
-        return SWL_RC_DONE;
+static void s_regChangedEvtCb(void* pRef _UNUSED, void* pData _UNUSED, wld_nl80211_regChangeInfo_t* pRegInfo) {
+    ASSERT_NOT_NULL(pRegInfo, , ME, "NULL");
+    SAH_TRACEZ_WARNING(ME, "reg change wid:%d alpha2:%s is detected", pRegInfo->wiphy, pRegInfo->alpha2);
+    T_Radio* pRad;
+    wld_for_eachRad(pRad) {
+        if(pRad && ((pRegInfo->wiphy == WLD_NL80211_ID_ANY) || (pRad->wiphy == pRegInfo->wiphy))) {
+            wld_rad_changeRegDomEventData_t evtdata;
+            memset(&evtdata, 0, sizeof(evtdata));
+            evtdata.isGlobal = (pRegInfo->wiphy == WLD_NL80211_ID_ANY);
+            swl_str_ncopy(evtdata.alpha2, sizeof(evtdata.alpha2), pRegInfo->alpha2, 2);
+            wld_rad_triggerChangeEvent(pRad, WLD_RAD_CHANGE_REGDOM, &evtdata);
+        }
     }
-    ASSERT_NOT_NULL(fcb, SWL_RC_INVALID_PARAM, ME, "missing callback");
-    gGlobWiphyMoniCtx.fcb = fcb;
+}
+
+swl_rc_ne wifiGen_waitForGenRadios(void* userData, wifiGen_wiphyDevReadyCb_f fWiphyDevReadyCb) {
     if(gGlobWiphyMoniCtx.listener == NULL) {
-        SAH_TRACEZ_WARNING(ME, "no vdr radio neither wiphy dev: WAIT FOR DETECTION");
         wld_nl80211_evtHandlers_cb handlers;
         memset(&handlers, 0, sizeof(handlers));
         handlers.fNewWiphyCb = s_newWiphyInfoEvtCb;
+        handlers.fRegChangedCb = s_regChangedEvtCb;
         gGlobWiphyMoniCtx.listener = wld_nl80211_addGlobalEvtListener(wld_nl80211_getSharedState(), &gGlobWiphyMoniCtx, NULL, &handlers);
         amxp_timer_new(&gGlobWiphyMoniCtx.pTimer, s_handleNewWiphy, &gGlobWiphyMoniCtx);
+        if(gGlobWiphyMoniCtx.listener == NULL) {
+            SAH_TRACEZ_ERROR(ME, "fail to add global listener");
+        }
         ASSERT_NOT_NULL(gGlobWiphyMoniCtx.listener, SWL_RC_ERROR, ME, "fail to add global listener");
+    }
+    gGlobWiphyMoniCtx.fWiphyDevReadyCb = fWiphyDevReadyCb;
+    if((wld_nl80211_countWiphyFromFS() > 0) || (wld_countRadios() > 0)) {
+        SWL_CALL(fWiphyDevReadyCb, userData);
+        return SWL_RC_DONE;
+    }
+    if(gGlobWiphyMoniCtx.listener == NULL) {
+        return SWL_RC_ERROR;
     }
     return SWL_RC_CONTINUE;
 }
