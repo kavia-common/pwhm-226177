@@ -2315,6 +2315,12 @@ swl_rc_ne wld_util_getRealReferencePath(char* outRefPath, size_t outRefPathSize,
     if(!swl_str_isEmpty(outRefPath) && (outRefPath[strlen(outRefPath) - 1] != '.')) {
         swl_str_cat(outRefPath, outRefPathSize, ".");
     }
+    if(strlen(ROOT_OBJ_PREFIX_STR) && !swl_str_startsWith(outRefPath, ROOT_OBJ_PREFIX_STR)) {
+        char outRefPathCopy[128] = {0};
+        swl_str_copy(outRefPathCopy, sizeof(outRefPathCopy), outRefPath);
+        memset(outRefPath, 0, outRefPathSize);
+        swl_str_catFormat(outRefPath, outRefPathSize, "%s%s", ROOT_OBJ_PREFIX_STR, outRefPathCopy);
+    }
     return SWL_RC_OK;
 }
 

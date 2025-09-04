@@ -91,6 +91,12 @@ configs:
         - CONFIG_PACKAGE_mod-amxb-pcb
         - CONFIG_SAH_MOD_AMXB_PCB
 
+  CONFIG_SAH_WLD_ROOT_OBJ_PREFIX:
+    type: string
+    description: "DataModel Root Object Prefix"
+    default: ""
+    depends_on: [ CONFIG_SAH_WLD_ENABLE_USP_SERVER_SOCKET ]
+
 doc:
   ## Specifies the parser/generator to use for processing the odl files
   parser: "amx"

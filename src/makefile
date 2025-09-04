@@ -41,7 +41,8 @@ CFLAGS += -std=gnu99 -fPIC -g -Wall -Werror -Wextra  \
 		-I../include/wld/ \
 		-I../include/ \
 		-I../include_priv/nl80211/ \
-		-DSAHTRACES_ENABLED -DSAHTRACES_LEVEL_DEFAULT=500
+		-DSAHTRACES_ENABLED -DSAHTRACES_LEVEL_DEFAULT=500 \
+		-DROOT_OBJ_PREFIX_STR="\"$(CONFIG_SAH_WLD_ROOT_OBJ_PREFIX)\""
 CFLAGS += -Wformat -Wformat-security -Wimplicit-function-declaration -Wl,--no-undefined -Wno-unused-variable
 LDFLAGS += $(STAGING_LIBDIR) -shared -lsahtrace -lswlc -lswla -lcrypto -lssl -lnl-3 -lnl-genl-3 -lrt -lm -lamxo -lamxb -lamxc -lamxm -lamxp -lamxd -ldl
 
