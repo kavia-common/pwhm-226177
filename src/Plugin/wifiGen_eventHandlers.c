@@ -92,7 +92,6 @@
 #include <errno.h>
 
 #define ME "genEvt"
-#define ACLDENY_EVENT_STR "<3>ACL-DENY"
 
 /* Table of standard wpactrl iface events to be forwarded to other applications */
 static const char* s_fwdIfaceStdWpaCtrlEventsList[] = {
@@ -104,8 +103,7 @@ static const char* s_fwdIfaceStdWpaCtrlEventsList[] = {
     "CTRL-EVENT-EAP-FAILURE2",
     "CTRL-EVENT-EAP-TIMEOUT-FAILURE2",
     "BEACON-REQ-TX-STATUS",
-    "BEACON-RESP-RX",
-    "ACL-DENY"
+    "BEACON-RESP-RX"
 };
 
 /* Table of standard wpactrl radio events to be forwarded to other applications */
@@ -157,78 +155,6 @@ static void s_wpaCtrlIfaceStdEvt(void* userData, char* ifName, char* eventName, 
 
     s_notifyWpaCtrlEvent(object, ifName, eventName, s_fwdIfaceStdWpaCtrlEventsList,
                          SWL_ARRAY_SIZE(s_fwdIfaceStdWpaCtrlEventsList), msgData);
-}
-
-typedef swl_rc_ne (* evtParserPreProc_f)(char* Interface, char* event, char* params, char** newIfName, char** newMsgData, size_t* newLen);
-
-static swl_rc_ne s_aclDeny(char* Interface _UNUSED, char* event, char* params, char** newIfName _UNUSED, char** newMsgData, size_t* newLen) {
-    ASSERT_NOT_NULL(event, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERT_NOT_NULL(params, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERT_NOT_NULL(newMsgData, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERT_NOT_NULL(newLen, SWL_RC_INVALID_PARAM, ME, "NULL");
-
-    SAH_TRACEZ_INFO(ME, "Altering Event (%s) with params (%s)", event, params);
-
-    char mac[SWL_MAC_CHAR_LEN] = {0};
-    strncpy(mac, params, SWL_MAC_CHAR_LEN - 1);
-    ASSERT_TRUE(swl_mac_charIsValidStaMac((swl_macChar_t*) mac), SWL_RC_ERROR, ME, "invalid MACAddress (%s)", mac);
-
-    // event + space + mac + null
-    size_t eventLen = strlen(ACLDENY_EVENT_STR);
-    size_t macLen = strlen(mac);
-    size_t totalLen = eventLen + 1 + macLen + 1;
-
-    char* combined = calloc(1, totalLen);
-    ASSERT_NOT_NULL(combined, SWL_RC_ERROR, ME, "NULL");
-
-    // <3>ACL-DENY AA:BB:CC:DD:EE:FF
-    snprintf(combined, totalLen, "%s %s", ACLDENY_EVENT_STR, mac);
-    *newMsgData = combined;
-    *newLen = strlen(*newMsgData);
-
-    SAH_TRACEZ_INFO(ME, "Altered msg (%s)", *newMsgData);
-
-    return SWL_RC_DONE;
-}
-
-/* Table of standard wpactrl iface events to be preprocessed */
-SWL_TABLE(sWpaCtrlEventsPreProc,
-          ARR(char* evtName; void* evtParser; ),
-          ARR(swl_type_charPtr, swl_type_voidPtr),
-          ARR(
-              {"<2>Ignore Authentication frame from", &s_aclDeny},
-              {"<2>Ignore Probe Request frame from", &s_aclDeny},
-              ));
-
-static evtParserPreProc_f s_getEventParser(char* eventName) {
-    evtParserPreProc_f* pfEvtHdlr = (evtParserPreProc_f*) swl_table_getMatchingValue(&sWpaCtrlEventsPreProc, 1, 0, eventName);
-    ASSERTS_NOT_NULL(pfEvtHdlr, NULL, ME, "no internal hdlr defined for evt(%s)", eventName);
-    return *pfEvtHdlr;
-}
-
-static swl_rc_ne s_wpaCtrlIfacePreEvt(void* userData _UNUSED, char* ifName, char* msgData, size_t len _UNUSED, char** newIfName, char** newMsgData, size_t* newLen) {
-    ASSERT_NOT_NULL(msgData, SWL_RC_INVALID_PARAM, ME, "NULL");
-
-    swl_rc_ne ret = SWL_RC_OK;
-    char* eventName = NULL;
-    char* pParams = NULL;
-    size_t nStdEvts = swl_table_getSize(&sWpaCtrlEventsPreProc);
-    char* evtList[nStdEvts];
-    swl_table_columnToArray(evtList, nStdEvts, &sWpaCtrlEventsPreProc, 0);
-    // All wpa msgs
-    ASSERTS_TRUE(wld_wpaCtrl_fetchEvent(msgData, NULL, " ", evtList, nStdEvts, &eventName, &pParams) != -1, ret,
-                 ME, "this is not standard wpa_ctrl event to be preprocessed %s", msgData);
-    evtParserPreProc_f fEvtParser = s_getEventParser(eventName);
-    if(fEvtParser) {
-        ret = fEvtParser(ifName, eventName, pParams, newIfName, newMsgData, newLen);
-    } else {
-        SAH_TRACEZ_NOTICE(ME, "No parser for preprocessing msg(%s)", msgData);
-    }
-
-    W_SWL_FREE(eventName);
-    W_SWL_FREE(pParams);
-
-    return ret;
 }
 
 static void s_wpaCtrlRadioStdEvt(void* userData, char* ifName, char* eventName, char* msgData) {
@@ -1226,7 +1152,6 @@ swl_rc_ne wifiGen_setVapEvtHandlers(T_AccessPoint* pAP) {
     memset(&wpaCtrlVapEvtHandlers, 0, sizeof(wpaCtrlVapEvtHandlers));
 
     //Set here the wpa_ctrl VAP event handlers
-    wpaCtrlVapEvtHandlers.fPreProcEvtMsg = s_wpaCtrlIfacePreEvt;
     wpaCtrlVapEvtHandlers.fProcStdEvtMsg = s_wpaCtrlIfaceStdEvt;
     wpaCtrlVapEvtHandlers.fWpsCancelMsg = s_wpsCancel;
     wpaCtrlVapEvtHandlers.fWpsTimeoutMsg = s_wpsTimeout;

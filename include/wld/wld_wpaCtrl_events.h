@@ -71,7 +71,6 @@
 #include "wld_wpaCtrl_types.h"
 
 #define WPA_MSG_LEVEL_INFO "<3>"
-#define WPA_MSG_LEVEL_DEBUG_ID 2
 
 typedef struct {
     uint8_t opclass;

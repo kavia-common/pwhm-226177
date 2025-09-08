@@ -411,12 +411,6 @@ bool wld_wpaCtrlInterface_open(wld_wpaCtrlInterface_t* pIface) {
         return false;
     }
 
-    char level_cmd[16];
-    snprintf(level_cmd, sizeof(level_cmd), "LEVEL %d", WPA_MSG_LEVEL_DEBUG_ID);
-    if((!swl_rc_isOk(wld_wpaCtrlConnection_sendCmdCheckResponse(pIface->eventConn, level_cmd, "OK")))) {
-        SAH_TRACEZ_WARNING(ME, "%s: fail to set debug level", pIface->name);
-    }
-
     /*
      * create a socket for cmd
      */
