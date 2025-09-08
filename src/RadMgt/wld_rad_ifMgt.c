@@ -121,7 +121,8 @@ amxd_status_t _addVAPIntf(amxd_object_t* obj _UNUSED,
         amxd_trans_select_object(&trans, ssidObjTmpl);
         amxd_trans_add_inst(&trans, newSsidIdx, apname);
         char* ssidTmplPath = amxd_object_get_path(ssidObjTmpl, AMXD_OBJECT_INDEXED);
-        swl_str_catFormat(ssidRef, sizeof(ssidRef), "%s%s.%d.", ROOT_OBJ_PREFIX_STR, ssidTmplPath, newSsidIdx);
+        swl_str_catFormat(ssidRef, sizeof(ssidRef), "%s.%d.", ssidTmplPath, newSsidIdx);
+        wld_util_addReferencePathPrefix(ssidRef, sizeof(ssidRef), ssidRef);
         free(ssidTmplPath);
         SAH_TRACEZ_INFO(ME, "%s: set trans to add new ssid instance (%s) at index (%d)", pR->Name, apname, newSsidIdx);
     } else {
@@ -231,7 +232,8 @@ amxd_status_t _addEndPointIntf(amxd_object_t* wifi,
         amxd_trans_select_object(&trans, ssidObjTmpl);
         amxd_trans_add_inst(&trans, newSsidIdx, endpointname);
         char* ssidTmplPath = amxd_object_get_path(ssidObjTmpl, AMXD_OBJECT_INDEXED);
-        swl_str_catFormat(ssidRef, sizeof(ssidRef), "%s%s.%d.", ROOT_OBJ_PREFIX_STR, ssidTmplPath, newSsidIdx);
+        swl_str_catFormat(ssidRef, sizeof(ssidRef), "%s.%d.", ssidTmplPath, newSsidIdx);
+        wld_util_addReferencePathPrefix(ssidRef, sizeof(ssidRef), ssidRef);
         free(ssidTmplPath);
         SAH_TRACEZ_INFO(ME, "%s: set trans to add new ssid instance (%s) at index (%d)", pR->Name, endpointname, newSsidIdx);
     } else {

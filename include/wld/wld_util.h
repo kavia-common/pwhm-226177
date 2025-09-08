@@ -357,7 +357,7 @@ amxd_status_t wld_util_statsObj2Var(amxc_var_t* map, amxd_object_t* statsObj);
 
 void wld_util_initCustomAlias(amxd_trans_t* trans, amxd_object_t* object);
 
-/*
+/**
  * @brief return previous object instance
  */
 amxd_object_t* wld_util_getPrevObjInst(amxd_object_t* instance);
@@ -367,7 +367,7 @@ amxd_object_t* wld_util_getPrevObjInst(amxd_object_t* instance);
  */
 amxd_object_t* wld_util_getNextObjInst(amxd_object_t* instance);
 
-/*
+/**
  * @brief get real reference path:
  * when input Reference path (from upper layer instance) is available
  * then check it against currently referenced object path (regardless referencePath has indexed/named formats).
@@ -382,6 +382,26 @@ amxd_object_t* wld_util_getNextObjInst(amxd_object_t* instance);
  * @return SWL_RC_OK if successful (target path set), error code otherwise
  */
 swl_rc_ne wld_util_getRealReferencePath(char* outRefPath, size_t outRefPathSize, const char* currRefPath, amxd_object_t* currRefObj);
+
+/**
+ * @brief get the custom path prefix for reference paths
+ * expected to contain the missing path that sits above pwhm root object (i.e. WiFi.)
+ * Device. is the commonly used root object of the TR-181 datamodel
+ */
+const char* wld_util_getReferencePathPrefix();
+
+/**
+ * @brief set the custom path prefix for reference paths
+ */
+bool wld_util_setReferencePathPrefix(const char* prefix);
+
+/**
+ * @brief prefix @param[in] currRefPath with ReferencePathPrefix and write the result to @param[out] outRefPath
+ * @param[out] outRefPath the resulting path to an instance that always starts with ReferencePathPrefix
+ * @param[in] outRefPathSize the allocated size of outRefPath. no reallocation is done;
+ * @param[in] currRefPath a path to an instance that may or may not start with ReferencePathPrefix
+ */
+bool wld_util_addReferencePathPrefix(char* outRefPath, size_t outRefPathSize, const char* currRefPath);
 
 swl_rc_ne wld_util_getManagementFrameParameters(T_Radio* pRad, wld_util_managementFrame_t* mgmtFrame, amxc_var_t* args);
 

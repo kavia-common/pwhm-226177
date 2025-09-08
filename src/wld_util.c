@@ -2293,6 +2293,27 @@ void wld_util_updateStatusChangeInfo(wld_status_changeInfo_t* info, wld_status_e
     info->lastStatusHistogramUpdate = now;
 }
 
+static char sReferencePathPrefixStr[128] = ROOT_OBJ_PREFIX_STR;
+
+const char* wld_util_getReferencePathPrefix() {
+    return sReferencePathPrefixStr;
+}
+
+bool wld_util_setReferencePathPrefix(const char* prefix) {
+    return swl_str_copy(sReferencePathPrefixStr, sizeof(sReferencePathPrefixStr), prefix);
+}
+
+bool wld_util_addReferencePathPrefix(char* outRefPath, size_t outRefPathSize, const char* currRefPath) {
+    const char* refPrefix = wld_util_getReferencePathPrefix();
+    char outBuf[swl_str_len(currRefPath) + swl_str_len(refPrefix) + 2];
+    outBuf[0] = 0;
+    if(!swl_str_isEmpty(refPrefix) && !swl_str_startsWith(currRefPath, refPrefix)) {
+        swl_str_copy(outBuf, sizeof(outBuf), refPrefix);
+    }
+    swl_str_cat(outBuf, sizeof(outBuf), currRefPath);
+    return swl_str_copy(outRefPath, outRefPathSize, outBuf);
+}
+
 swl_rc_ne wld_util_getRealReferencePath(char* outRefPath, size_t outRefPathSize, const char* currRefPath, amxd_object_t* currRefObj) {
     ASSERT_NOT_NULL(outRefPath, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_TRUE(outRefPathSize > 0, SWL_RC_INVALID_PARAM, ME, "wrong size");
@@ -2315,13 +2336,8 @@ swl_rc_ne wld_util_getRealReferencePath(char* outRefPath, size_t outRefPathSize,
     if(!swl_str_isEmpty(outRefPath) && (outRefPath[strlen(outRefPath) - 1] != '.')) {
         swl_str_cat(outRefPath, outRefPathSize, ".");
     }
-    if(strlen(ROOT_OBJ_PREFIX_STR) && !swl_str_startsWith(outRefPath, ROOT_OBJ_PREFIX_STR)) {
-        char outRefPathCopy[128] = {0};
-        swl_str_copy(outRefPathCopy, sizeof(outRefPathCopy), outRefPath);
-        memset(outRefPath, 0, outRefPathSize);
-        swl_str_catFormat(outRefPath, outRefPathSize, "%s%s", ROOT_OBJ_PREFIX_STR, outRefPathCopy);
-    }
-    return SWL_RC_OK;
+    bool ret = wld_util_addReferencePathPrefix(outRefPath, outRefPathSize, outRefPath);
+    return ret ? SWL_RC_OK : SWL_RC_ERROR;
 }
 
 swl_rc_ne wld_util_getManagementFrameParameters(T_Radio* pRad, wld_util_managementFrame_t* mgmtFrame, amxc_var_t* args) {

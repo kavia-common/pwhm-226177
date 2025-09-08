@@ -77,6 +77,7 @@ static wld_th_dm_t dm;
 
 static int s_setupSuite(void** state _UNUSED) {
     assert_true(wld_th_dm_init(&dm));
+    wld_util_setReferencePathPrefix("");
     return 0;
 }
 
@@ -171,12 +172,75 @@ static void test_ssidReference(void** state _UNUSED) {
     }
 }
 
+static void test_referencePrefixed(void** state _UNUSED) {
+    T_Radio* pRad2 = dm.bandList[SWL_FREQ_BAND_2_4GHZ].rad;
+    T_Radio* pRad5 = dm.bandList[SWL_FREQ_BAND_5GHZ].rad;
+    T_Radio* pRad6 = dm.bandList[SWL_FREQ_BAND_6GHZ].rad;
+
+    T_SSID* pSsidPriv2 = dm.bandList[SWL_FREQ_BAND_2_4GHZ].vapPriv->pSSID;
+    T_SSID* pSsidPriv5 = dm.bandList[SWL_FREQ_BAND_5GHZ].vapPriv->pSSID;
+    T_SSID* pSsidPriv6 = dm.bandList[SWL_FREQ_BAND_6GHZ].vapPriv->pSSID;
+
+
+    test_referenceInfo_t tests[] = ARR(
+        //success cases, empty prefix
+        ARR("", pRad2->pBus, SWL_RC_OK, "WiFi.Radio.1."),
+        ARR("WiFi.Radio.wifi1", NULL, SWL_RC_OK, "WiFi.Radio.wifi1."),
+        ARR("WiFi.Radio.1.", pRad2->pBus, SWL_RC_OK, "WiFi.Radio.1."),
+        ARR("WiFi.Radio.wifi0", pRad2->pBus, SWL_RC_OK, "WiFi.Radio.wifi0."),
+        ARR("WiFi.Radio.wifi1.", pRad5->pBus, SWL_RC_OK, "WiFi.Radio.wifi1."),
+        ARR("WiFi.Radio.wifi2", pRad6->pBus, SWL_RC_OK, "WiFi.Radio.wifi2."),
+        ARR(NULL, pSsidPriv2->pBus, SWL_RC_OK, "WiFi.SSID.1."),
+        ARR("WiFi.SSID.1.", pSsidPriv2->pBus, SWL_RC_OK, "WiFi.SSID.1."),
+        ARR("WiFi.SSID.wlan0", pSsidPriv2->pBus, SWL_RC_OK, "WiFi.SSID.wlan0."),
+        ARR("WiFi.SSID.wlan1.", pSsidPriv5->pBus, SWL_RC_OK, "WiFi.SSID.wlan1."),
+        ARR("WiFi.SSID.wlan2", NULL, SWL_RC_OK, "WiFi.SSID.wlan2."),
+        ARR("Device.WiFi.SSID.3.", pSsidPriv6->pBus, SWL_RC_OK, "Device.WiFi.SSID.3."),
+        );
+
+    wld_util_setReferencePathPrefix("");
+    for(uint32_t i = 0; i < SWL_ARRAY_SIZE(tests); i++) {
+        checkReference(&tests[i]);
+    }
+
+    const char* overFlow = "WiFi.SSID.3.InitialPathIsTooLongItWillCauseAnErrorInsideLibSWLCFunction_swl_str_cat_if_it_is_longer_than_128_bytes_probably";
+
+    test_referenceInfo_t testsPrefixed[] = ARR(
+        //success cases, prefix set to Device. : add prefix
+        ARR("", pRad2->pBus, SWL_RC_OK, "Device.WiFi.Radio.1."),
+        ARR("WiFi.Radio.wifi1", NULL, SWL_RC_OK, "Device.WiFi.Radio.wifi1."),
+        ARR("WiFi.Radio.1.", pRad2->pBus, SWL_RC_OK, "Device.WiFi.Radio.1."),
+        ARR("WiFi.Radio.wifi0", pRad2->pBus, SWL_RC_OK, "Device.WiFi.Radio.wifi0."),
+        ARR("WiFi.Radio.wifi1.", pRad5->pBus, SWL_RC_OK, "Device.WiFi.Radio.wifi1."),
+        ARR("WiFi.Radio.wifi2", pRad6->pBus, SWL_RC_OK, "Device.WiFi.Radio.wifi2."),
+        ARR(NULL, pSsidPriv2->pBus, SWL_RC_OK, "Device.WiFi.SSID.1."),
+        ARR("WiFi.SSID.1.", pSsidPriv2->pBus, SWL_RC_OK, "Device.WiFi.SSID.1."),
+        ARR("WiFi.SSID.wlan0", pSsidPriv2->pBus, SWL_RC_OK, "Device.WiFi.SSID.wlan0."),
+        ARR("WiFi.SSID.wlan1.", pSsidPriv5->pBus, SWL_RC_OK, "Device.WiFi.SSID.wlan1."),
+        ARR("WiFi.SSID.wlan2", NULL, SWL_RC_OK, "Device.WiFi.SSID.wlan2."),
+        ARR("WiFi.SSID.wlan0", pSsidPriv2->pBus, SWL_RC_OK, "Device.WiFi.SSID.wlan0."),
+        ARR("WiFi.SSID.wlan1.", pSsidPriv5->pBus, SWL_RC_OK, "Device.WiFi.SSID.wlan1."),
+        ARR("Device.WiFi.SSID.3.", pSsidPriv6->pBus, SWL_RC_OK, "Device.WiFi.SSID.3."),
+        // success, even with a too long value for currRefPath arg : function will use currRefObj argument preferentially
+        ARR(overFlow, pSsidPriv6->pBus, SWL_RC_OK, "Device.WiFi.SSID.3."),
+        // failure : overflow
+        ARR(overFlow, NULL, SWL_RC_ERROR, ""),
+        );
+
+    wld_util_setReferencePathPrefix("Device.");
+    for(uint32_t i = 0; i < SWL_ARRAY_SIZE(testsPrefixed); i++) {
+        checkReference(&testsPrefixed[i]);
+    }
+    wld_util_setReferencePathPrefix("");
+}
+
 int main(int argc _UNUSED, char* argv[] _UNUSED) {
     sahTraceSetLevel(TRACE_LEVEL_INFO);
     sahTraceAddZone(TRACE_LEVEL_APP_INFO, "radRef");
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_radioReference),
         cmocka_unit_test(test_ssidReference),
+        cmocka_unit_test(test_referencePrefixed),
     };
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);
     sahTraceClose();

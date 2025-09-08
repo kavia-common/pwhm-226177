@@ -94,7 +94,7 @@ configs:
   CONFIG_SAH_WLD_ROOT_OBJ_PREFIX:
     type: string
     description: "DataModel Root Object Prefix"
-    default: ""
+    default: "Device."
     depends_on: [ CONFIG_SAH_WLD_ENABLE_USP_SERVER_SOCKET ]
 
 doc:
