@@ -248,7 +248,7 @@ static void s_setProfileReference_pwf(void* priv _UNUSED, amxd_object_t* object,
     amxd_object_t* newProfileObj = NULL;
 
     if(swl_str_countChar(newProfileRef, '.') > 0) {
-        newProfileObj = amxd_object_findf(amxd_dm_get_root(wld_plugin_dm), "%s", newProfileRef);
+        newProfileObj = swla_object_getReferenceObject(object, newProfileRef);
     } else {
         newProfileObj = amxd_object_findf(pEP->pBus, "Profile.%s", newProfileRef);
     }
@@ -1135,9 +1135,9 @@ void syncData_EndPoint2OBJ(T_EndPoint* pEP) {
     if(pEP->currentProfile) {
         char* curProfileStr = amxd_object_get_cstring_t(pEP->pBus, "ProfileReference", NULL);
         if((swl_str_isEmpty(curProfileStr) || (swl_str_countChar(curProfileStr, '.') > 0))) {
-            char* profileRef = amxd_object_get_path(pEP->currentProfile->pBus, AMXD_OBJECT_INDEXED);
-            amxd_trans_set_cstring_t(&trans, "ProfileReference", profileRef);
-            free(profileRef);
+            TBuf[0] = 0;
+            wld_util_getRealReferencePath(TBuf, sizeof(TBuf), curProfileStr, pEP->currentProfile->pBus);
+            amxd_trans_set_cstring_t(&trans, "ProfileReference", TBuf);
         }
         free(curProfileStr);
     } else {
