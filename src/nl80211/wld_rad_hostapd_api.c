@@ -371,7 +371,7 @@ wld_secDmn_action_rc_ne wld_rad_hostapd_setMiscParams(T_Radio* pRad) {
     swl_mapChar_init(&vapParams);
     wld_hostapd_cfgFile_setVapConfig(primaryVap, &vapParams, (swl_mapChar_t*) NULL);
     const char* miscVapParams[] = {
-        "beacon_int", "dtim_period", "wpa_key_mgmt"
+        "beacon_int", "dtim_period"
     };
     amxc_llist_for_each(it, &pRad->llAP) {
         T_AccessPoint* pAP = amxc_llist_it_get_data(it, T_AccessPoint, it);
