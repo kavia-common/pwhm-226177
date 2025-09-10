@@ -22,6 +22,9 @@ endef
 all:
 	$(MAKE) -C include all
 	$(MAKE) -C src all
+ifeq ($(CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT),y)
+	$(MAKE) -C scripts all
+endif
 	$(MAKE) -C odl all
 ifneq ($(CONFIG_SAH_WLD_INIT_LEGACY),y)
 	$(MAKE) -C src/Plugin all
@@ -29,6 +32,7 @@ endif
 
 clean:
 	$(MAKE) -C src clean
+	$(MAKE) -C scripts clean
 	$(MAKE) -C odl clean
 	$(MAKE) -C doc clean
 	$(MAKE) -C src/Plugin clean
@@ -62,7 +66,7 @@ endif
 ifneq ($(CONFIG_SAH_WLD_INIT_LEGACY),y)
 	$(INSTALL) -D -p -m 0755 output/$(MACHINE)/Plugin/wld.so.$(VERSION) $(DEST)$(LIBDIR)/amx/wld/wld.so.$(VERSION)
 endif
-ifneq ($(CONFIG_SAH_WLD_INIT_LEGACY),y)
+ifneq ($(or $(CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT),$(CONFIG_SAH_WLD_INIT_LEGACY)),y)
 	$(INSTALL) -D -p -m 0755 scripts/Plugin/wld_gen.sh $(DEST)$(INITDIR)/$(CONFIG_SAH_WLD_INIT_SCRIPT)
 endif
 ifneq ($(CONFIG_SAH_WLD_INIT_LEGACY),y)
@@ -73,6 +77,9 @@ endif
 	ln -sfr $(DEST)/usr/bin/amxrt $(DEST)$(BINDIR)/wld
 	$(INSTALL) -D -p -m 0755 scripts/debug_wifi.sh $(DEST)/usr/lib/debuginfo/debug_wifi.sh
 	$(INSTALL) -D -p -m 0755 scripts/debugInfo.sh $(DEST)$(LIBDIR)/amx/wld/debugInfo.sh
+ifeq ($(and $(CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT),$(if $(CONFIG_SAH_WLD_INIT_LEGACY),,y)),y)
+	$(INSTALL) -D -p -m 0755 scripts/Plugin/wld_gen-procd.sh $(DEST)$(INITDIR)/$(CONFIG_SAH_WLD_INIT_SCRIPT)
+endif
 	ln -sfr $(DEST)$(LIBDIR)/libwld.so.$(VERSION) $(DEST)$(LIBDIR)/libwld.so.$(VMAJOR)
 	ln -sfr $(DEST)$(LIBDIR)/libwld.so.$(VERSION) $(DEST)$(LIBDIR)/libwld.so
 	ln -sfr $(DEST)$(LIBDIR)/amx/wld/wld.so.$(VERSION) $(DEST)$(LIBDIR)/amx/wld/wld.so.$(VMAJOR)
@@ -107,7 +114,7 @@ endif
 ifneq ($(CONFIG_SAH_WLD_INIT_LEGACY),y)
 	$(INSTALL) -D -p -m 0755 output/$(MACHINE)/Plugin/wld.so.$(VERSION) $(PKGDIR)$(LIBDIR)/amx/wld/wld.so.$(VERSION)
 endif
-ifneq ($(CONFIG_SAH_WLD_INIT_LEGACY),y)
+ifneq ($(or $(CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT),$(CONFIG_SAH_WLD_INIT_LEGACY)),y)
 	$(INSTALL) -D -p -m 0755 scripts/Plugin/wld_gen.sh $(PKGDIR)$(INITDIR)/$(CONFIG_SAH_WLD_INIT_SCRIPT)
 endif
 ifneq ($(CONFIG_SAH_WLD_INIT_LEGACY),y)
@@ -120,6 +127,9 @@ endif
 	ln -sfr $(PKGDIR)/usr/bin/amxrt $(PKGDIR)$(BINDIR)/wld
 	$(INSTALL) -D -p -m 0755 scripts/debug_wifi.sh $(PKGDIR)/usr/lib/debuginfo/debug_wifi.sh
 	$(INSTALL) -D -p -m 0755 scripts/debugInfo.sh $(PKGDIR)$(LIBDIR)/amx/wld/debugInfo.sh
+ifeq ($(and $(CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT),$(if $(CONFIG_SAH_WLD_INIT_LEGACY),,y)),y)
+	$(INSTALL) -D -p -m 0755 scripts/Plugin/wld_gen-procd.sh $(PKGDIR)$(INITDIR)/$(CONFIG_SAH_WLD_INIT_SCRIPT)
+endif
 	cd $(PKGDIR) && $(TAR) -czvf ../$(COMPONENT)-$(VERSION).tar.gz .
 	cp $(PKGDIR)../$(COMPONENT)-$(VERSION).tar.gz .
 	make -C packages

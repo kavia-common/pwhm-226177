@@ -97,6 +97,11 @@ configs:
     default: "Device."
     depends_on: [ CONFIG_SAH_WLD_ENABLE_USP_SERVER_SOCKET ]
 
+  CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT:
+    default: PACKAGE_procd
+    type: bool
+    description: "Installs procd init script in stead of the default init script"
+
 doc:
   ## Specifies the parser/generator to use for processing the odl files
   parser: "amx"
@@ -105,12 +110,16 @@ makefiles:
   compile:
   - directory: "include"
   - directory: "src"
+  - directory: "scripts"
+    only: CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT
   - directory: "odl"
   - directory: "src/Plugin"
     target: "all"
     except: CONFIG_SAH_WLD_INIT_LEGACY
   clean:
   - directory: "src"
+  - directory: "scripts"
+    only: CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT
   - directory: "odl"
   - directory: "doc"
   - directory: "src/Plugin"
@@ -198,7 +207,7 @@ artifacts:
     start: $(CONFIG_SAH_WLD_INIT_ORDER)
   debug:
     order: $(CONFIG_SAH_WLD_INIT_ORDER)
-  except: CONFIG_SAH_WLD_INIT_LEGACY
+  except: CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT | CONFIG_SAH_WLD_INIT_LEGACY
 - source: "$(INITDIR)/$(CONFIG_SAH_WLD_INIT_SCRIPT)"
   destination: "$(PROCMONDIR)/$(CONFIG_SAH_WLD_INIT_SCRIPT)"
   symbolic: "True"
@@ -214,6 +223,10 @@ artifacts:
 - source: "scripts/debugInfo.sh"
   destination: "$(LIBDIR)/amx/wld/debugInfo.sh"
   permissions: "0755"
+- source: "scripts/Plugin/wld_gen-procd.sh"
+  destination: "$(INITDIR)/$(CONFIG_SAH_WLD_INIT_SCRIPT)"
+  permissions: "0755"
+  only: CONFIG_SAH_SERVICES_PWHM_PROCD_SUPPORT & !CONFIG_SAH_WLD_INIT_LEGACY
 
 dependencies:
   compile:
