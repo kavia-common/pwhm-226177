@@ -338,6 +338,12 @@ SWL_TABLE(sHapdCfgParamsActionMap,
               {"ap_max_inactivity", SECDMN_ACTION_OK_NEED_SIGHUP},
               {"rrm_neighbor_report", SECDMN_ACTION_OK_NEED_SIGHUP},
               {"rrm_beacon_report", SECDMN_ACTION_OK_NEED_SIGHUP},
+              {"rsn_override_key_mgmt", SECDMN_ACTION_OK_NEED_SIGHUP},
+              {"rsn_override_pairwise", SECDMN_ACTION_OK_NEED_SIGHUP},
+              {"rsn_override_mfp", SECDMN_ACTION_OK_NEED_SIGHUP},
+              {"rsn_override_mfp_2", SECDMN_ACTION_OK_NEED_SIGHUP},
+              {"rsn_override_key_mgmt_2", SECDMN_ACTION_OK_NEED_SIGHUP},
+              {"rsn_override_pairwise_2", SECDMN_ACTION_OK_NEED_SIGHUP},
               //params set and applied on bss with reload_wpa_psk and update_beacon
               {"ssid", SECDMN_ACTION_OK_NEED_RELOAD_SECKEY},
               {"wpa_psk", SECDMN_ACTION_OK_NEED_RELOAD_SECKEY},
@@ -518,6 +524,8 @@ static wld_secDmn_action_rc_ne s_ap_hostapd_setSecretKeyExt(T_AccessPoint* pAP, 
     break;
     case SWL_SECURITY_APMODE_WPA2_WPA3_P:
     case SWL_SECURITY_APMODE_WPA3_P:
+    case SWL_SECURITY_APMODE_WPA3_P_TM:
+    case SWL_SECURITY_APMODE_WPA3_P_CM:
     {
         const char* secParams[] = {
             "wpa_psk", "wpa_passphrase", "sae_password",
@@ -577,7 +585,9 @@ static wld_secDmn_action_rc_ne s_ap_hostapd_setSecurityModeExt(T_AccessPoint* pA
     ASSERTS_NOT_NULL(pAP, SECDMN_ACTION_ERROR, ME, "NULL");
     wld_secDmn_action_rc_ne action = SECDMN_ACTION_OK_DONE;
     //when switching into or out of wep mode, we need to toggle hostapd to apply security mode
-    const char* secParams[] = {"wpa", "wpa_pairwise", "rsn_pairwise", "wpa_key_mgmt", "wep_default_key", "sae_pwe", };
+    const char* secParams[] = {"wpa", "wpa_pairwise", "rsn_pairwise", "wpa_key_mgmt", "wep_default_key",
+        "sae_pwe", "rsn_override_key_mgmt", "rsn_override_pairwise", "rsn_override_mfp",
+        "rsn_override_mfp_2", "rsn_override_key_mgmt_2", "rsn_override_pairwise_2", };
     s_setChangedMultiParams(pAP, pCurrVapParams, pNewVapParams,
                             secParams, SWL_ARRAY_SIZE(secParams), &action);
     return action;

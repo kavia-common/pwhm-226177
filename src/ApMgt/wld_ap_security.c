@@ -192,6 +192,7 @@ bool wld_ap_sec_checkSecConfigParams(const char* oname, amxc_var_t* pParams, swl
     case SWL_SECURITY_APMODE_WPA2_P:
     case SWL_SECURITY_APMODE_WPA_WPA2_P:
     case SWL_SECURITY_APMODE_WPA2_WPA3_P:
+    case SWL_SECURITY_APMODE_WPA3_P_CM:
         if(swl_str_isEmpty(keyPassPhrase) || !isValidAESKey(keyPassPhrase, PSK_KEY_SIZE_LEN - 1)) {
             SAH_TRACEZ_ERROR(ME, "%s: invalid Key(AES:%s) in WPA2 mode", oname, keyPassPhrase);
             valid = false;
@@ -579,6 +580,15 @@ struct {
     {SWL_SECURITY_APMODE_WPA2_WPA3_P, SWL_SECURITY_APMODE_WPA2_P, SWL_SECURITY_APMODE_WPA3_P, },
     {SWL_SECURITY_APMODE_WPA2_WPA3_P, SWL_SECURITY_APMODE_WPA3_P, SWL_SECURITY_APMODE_WPA2_P, },
     {SWL_SECURITY_APMODE_WPA2_WPA3_P, SWL_SECURITY_APMODE_WPA2_WPA3_P, SWL_SECURITY_APMODE_WPA3_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_TM, SWL_SECURITY_APMODE_WPA2_P, SWL_SECURITY_APMODE_WPA3_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_TM, SWL_SECURITY_APMODE_WPA3_P, SWL_SECURITY_APMODE_WPA2_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_TM, SWL_SECURITY_APMODE_WPA3_P_TM, SWL_SECURITY_APMODE_WPA3_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_TM, SWL_SECURITY_APMODE_WPA2_WPA3_P, SWL_SECURITY_APMODE_WPA3_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_CM, SWL_SECURITY_APMODE_WPA2_P, SWL_SECURITY_APMODE_WPA3_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_CM, SWL_SECURITY_APMODE_WPA3_P, SWL_SECURITY_APMODE_WPA2_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_CM, SWL_SECURITY_APMODE_WPA2_WPA3_P, SWL_SECURITY_APMODE_WPA3_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_CM, SWL_SECURITY_APMODE_WPA3_P_TM, SWL_SECURITY_APMODE_WPA3_P, },
+    {SWL_SECURITY_APMODE_WPA3_P_CM, SWL_SECURITY_APMODE_WPA3_P_CM, SWL_SECURITY_APMODE_WPA3_P, },
 };
 
 /*
@@ -615,6 +625,9 @@ static bool s_compareSecModes(T_AccessPoint* pAP1, T_AccessPoint* pAP2, swl_secu
 bool wld_ap_sec_checkSharedSecConfigs(T_AccessPoint* pAP1, T_AccessPoint* pAP2) {
     swl_security_apMode_e secModeShared;
     swl_security_apMode_e secModeCompl;
+    if(pAP1 && pAP2 && (pAP1 == pAP2)) {
+        return true;
+    }
     bool modeMatch = s_compareSecModes(pAP1, pAP2, &secModeShared, &secModeCompl);
     ASSERTI_TRUE(modeMatch, modeMatch, ME, "No shared sec mode");
     T_AccessPoint* pApRef = (pAP1->secModeEnabled == secModeShared) ? pAP1 : ((pAP2->secModeEnabled == secModeShared) ? pAP2 : NULL);
@@ -630,7 +643,8 @@ bool wld_ap_sec_checkSharedSecConfigs(T_AccessPoint* pAP1, T_AccessPoint* pAP2) 
     case SWL_SECURITY_APMODE_WPA2_P:
     case SWL_SECURITY_APMODE_WPA_WPA2_P:
     case SWL_SECURITY_APMODE_WPA3_P:
-    case SWL_SECURITY_APMODE_WPA2_WPA3_P: {
+    case SWL_SECURITY_APMODE_WPA2_WPA3_P:
+    case SWL_SECURITY_APMODE_WPA3_P_CM: {
         if((secModeShared == SWL_SECURITY_APMODE_WPA3_P) ||
            (secModeCompl == SWL_SECURITY_APMODE_WPA3_P)) {
             if(!swl_str_isEmpty(pApRef->saePassphrase)) {

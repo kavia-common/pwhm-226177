@@ -196,6 +196,9 @@ static void s_setDefaults(T_AccessPoint* pAP, T_Radio* pRad, const char* vapName
             pAP->secModesSupported |= M_SWL_SECURITY_APMODE_WPA2_WPA3_P;
         }
     }
+
+    pAP->secModesSupported |= pAP->pFA->mfn_misc_has_support(pAP->pRadio, pAP, "MRSNO", 0) ? M_SWL_SECURITY_APMODE_WPA3_P_CM : 0;
+
     pAP->secModesSupported |= (pAP->pFA->mfn_misc_has_support(pAP->pRadio, pAP, "OWE", 0)) ?
         (M_SWL_SECURITY_APMODE_OWE) : 0;
     if(!pAP->MCEnable) {

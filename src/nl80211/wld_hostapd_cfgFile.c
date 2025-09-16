@@ -874,6 +874,65 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
         swl_mapCharFmt_addValInt32(vapConfigMap, "ieee80211w", mfp);
         break;
     }
+    case SWL_SECURITY_APMODE_WPA3_P_CM: {
+        if(!is6g) { /* AKM:2 for 2.4/5GHz RSNE */
+
+            // per WPA3CM spec: set only the MFPC to 1 if MBO Enabled
+            if(pAP->mfpConfig == SWL_SECURITY_MFPMODE_DISABLED) {
+                mfp = (pAP->mboEnable ? SWL_SECURITY_MFPMODE_OPTIONAL : SWL_SECURITY_MFPMODE_DISABLED);
+            }
+
+            swl_mapChar_add(vapConfigMap, "wpa", "2");
+
+            swl_mapCharFmt_addValStr(vapConfigMap, "wpa_key_mgmt", "WPA-PSK");
+            swl_mapChar_add(vapConfigMap, "wpa_pairwise", "CCMP");
+            swl_mapChar_add(vapConfigMap, "rsn_pairwise", "CCMP");
+            /* If key pass phrase is set, we use the Key pass phrase */
+            swl_mapChar_add(vapConfigMap, wpa_key_str, pAP->keyPassPhrase);
+
+            swl_mapCharFmt_addValInt32(vapConfigMap, "wpa_group_rekey", pAP->rekeyingInterval);
+            swl_mapChar_add(vapConfigMap, "wpa_ptk_rekey", "0");
+            swl_mapCharFmt_addValInt32(vapConfigMap, "ieee80211w", mfp);
+        } else { /* AKM:8 for 6GHz RSNE */
+            swl_mapChar_add(vapConfigMap, "wpa", "2");
+            swl_mapCharFmt_addValStr(vapConfigMap, "wpa_key_mgmt", "SAE");
+
+            swl_mapChar_add(vapConfigMap, "wpa_pairwise", "CCMP");
+            swl_mapChar_add(vapConfigMap, "rsn_pairwise", "CCMP");
+            swl_mapCharFmt_addValInt32(vapConfigMap, "wpa_group_rekey", pAP->rekeyingInterval);
+            swl_mapChar_add(vapConfigMap, "wpa_ptk_rekey", "0");
+            // If sae_password is set, wpa_passphrase is ignored by hostapd
+            // otherwise wpa_passphrase is used
+            if(!swl_str_isEmpty(pAP->saePassphrase)) {
+                swl_mapChar_add(vapConfigMap, "sae_password", pAP->saePassphrase);
+            }
+            swl_mapChar_add(vapConfigMap, wpa_key_str, pAP->keyPassPhrase);
+
+            swl_mapCharFmt_addValInt32(vapConfigMap, "ieee80211w", SWL_SECURITY_MFPMODE_REQUIRED);
+        }
+
+        if(!is6g) { /* AKM:8 for RSNO1; not advertised on 6GHz */
+            swl_mapChar_add(vapConfigMap, "rsn_override_key_mgmt", "SAE");
+            swl_mapChar_add(vapConfigMap, "rsn_override_pairwise", "CCMP");
+            swl_mapCharFmt_addValInt32(vapConfigMap, "rsn_override_mfp", SWL_SECURITY_MFPMODE_REQUIRED);
+        }
+        if(enableVap11be) { /* AKM:24 for RSNO2 on all bands */
+            swl_mapChar_add(vapConfigMap, "rsn_override_key_mgmt_2", "SAE-EXT-KEY");
+            swl_mapChar_add(vapConfigMap, "rsn_override_pairwise_2", "GCMP-256");
+            swl_mapCharFmt_addValInt32(vapConfigMap, "rsn_override_mfp_2", SWL_SECURITY_MFPMODE_REQUIRED);
+        }
+
+        swl_mapChar_add(vapConfigMap, "sae_sync", "5");
+        swl_mapChar_add(vapConfigMap, "sae_require_mfp", "1");
+        swl_mapChar_add(vapConfigMap, "sae_anti_clogging_threshold", "5");
+        swl_mapChar_add(vapConfigMap, "sae_groups", "19 20 21");
+
+        if(enableVap11be) {
+            swl_mapChar_add(vapConfigMap, "beacon_prot", "1");
+        }
+        swl_mapCharFmt_addValInt32(vapConfigMap, "sae_pwe", isH2E ? is6g ? 1 : 2 : 0);
+        break;
+    }
     case SWL_SECURITY_APMODE_WPA2_WPA3_P: {
         swl_mapChar_add(vapConfigMap, "wpa", "2");
         swl_mapCharFmt_addValStr(vapConfigMap, "wpa_key_mgmt", "%s%s%s",

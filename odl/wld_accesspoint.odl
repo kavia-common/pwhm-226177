@@ -758,7 +758,7 @@ define rrm_t{
 				on action validate call check_enum ["None", "OWE",
 						"WEP-64","WEP-128","WEP-128iv",
 						"WPA-Personal","WPA2-Personal","WPA-WPA2-Personal",
-						"WPA3-Personal","WPA2-WPA3-Personal",
+						"WPA3-Personal","WPA2-WPA3-Personal", "WPA3-Personal-Compatibility",
 						"WPA-Enterprise","WPA2-Enterprise","WPA-WPA2-Enterprise",
 						"WPA3-Enterprise","WPA2-WPA3-Enterprise"];
 				userflags %usersetting;

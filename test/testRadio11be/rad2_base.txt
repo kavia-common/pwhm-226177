@@ -1,5 +1,6 @@
 {
     "SupportedOperatingChannelBandwidth": "Auto,20MHz,40MHz",
+    "ForceMRSNOSupport": false,
     "SupportedStandards": "b,g,n,bg,gn,bgn,ax,be",
     "ChannelsInUse": "1",
     "Channel": 1,

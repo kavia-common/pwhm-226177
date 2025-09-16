@@ -132,7 +132,12 @@ int wifiGen_rad_miscHasSupport(T_Radio* pRad, T_AccessPoint* pAp, char* buf, int
         if(swl_str_matches(buf, "RADAR_BACKGROUND")) {
             ret &= (pRad && pRad->bgdfs_config.available);
         }
+    } else {
+        if(swl_str_matches(buf, "MRSNO")) {
+            ret |= (pRad && amxd_object_get_bool(pRad->pBus, "ForceMRSNOSupport", NULL));
+        }
     }
+
     return ret;
 }
 

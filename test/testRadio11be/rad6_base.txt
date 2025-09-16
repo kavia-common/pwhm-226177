@@ -1,5 +1,6 @@
 {
     "SupportedOperatingChannelBandwidth": "Auto,20MHz,40MHz,80MHz,160MHz,80+80MHz,320MHz-1,320MHz-2",
+    "ForceMRSNOSupport": false,
     "SupportedStandards": "ax,be",
     "ChannelsInUse": "1,5,9,13,17,21,25,29,33,37,41,45,49,53,57,61",
     "Channel": 1,
