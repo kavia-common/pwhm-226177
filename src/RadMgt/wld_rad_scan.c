@@ -894,19 +894,25 @@ void fillFullScanResultsList(amxc_var_t* pScanResultList, T_Radio* pRad, wld_sca
             convSsid2Str(pSsid->ssid, pSsid->ssidLen, pNeighborBss->ssid, sizeof(pNeighborBss->ssid));
             pNeighborBss->signalStrength = pSsid->rssi;
             pNeighborBss->channelBandwidth = pSsid->bandwidth;
-            pNeighborBss->channelUtilization = 0;
-            pNeighborBss->StationCount = 0;      // will be ftreated in  SSW-8679
+            pNeighborBss->channelUtilization = pSsid->channelUtilization;
+            pNeighborBss->StationCount = pSsid->stationCount;
             pNeighborBss->securityModeEnabled = pSsid->secModeEnabled;
             pNeighborBss->encryptionMode = pSsid->encryptionMode;
 
-            pNeighborBss->supportedStandards = pSsid->operatingStandards; // will be ftreated in  SSW-8679
+            pNeighborBss->supportedStandards = pSsid->supportedStandards;
             pNeighborBss->operatingStandards = pSsid->operatingStandards;
 
-            pNeighborBss->basicDataTransferRates = NULL;
-            pNeighborBss->supportedDataTransferRates = NULL;
-            pNeighborBss->supportedNss = 0; // will be ftreated in  SSW-8679
-            pNeighborBss->dtimPeriod = 0;   // will be ftreated in  SSW-8679
-            pNeighborBss->beaconPeriod = 0; // will be ftreated in  SSW-8679
+            pNeighborBss->supportedNss = pSsid->supportedNss;
+            pNeighborBss->dtimPeriod = pSsid->dtimPeriod;
+            pNeighborBss->beaconPeriod = pSsid->beaconInterval;
+
+            char basicRatesChar[64] = "";
+            swl_conv_maskToCharSep(basicRatesChar, sizeof(basicRatesChar), pSsid->basicDataTransferRates, swl_mcs_legacyStrList, SWL_MCS_LEGACY_LIST_SIZE, ',');
+            pNeighborBss->basicDataTransferRates = strdup(basicRatesChar);
+
+            char supportedRatesChar[64] = "";
+            swl_conv_maskToCharSep(supportedRatesChar, sizeof(supportedRatesChar), pSsid->supportedDataTransferRates, swl_mcs_legacyStrList, SWL_MCS_LEGACY_LIST_SIZE, ',');
+            pNeighborBss->supportedDataTransferRates = strdup(supportedRatesChar);
 
             amxc_llist_it_init(&pNeighborBss->neighborBssIt);
             amxc_llist_append(&pChannelScan->neighborBssList, &pNeighborBss->neighborBssIt);
@@ -954,7 +960,7 @@ void fillFullScanResultsList(amxc_var_t* pScanResultList, T_Radio* pRad, wld_sca
                 amxc_var_add_key(uint8_t, pNeighborBssHashTable, "SignalStrength", pNeighborBss->signalStrength);
                 amxc_var_add_key(cstring_t, pNeighborBssHashTable, "ChannelBandwidth", Rad_SupBW[swl_chanspec_intToBw(pNeighborBss->channelBandwidth)]);
                 amxc_var_add_key(uint8_t, pNeighborBssHashTable, "ChannelUtilization", pNeighborBss->channelUtilization);
-                amxc_var_add_key(uint32_t, pNeighborBssHashTable, "StationCount", pNeighborBss->StationCount);  // pwhm does not receive StationCount as this stage
+                amxc_var_add_key(uint32_t, pNeighborBssHashTable, "StationCount", pNeighborBss->StationCount);
                 amxc_var_add_key(cstring_t, pNeighborBssHashTable, "SecurityModeEnabled", swl_security_apModeToString(pNeighborBss->securityModeEnabled, SWL_SECURITY_APMODEFMT_LEGACY));
                 amxc_var_add_key(cstring_t, pNeighborBssHashTable, "EncryptionMode", swl_security_encMode_str[ pNeighborBss->encryptionMode ]);
 
@@ -963,10 +969,13 @@ void fillFullScanResultsList(amxc_var_t* pScanResultList, T_Radio* pRad, wld_sca
                                   pNeighborBss->operatingStandards, SWL_RADSTD_FORMAT_STANDARD, 0);
                 amxc_var_add_key(cstring_t, pNeighborBssHashTable, "OperatingStandards", operatingStandardsChar);
 
-                amxc_var_add_key(cstring_t, pNeighborBssHashTable, "SupportedStandards", operatingStandardsChar);
+                char supportedStandardsChar[32] = "";
+                swl_radStd_toChar(supportedStandardsChar, sizeof(supportedStandardsChar),
+                                  pNeighborBss->supportedStandards, SWL_RADSTD_FORMAT_STANDARD, 0);
+                amxc_var_add_key(cstring_t, pNeighborBssHashTable, "SupportedStandards", supportedStandardsChar);
 
-                amxc_var_add_key(cstring_t, pNeighborBssHashTable, "BasicDataTransferRates", "");
-                amxc_var_add_key(cstring_t, pNeighborBssHashTable, "SupportedDataTransferRates", "");
+                amxc_var_add_key(cstring_t, pNeighborBssHashTable, "BasicDataTransferRates", pNeighborBss->basicDataTransferRates);
+                amxc_var_add_key(cstring_t, pNeighborBssHashTable, "SupportedDataTransferRates", pNeighborBss->supportedDataTransferRates);
 
                 amxc_var_add_key(uint32_t, pNeighborBssHashTable, "SupportedNSS", pNeighborBss->supportedNss);
                 amxc_var_add_key(uint32_t, pNeighborBssHashTable, "DTIMPeriod", pNeighborBss->dtimPeriod);

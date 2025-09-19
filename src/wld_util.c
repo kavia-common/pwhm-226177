@@ -2540,6 +2540,10 @@ swl_rc_ne wld_util_copyScanInfoFromIEs(wld_scanResultSSID_t* pResult, swl_wirele
     pResult->operatingStandards = pWirelessDevIE->operatingStandards;
     pResult->secModeEnabled = pWirelessDevIE->secModeEnabled;
     pResult->WPS_ConfigMethodsEnabled = pWirelessDevIE->WPS_ConfigMethodsEnabled;
+
+    // NSS (Number of Spatial Streams)
+    pResult->supportedNss = SWL_MAX(1, SWL_MAX(pWirelessDevIE->maxRxSpatialStreamsSupported, pWirelessDevIE->maxTxSpatialStreamsSupported));
+
     return SWL_RC_OK;
 }
 
