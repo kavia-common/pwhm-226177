@@ -342,7 +342,8 @@ swl_rc_ne wld_wpaSupp_cfgFile_create(T_EndPoint* pEP, char* cfgFileName) {
      * is a part of network section. */
     swl_mapChar_t* network = wld_wpaSupp_getNetworkConfig(config);
     swl_mapChar_t* global = wld_wpaSupp_getGlobalConfig(config);
-    if((!swl_map_has(global, "multi_ap_profile")) && (swl_map_size(network) > 0)) {
+    if((!swl_map_has(global, "multi_ap_profile")) && (pEP->multiAPProfile > MULTIAP_NOT_SUPPORTED)
+       && (swl_map_size(network) > 0)) {
         swl_mapCharFmt_addValInt32(network, "multi_ap_profile", pEP->multiAPProfile);
     }
 
