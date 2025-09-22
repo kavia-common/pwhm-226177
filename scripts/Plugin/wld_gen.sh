@@ -52,6 +52,8 @@ init_wld()
         /usr/lib/amx/${name}/preInit.sh
     fi
 
+    [ -S /var/run/pwhm_usp.sock ] && rm -f /var/run/pwhm_usp.sock
+
     for FILE in $(ls -1 /usr/lib/amx/${name}/modules/*/modPreInit.sh 2> /dev/null); do
        $FILE
     done
