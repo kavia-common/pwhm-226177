@@ -359,6 +359,7 @@ void wifiGen_hapd_initDynCfgParamSupp(T_Radio* pRad) {
     const char* mrsnoParams[] = {
         "rsn_override_key_mgmt", "rsn_override_pairwise", "rsn_override_mfp",
         "rsn_override_key_mgmt_2", "rsn_override_pairwise_2", "rsn_override_mfp_2",
+        "rsn_override_omit_rsnxe",
     };
     uint32_t nMrsnoParams = sizeof(mrsnoParams) / sizeof(mrsnoParams[0]);
     if(wld_secDmn_detectCfgParamsSupp(pRad->hostapd, mrsnoParams, nMrsnoParams, "rsn_override_") > 0) {

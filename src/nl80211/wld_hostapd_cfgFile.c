@@ -921,6 +921,9 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
             s_checkAndSetParamValueStr(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_pairwise_2", "GCMP-256");
             s_checkAndSetParamValueInt32(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_mfp_2", SWL_SECURITY_MFPMODE_REQUIRED);
         }
+        if(!is6g) { /* The RSNXE is not advertised in the 2.4 and 5 GHz bands, replaced by RSNXE Override element */
+            s_checkAndSetParamValueInt32(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_omit_rsnxe", true);
+        }
 
         swl_mapChar_add(vapConfigMap, "sae_sync", "5");
         swl_mapChar_add(vapConfigMap, "sae_require_mfp", "1");

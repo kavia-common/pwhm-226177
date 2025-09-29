@@ -111,6 +111,7 @@ static testStruct_t secCfgObj_24ghz[] = {
     {"rsn_override_mfp_2", "2"},
     {"rsn_override_key_mgmt_2", "SAE-EXT-KEY"},
     {"rsn_override_pairwise_2", "GCMP-256"},
+    {"rsn_override_omit_rsnxe", "1"},
     {"sae_require_mfp", "1"},
     {"sae_anti_clogging_threshold", "5"},
     {"sae_sync", "5"},
@@ -132,6 +133,7 @@ static testStruct_t secCfgObj_5ghz[] = {
     {"rsn_override_mfp_2", "2"},
     {"rsn_override_key_mgmt_2", "SAE-EXT-KEY"},
     {"rsn_override_pairwise_2", "GCMP-256"},
+    {"rsn_override_omit_rsnxe", "1"},
     {"sae_require_mfp", "1"},
     {"sae_anti_clogging_threshold", "5"},
     {"sae_sync", "5"},
@@ -200,6 +202,7 @@ static bool setup_internal_context_for_wpa3_cm(wld_th_dm_t* dm) {
         const char* mrsnoParams[] = {
             "rsn_override_key_mgmt", "rsn_override_pairwise", "rsn_override_mfp",
             "rsn_override_key_mgmt_2", "rsn_override_pairwise_2", "rsn_override_mfp_2",
+            "rsn_override_omit_rsnxe",
         };
         for(uint32_t i = 0; i < sizeof(mrsnoParams) / sizeof(mrsnoParams[0]); i++) {
             const char* param = mrsnoParams[i];
