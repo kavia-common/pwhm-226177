@@ -123,6 +123,7 @@ swl_trl_e wld_secDmn_getCfgParamSupp(wld_secDmn_t* pSecDmn, const char* param);
 uint32_t wld_secDmn_countCfgParamSuppAll(wld_secDmn_t* pSecDmn);
 uint32_t wld_secDmn_countCfgParamSuppChecked(wld_secDmn_t* pSecDmn);
 uint32_t wld_secDmn_countCfgParamSuppByVal(wld_secDmn_t* pSecDmn, swl_trl_e supp);
+int32_t wld_secDmn_detectCfgParamsSupp(wld_secDmn_t* pSecDmn, const char* cfgParams[], uint32_t nCfgParams, const char* optCfgParamPrefix);
 const char* wld_secDmn_getCtrlIfaceDirPath(wld_secDmn_t* pSecDmn);
 bool wld_secDmn_setCmdSupp(wld_secDmn_t* pSecDmn, const char* cmd, swl_trl_e supp);
 swl_trl_e wld_secDmn_getCmdSupp(wld_secDmn_t* pSecDmn, const char* cmd);

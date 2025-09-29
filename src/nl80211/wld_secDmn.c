@@ -65,6 +65,8 @@
 #include "swl/swl_string.h"
 #include "wld_secDmn.h"
 #include "wld_secDmnGrp_priv.h"
+#include "wld_util.h"
+#include "wld_wpaCtrl_api.h"
 
 #define ME "secDmn"
 
@@ -526,5 +528,27 @@ bool wld_secDmn_isActiveAlone(wld_secDmn_t* pSecDmn) {
     return ((wld_secDmn_isAlive(pSecDmn)) &&
             ((!wld_secDmn_isGrpMember(pSecDmn)) ||
              (wld_secDmn_countActiveGrpMembers(pSecDmn) == 1)));
+}
+
+/*
+ * @brief detect support of token string fetched in security daemon binary
+ * (binary full path fetched through PATH env)
+ *
+ * @param pSecDmn secDmn ctx
+ * @param cfgParams array of cfg param strings
+ * @param nCfgParams number of elements in cfgParams array
+ * @param optCfgParamPrefix optional common prefix string to speed up scanning cfg param strings in binary file
+ *
+ * @return number of detected params, -1 in case of error
+ */
+int32_t wld_secDmn_detectCfgParamsSupp(wld_secDmn_t* pSecDmn, const char* cfgParams[], uint32_t nCfgParams, const char* optCfgParamPrefix) {
+    ASSERTS_NOT_NULL(pSecDmn, -1, ME, "NULL");
+    ASSERT_NOT_NULL(pSecDmn->dmnProcess, -1, ME, "Null dmn proc ctx");
+    ASSERT_TRUE(cfgParams && nCfgParams, -1, ME, "No cfg params");
+    char binPath[PATH_MAX] = {0};
+    const char* cmd = pSecDmn->dmnProcess->cmd;
+    swl_rc_ne rc = wld_util_getExecutablePath(cmd, binPath, sizeof(binPath));
+    ASSERT_STR(binPath, -1, ME, "Fail to locate cmd(%s) bin path (rc:%d:%s)", cmd, rc, swl_rc_toString(rc))
+    return wld_wpaCtrl_detectKeywordsSupp(&pSecDmn->cfgParamSup, binPath, cfgParams, nCfgParams, optCfgParamPrefix);
 }
 
