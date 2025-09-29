@@ -1085,7 +1085,6 @@ static void s_radioChange(wld_rad_changeEvent_t* event) {
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
     ASSERTS_EQUALS(pRad->vendor->fsmMngr, &mngr, , ME, "%s: radio managed by vendor specific FSM", pRad->Name);
     if(event->changeType == WLD_RAD_CHANGE_INIT) {
-        wifiGen_hapd_initDynCfgParamSupp(pRad);
         s_updateHapdDmnEvtHandlers(pRad);
         wld_event_add_callback(gWld_queue_vap_onStatusChange, &s_vapStatusCbContainer);
         s_registerHadpRadEvtHandlers(pRad->hostapd);

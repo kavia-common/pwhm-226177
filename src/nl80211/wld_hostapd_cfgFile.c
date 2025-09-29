@@ -912,14 +912,14 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
         }
 
         if(!is6g) { /* AKM:8 for RSNO1; not advertised on 6GHz */
-            swl_mapChar_add(vapConfigMap, "rsn_override_key_mgmt", "SAE");
-            swl_mapChar_add(vapConfigMap, "rsn_override_pairwise", "CCMP");
-            swl_mapCharFmt_addValInt32(vapConfigMap, "rsn_override_mfp", SWL_SECURITY_MFPMODE_REQUIRED);
+            s_checkAndSetParamValueStr(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_key_mgmt", "SAE");
+            s_checkAndSetParamValueStr(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_pairwise", "CCMP");
+            s_checkAndSetParamValueInt32(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_mfp", SWL_SECURITY_MFPMODE_REQUIRED);
         }
         if(enableVap11be) { /* AKM:24 for RSNO2 on all bands */
-            swl_mapChar_add(vapConfigMap, "rsn_override_key_mgmt_2", "SAE-EXT-KEY");
-            swl_mapChar_add(vapConfigMap, "rsn_override_pairwise_2", "GCMP-256");
-            swl_mapCharFmt_addValInt32(vapConfigMap, "rsn_override_mfp_2", SWL_SECURITY_MFPMODE_REQUIRED);
+            s_checkAndSetParamValueStr(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_key_mgmt_2", "SAE-EXT-KEY");
+            s_checkAndSetParamValueStr(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_pairwise_2", "GCMP-256");
+            s_checkAndSetParamValueInt32(pAP->wpaCtrlInterface, vapConfigMap, "rsn_override_mfp_2", SWL_SECURITY_MFPMODE_REQUIRED);
         }
 
         swl_mapChar_add(vapConfigMap, "sae_sync", "5");

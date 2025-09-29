@@ -355,6 +355,15 @@ void wifiGen_hapd_initDynCfgParamSupp(T_Radio* pRad) {
     bool hasRnr = (swl_bit32_getHighest(pRad->supportedStandards) >= SWL_RADSTD_AX);
     wld_secDmn_setCfgParamSupp(pRad->hostapd, "rnr", hasRnr ? SWL_TRL_TRUE : SWL_TRL_UNKNOWN);
     wld_secDmn_setCfgParamSupp(pRad->hostapd, "config_id", SWL_TRL_TRUE);
+
+    const char* mrsnoParams[] = {
+        "rsn_override_key_mgmt", "rsn_override_pairwise", "rsn_override_mfp",
+        "rsn_override_key_mgmt_2", "rsn_override_pairwise_2", "rsn_override_mfp_2",
+    };
+    uint32_t nMrsnoParams = sizeof(mrsnoParams) / sizeof(mrsnoParams[0]);
+    if(wld_secDmn_detectCfgParamsSupp(pRad->hostapd, mrsnoParams, nMrsnoParams, "rsn_override_") > 0) {
+        wld_rad_addSuppDrvCap(pRad, wld_rad_getFreqBand(pRad), "MRSNO");
+    }
 }
 
 swl_rc_ne wifiGen_hapd_init(T_Radio* pRad) {

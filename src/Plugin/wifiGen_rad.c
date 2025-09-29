@@ -132,10 +132,6 @@ int wifiGen_rad_miscHasSupport(T_Radio* pRad, T_AccessPoint* pAp, char* buf, int
         if(swl_str_matches(buf, "RADAR_BACKGROUND")) {
             ret &= (pRad && pRad->bgdfs_config.available);
         }
-    } else {
-        if(swl_str_matches(buf, "MRSNO")) {
-            ret |= (pRad && amxd_object_get_bool(pRad->pBus, "ForceMRSNOSupport", NULL));
-        }
     }
 
     return ret;
@@ -655,6 +651,7 @@ int wifiGen_rad_supports(T_Radio* pRad, char* buf _UNUSED, int bufsize _UNUSED) 
     pRad->m_multiAPTypesSupported = M_MULTIAP_ALL;
 
     wifiGen_hapd_initGlobDmnCap(pRad);
+    wifiGen_hapd_initDynCfgParamSupp(pRad);
 
     /* First time force full config */
     pRad->fsmRad.FSM_SyncAll = TRUE;

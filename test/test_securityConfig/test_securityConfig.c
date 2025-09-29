@@ -73,6 +73,8 @@
 #include <amxd/amxd_object.h>
 #include "wld_hostapd_cfgFile.h"
 #include "nl80211/wld_hostapd_cfgManager_priv.h"
+#include "wld_secDmn.h"
+#include "wld_wpaCtrlInterface.h"
 
 
 
@@ -155,7 +157,7 @@ static testStruct_t secCfgObj_6ghz[] = {
     {"sae_pwe", "1"},
 };
 
-static bool configure_internal_context_for_wpa3_cm(wld_th_dm_t* dm) {
+static bool setup_internal_context_for_wpa3_cm(wld_th_dm_t* dm) {
 
     for(size_t i = 0; i < SWL_FREQ_BAND_MAX && i < SWL_ARRAY_SIZE(radNames); i++) {
         printf("** INIT WPA3CM for BAND %s, rad %s, vap %s\n", swl_freqBand_str[i],
@@ -188,16 +190,46 @@ static bool configure_internal_context_for_wpa3_cm(wld_th_dm_t* dm) {
 
         // RSN Override 2 configuration is added under this condition by wld_hosapd_cfgFile.c :: s_setVapCommonConfig()
         ttb_assert_true(wld_rad_is11beUsable(band->rad));
+
+        char confFilePath[128] = {0};
+        swl_str_catFormat(confFilePath, sizeof(confFilePath), "/tmp/%s_hapd.conf", pRad->Name);
+        wld_secDmn_init(&pRad->hostapd, "hostapd", NULL, confFilePath, HOSTAPD_CTRL_IFACE_DIR);
+        wld_wpaCtrlInterface_init(&pAP->wpaCtrlInterface, pAP->alias, pAP->pRadio->hostapd->ctrlIfaceDir);
+        wld_wpaCtrlMngr_registerInterface(pRad->hostapd->wpaCtrlMngr, pAP->wpaCtrlInterface);
+
+        const char* mrsnoParams[] = {
+            "rsn_override_key_mgmt", "rsn_override_pairwise", "rsn_override_mfp",
+            "rsn_override_key_mgmt_2", "rsn_override_pairwise_2", "rsn_override_mfp_2",
+        };
+        for(uint32_t i = 0; i < sizeof(mrsnoParams) / sizeof(mrsnoParams[0]); i++) {
+            const char* param = mrsnoParams[i];
+            wld_secDmn_setCfgParamSupp(pRad->hostapd, param, SWL_TRL_TRUE);
+        }
+        wld_rad_addSuppDrvCap(pRad, wld_rad_getFreqBand(pRad), "MRSNO");
+    }
+    return true;
+}
+
+static bool teardown_internal_context_for_wpa3_cm(wld_th_dm_t* dm) {
+    for(size_t i = 0; i < SWL_FREQ_BAND_MAX && i < SWL_ARRAY_SIZE(radNames); i++) {
+        wld_th_dmBand_t* band = &dm->bandList[i];
+
+        T_Radio* pRad = band->rad;
+        T_AccessPoint* pAP = band->vapPriv;
+        wld_wpaCtrlInterface_cleanup(&pAP->wpaCtrlInterface);
+        wld_secDmn_cleanup(&pRad->hostapd);
     }
     return true;
 }
 
 static int s_setupSuite(void** state _UNUSED) {
     assert_true(wld_th_dm_init(&dm));
+    assert_true(setup_internal_context_for_wpa3_cm(&dm));
     return 0;
 }
 
 static int s_teardownSuite(void** state _UNUSED) {
+    teardown_internal_context_for_wpa3_cm(&dm);
     wld_th_dm_destroy(&dm);
     return 0;
 }
@@ -234,8 +266,6 @@ static void test_config_map_6_ghz(swl_mapChar_t* map) {
 }
 
 static void test_wpa3_compatibility_mode(void** state _UNUSED) {
-    assert_true(configure_internal_context_for_wpa3_cm(&dm));
-
     for(size_t i = 0; i < SWL_FREQ_BAND_MAX && i < SWL_ARRAY_SIZE(radNames); i++) {
         wld_th_dmBand_t* band = &dm.bandList[i];
 

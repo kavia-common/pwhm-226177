@@ -3164,14 +3164,6 @@ define probelist_t{
 		 * Identify the vendor for chip and driver
 		 */
 		%read-only string ChipsetVendor;
-
-
-		/**
-		 * Hint to pwhm that the device it is running on supports RSN Overriding
-		 */
-		%persistent %private bool ForceMRSNOSupport{
-			default false;
-		}
  
 	} /* object Radio */
 	}
