@@ -65,6 +65,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include <openssl/evp.h>
 
@@ -2479,5 +2480,43 @@ wld_spectrumChannelInfoEntry_t* wld_util_addorUpdateSpectrumEntry(amxc_llist_t* 
         pEntry->it = it;
     }
     return pEntry;
+}
+
+swl_rc_ne wld_util_fetchExecutablePath(const char* searchPaths, const char* cmd, char* buf, size_t bufSize) {
+    ASSERT_STR(searchPaths, SWL_RC_INVALID_PARAM, ME, "Empty searchPaths");
+    ASSERT_STR(cmd, SWL_RC_INVALID_PARAM, ME, "Empty command");
+    char tmpSPath[swl_str_len(searchPaths) + 1];
+    swl_str_copy(tmpSPath, sizeof(tmpSPath), searchPaths);
+    char* p = tmpSPath;
+    char* tk = NULL;
+    while((tk = strsep(&p, ":")) != NULL) {
+        //skip empty fields
+        if(*tk == 0) {
+            continue;
+        }
+        char fullPath[swl_str_len(tk) + swl_str_len(cmd) + 2];
+        snprintf(fullPath, sizeof(fullPath), "%s%s%s",
+                 tk, ((tk[swl_str_len(tk) - 1] == '/') ? "" : "/"), cmd);
+        char resPath[PATH_MAX] = {0};
+        if(realpath(fullPath, resPath) == NULL) {
+            continue;
+        }
+        struct stat sb;
+        memset(&sb, 0, sizeof(sb));
+        if(stat(resPath, &sb) != 0) {
+            SAH_TRACEZ_WARNING(ME, "fail to get info of (%s)", resPath);
+            continue;
+        }
+        if(S_ISREG(sb.st_mode) && (sb.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))) {
+            SAH_TRACEZ_INFO(ME, "found real cmd(%s) exec file in (%s)", cmd, resPath);
+            return swl_str_copy(buf, bufSize, resPath) ? SWL_RC_OK : SWL_RC_RESULT_OUT_OF_BOUNDS;
+        }
+    }
+    SAH_TRACEZ_WARNING(ME, "not found cmd(%s) exec bin in (%s)", cmd, searchPaths);
+    return SWL_RC_NOT_FOUND;
+}
+
+swl_rc_ne wld_util_getExecutablePath(const char* cmd, char* buf, size_t bufSize) {
+    return wld_util_fetchExecutablePath(getenv("PATH"), cmd, buf, bufSize);
 }
 

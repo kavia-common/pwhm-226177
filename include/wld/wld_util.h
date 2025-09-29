@@ -440,6 +440,36 @@ wld_spectrumChannelInfoEntry_t* wld_util_getSpectrumEntryByChannel(amxc_llist_t*
  */
 wld_spectrumChannelInfoEntry_t* wld_util_addorUpdateSpectrumEntry(amxc_llist_t* llSpectrumChannelInfo, wld_spectrumChannelInfoEntry_t* pData);
 
+/*
+ * @brief return resolved absolute path of executable command,
+ * by searching in semi-colon separated string list of paths
+ *
+ * @param searchPaths semi-colon separated string list of paths
+ * @param cmd command to search for it
+ * @param buf output buffer including the full command path (if found)
+ * @param bufSize maximum buf size
+ *
+ * @return SWL_RC_OK if successful, error code otherwise:
+ *         SWL_RC_NOT_FOUND command not found in any dir of PATH env variable
+ *         SWL_RC_RESULT_OUT_OF_BOUNDS incomplete path caused by too short target buffer size
+ */
+swl_rc_ne wld_util_fetchExecutablePath(const char* searchPaths, const char* cmd, char* buf, size_t bufSize);
+
+/*
+ * @brief return resolved absolute path of executable command,
+ * by searching in directories of PATH environment variable
+ * (same output as shell command 'which')
+ *
+ * @param cmd command to search for it
+ * @param buf output buffer including the full command path (if found)
+ * @param bufSize maximum buf size
+ *
+ * @return SWL_RC_OK if successful, error code otherwise:
+ *         SWL_RC_NOT_FOUND command not found in any dir of PATH env variable
+ *         SWL_RC_RESULT_OUT_OF_BOUNDS incomplete path caused by too short target buffer size
+ */
+swl_rc_ne wld_util_getExecutablePath(const char* cmd, char* buf, size_t bufSize);
+
 #ifdef __cplusplus
 }/* extern "C" */
 #endif

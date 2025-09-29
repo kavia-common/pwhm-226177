@@ -464,6 +464,105 @@ static void test_accuStats(void** state _UNUSED) {
     }
 }
 
+static void test_getCmdPath(const char* cmd, const char* expectFullPath, swl_rc_ne expectRc) {
+    char fullPath[128] = {0};
+    swl_rc_ne rc = wld_util_getExecutablePath(cmd, fullPath, sizeof(fullPath));
+    assert_int_equal(rc, expectRc);
+    if(swl_rc_isOk(rc)) {
+        assert_string_equal(fullPath, expectFullPath);
+    }
+}
+
+static void test_getExecutablePath(void** state _UNUSED) {
+    struct {
+        const char* cmd;
+        const char* expectFullPath;
+        swl_rc_ne expectRc;
+    } tests[] = {
+        {"ls", "/bin/ls", SWL_RC_OK, },
+        {"ifconfig", "/sbin/ifconfig", SWL_RC_OK, },
+        {"which", "/usr/bin/which", SWL_RC_OK, },
+        {"notexec", NULL, SWL_RC_NOT_FOUND, },
+    };
+    for(uint32_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
+        test_getCmdPath(tests[i].cmd, tests[i].expectFullPath, tests[i].expectRc);
+    }
+}
+
+static int s_test_fetchExecutablePath_setup(void** state _UNUSED) {
+    system("mkdir -p /tmp/local/bin");
+    system("mkdir -p /tmp/bin");
+
+    system("touch /tmp/bin/test1");
+    system("chmod a+x /tmp/bin/test1");
+
+    system("touch /tmp/local/bin/test2");
+    system("chmod a+x /tmp/local/bin/test2");
+    system("ln -sf /tmp/local/bin/test2 /tmp/bin/test2");
+
+    system("touch /tmp/bin/test3");
+    system("chmod a+x /tmp/bin/test3");
+    system("cp /tmp/bin/test3 /tmp/local/bin/test3");
+
+    system("touch /tmp/bin/btest4");
+    system("chmod a+x /tmp/bin/btest4");
+    system("ln -sf btest4 /tmp/bin/test4");
+
+    system("touch /tmp/local/btest5");
+    system("chmod a+x /tmp/local/btest5");
+    system("ln -sf ../../local/btest5 /tmp/local/bin/test5");
+
+    system("touch /tmp/local/bin/btest6");
+    system("chmod a+x /tmp/local/bin/btest6");
+    system("ln -sf bin/btest6 /tmp/local/test6");
+
+    return 0;
+}
+
+static int s_test_fetchExecutablePath_teardown(void** state _UNUSED) {
+    system("rm -rf /tmp/local/bin");
+    system("rm -rf /tmp/bin");
+    return 0;
+}
+
+static void test_fetchCmdPath(const char* spaths, const char* cmd, const char* expectFullPath, swl_rc_ne expectRc) {
+    char fullPath[128] = {0};
+    swl_rc_ne rc = wld_util_fetchExecutablePath(spaths, cmd, fullPath, sizeof(fullPath));
+    assert_int_equal(rc, expectRc);
+    if(swl_rc_isOk(rc)) {
+        assert_string_equal(fullPath, expectFullPath);
+    }
+}
+
+static void test_fetchExecutablePath(void** state _UNUSED) {
+    struct {
+        const char* spaths;
+        const char* cmd;
+        const char* expectFullPath;
+        swl_rc_ne expectRc;
+    } tests[] = {
+        {"/tmp:/tmp/bin", "test1", "/tmp/bin/test1", SWL_RC_OK, },
+        {"/tmp:/tmp/bin/", "test1", "/tmp/bin/test1", SWL_RC_OK, },
+        {"/tmp:/tmp/bin/", "", NULL, SWL_RC_INVALID_PARAM, },
+        {"/tmp", "test1", NULL, SWL_RC_NOT_FOUND, },
+        {"/tmp:/tmp/bin", "test2", "/tmp/local/bin/test2", SWL_RC_OK, },
+        {"/tmp/bin/:/tmp/local", "test2", "/tmp/local/bin/test2", SWL_RC_OK, },
+        {"/tmp/bin/:/tmp/local/bin", "test3", "/tmp/bin/test3", SWL_RC_OK, },
+        {"::/tmp/local/bin::/tmp/bin/::", "test3", "/tmp/local/bin/test3", SWL_RC_OK, },
+        {"/tmp:/tmp/bin", "test4", "/tmp/bin/btest4", SWL_RC_OK, },
+        {"/tmp:/tmp/local/bin", "test5", "/tmp/local/btest5", SWL_RC_OK, },
+        {"/tmp:/tmp/local", "test6", "/tmp/local/bin/btest6", SWL_RC_OK, },
+    };
+
+    for(uint32_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
+        test_fetchCmdPath(tests[i].spaths, tests[i].cmd, tests[i].expectFullPath, tests[i].expectRc);
+    }
+
+    char shortBuf[16] = {0};
+    swl_rc_ne rc = wld_util_fetchExecutablePath("/tmp/bin/", "test2", shortBuf, sizeof(shortBuf));
+    assert_int_equal(rc, SWL_RC_RESULT_OUT_OF_BOUNDS);
+}
+
 static int s_setupSuite(void** state _UNUSED) {
     return 0;
 }
@@ -479,7 +578,7 @@ int main(int argc _UNUSED, char* argv[] _UNUSED) {
     }
     sahTraceSetLevel(TRACE_LEVEL_WARNING);
     sahTraceSetTimeFormat(TRACE_TIME_APP_SECONDS);
-    sahTraceAddZone(sahTraceLevel(), "pcb");
+    sahTraceAddZone(sahTraceLevel(), "util");
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_ssid_to_string_ascii),
         cmocka_unit_test(test_ssid_to_string_hex),
@@ -494,6 +593,8 @@ int main(int argc _UNUSED, char* argv[] _UNUSED) {
         cmocka_unit_test(test_convIntArrToString),
         cmocka_unit_test(test_convStrToIntArray),
         cmocka_unit_test(test_accuStats),
+        cmocka_unit_test(test_getExecutablePath),
+        cmocka_unit_test_setup_teardown(test_fetchExecutablePath, s_test_fetchExecutablePath_setup, s_test_fetchExecutablePath_teardown),
     };
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);
     sahTraceClose();
