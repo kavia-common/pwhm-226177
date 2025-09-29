@@ -76,6 +76,7 @@
 #include "wld.h"
 #include "wld_hostapd_ap_api.h"
 #include "wld_wpaCtrl_events.h"
+#include "wld_wpaCtrl_api.h"
 
 static void test_wld_ap_hostapd_getParamAction(void** state) {
     (void) state;
@@ -255,6 +256,69 @@ static void test_wld_fetch_wpactrl_event(void** state) {
     W_SWL_FREE(pParams);
 }
 
+const char* exeBinPath = "/tmp/hostapdMock";
+swl_mapCharInt32_t mapKwsSup;
+static int s_test_detectKeywordsSupport_setup(void** state) {
+    *state = &mapKwsSup;
+    swl_mapCharInt32_init(&mapKwsSup);
+    return 0;
+}
+static int s_test_detectKeywordsSupport_teardown(void** state) {
+    swl_mapCharInt32_t* pMapKwsSup = (swl_mapCharInt32_t*) *state;
+    swl_mapCharInt32_cleanup(pMapKwsSup);
+    unlink(exeBinPath);
+    return 0;
+}
+
+static void test_detectKeywordsSupport(void** state) {
+    (void) state;
+    swl_mapCharInt32_t* pMapKwsSup = (swl_mapCharInt32_t*) *state;
+
+    const char* incKws[] = {
+        "RELOAD",
+        "rsn_override_key_mgmt", "rsn_override_pairwise", "rsn_override_mfp",
+        "UPDATE_BEACON", "RELOAD_BSS",
+        "wpa",
+        "rsn_override_key_mgmt_2", "rsn_override_pairwise_2", "rsn_override_mfp_2",
+        "TERMINATE",
+    };
+    uint32_t nIncKws = sizeof(incKws) / sizeof(incKws[0]);
+
+    FILE* fp = fopen(exeBinPath, "wb");
+    for(uint32_t i = 0; i < nIncKws; i++) {
+        char padBytes[nIncKws - i];
+        memset(padBytes, 0xe0 + i, sizeof(padBytes));
+        fwrite(padBytes, sizeof(padBytes), 1, fp);
+        fwrite(incKws[i], swl_str_len(incKws[i]), 1, fp);
+        fwrite(padBytes, sizeof(padBytes), 1, fp);
+    }
+    fclose(fp);
+
+    const char* reqKws[] = {
+        "UPDATE", "RELOAD",
+        "rsn_override_key_mgmt", "rsn_override_pairwise", "rsn_override_mfp",
+        "RELOAD_CONFIG", "UPDATE_BEACON", "RELOAD_BSS",
+        "rnr", "config_id", "wpa",
+        "rsn_override_key_mgmt_2", "rsn_override_pairwise_2", "rsn_override_mfp_2",
+        "TERMINATE",
+        "rsn_override_omit_rsnxe",
+    };
+    uint32_t nReqKws = sizeof(reqKws) / sizeof(reqKws[0]);
+
+    int32_t nMatch = 0;
+    nMatch = wld_wpaCtrl_detectKeywordsSupp(pMapKwsSup, exeBinPath, reqKws, nReqKws, "rsn_override_");
+    assert_int_equal(nMatch, 6);
+    assert_int_equal(swl_mapCharInt32_get(pMapKwsSup, "rsn_override_key_mgmt"), SWL_TRL_TRUE);
+    assert_int_equal(swl_mapCharInt32_get(pMapKwsSup, "rsn_override_omit_rsnxe"), SWL_TRL_FALSE);
+    nMatch += wld_wpaCtrl_detectKeywordsSupp(pMapKwsSup, exeBinPath, reqKws, nReqKws, "RELOAD");
+    assert_int_equal(nMatch, 8);
+    assert_int_equal(swl_mapCharInt32_get(pMapKwsSup, "RELOAD"), SWL_TRL_TRUE);
+    assert_int_equal(swl_mapCharInt32_get(pMapKwsSup, "RELOAD_BSS"), SWL_TRL_TRUE);
+    assert_int_equal(swl_mapCharInt32_get(pMapKwsSup, "RELOAD_CONFIG"), SWL_TRL_FALSE);
+    nMatch = wld_wpaCtrl_detectKeywordsSupp(pMapKwsSup, exeBinPath, reqKws, nReqKws, NULL);
+    assert_int_equal(nMatch, nIncKws);
+}
+
 static int s_setupSuite(void** state) {
     (void) state;
     return 0;
@@ -270,14 +334,16 @@ int main(int argc _UNUSED, char* argv[] _UNUSED) {
     if(!sahTraceIsOpen()) {
         fprintf(stderr, "FAILED to open SAH TRACE\n");
     }
-    sahTraceSetLevel(TRACE_LEVEL_WARNING);
+    sahTraceSetLevel(TRACE_LEVEL_INFO);
     sahTraceSetTimeFormat(TRACE_TIME_APP_SECONDS);
     sahTraceAddZone(sahTraceLevel(), "hapdAP");
+    sahTraceAddZone(sahTraceLevel(), "wpaCtrl");
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_wld_ap_hostapd_getParamAction),
         cmocka_unit_test(test_wld_ap_hostapd_setParamAction),
         cmocka_unit_test(test_wld_parse_wpactrl_event),
         cmocka_unit_test(test_wld_fetch_wpactrl_event),
+        cmocka_unit_test_setup_teardown(test_detectKeywordsSupport, s_test_detectKeywordsSupport_setup, s_test_detectKeywordsSupport_teardown),
     };
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);
     sahTraceClose();

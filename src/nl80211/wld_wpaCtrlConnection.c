@@ -371,3 +371,43 @@ swl_rc_ne wld_wpaCtrl_queryToSock(const char* serverPath, const char* sockName, 
     return wld_wpaCtrl_queryToSockExt(serverPath, sockName, cmd, reply, replyLen, DFLT_SYNC_CMD_TMOUT_MS);
 }
 
+/*
+ * @brief detect support of keyword strings (command, cfg parameter) fetched in security daemon binary
+ *
+ * @param mapKwSup in/out mapCharInt32 to save to support result
+ * @param exeBinPath executable binary full path
+ * @param reqKws array of keyword strings to be fetched
+ * @param nReqKws number of elements in keywords array
+ * @param optKwPfx optional common prefix string to speed up scanning keywords in binary file
+ *
+ * @return number of matched keywords, -1 in case of error
+ */
+int32_t wld_wpaCtrl_detectKeywordsSupp(swl_mapCharInt32_t* mapKwSup, const char* exeBinPath, const char* reqKws[], uint32_t nReqKws, const char* optKwPfx) {
+    ASSERT_STR(exeBinPath, -1, ME, "Empty exec bin path");
+    ASSERT_TRUE(reqKws && nReqKws, -1, ME, "No requested keywords");
+    ASSERT_EQUALS(access(exeBinPath, F_OK), 0, -1, ME, "not found exeBinPath (%s)", exeBinPath);
+    uint32_t nMatch = 0;
+    char foundKws[1024] = {0};
+    if(!swl_str_isEmpty(optKwPfx)) {
+        swl_fileUtils_findStrInFile(foundKws, sizeof(foundKws), exeBinPath, optKwPfx, true);
+    }
+    for(uint32_t i = 0; i < nReqKws; i++) {
+        const char* reqKw = reqKws[i];
+        if(swl_str_isEmpty(reqKw)) {
+            continue;
+        }
+        if(swl_str_isEmpty(optKwPfx)) {
+            memset(foundKws, 0, sizeof(foundKws));
+            swl_fileUtils_findStrInFile(foundKws, sizeof(foundKws), exeBinPath, reqKw, true);
+        }
+        swl_trl_e supp = (swl_strlst_contains(foundKws, ",", reqKw) ? SWL_TRL_TRUE : SWL_TRL_FALSE);
+        if(mapKwSup != NULL) {
+            swl_mapCharInt32_addOrSet(mapKwSup, (char*) reqKw, supp);
+        }
+        SAH_TRACEZ_INFO(ME, "%smatch keyword(%s) in file(%s) : pfx(%s),foundKwds(%s)",
+                        (!supp ? "un" : ""), reqKw, exeBinPath, (optKwPfx ? : ""), foundKws);
+        nMatch += (supp == SWL_TRL_TRUE);
+    }
+    return nMatch;
+}
+

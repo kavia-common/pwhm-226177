@@ -65,6 +65,7 @@
 
 #include "wld_wpaCtrl_types.h"
 #include "swl/swl_common.h"
+#include "swl/swl_maps.h"
 
 bool wld_wpaCtrl_sendCmd(wld_wpaCtrlInterface_t* pIface, const char* cmd);
 bool wld_wpaCtrl_sendCmdSynced(wld_wpaCtrlInterface_t* pIface, const char* cmd, char* reply, size_t replyLen);
@@ -79,5 +80,6 @@ swl_rc_ne wld_wpaCtrl_queryToSock(const char* serverPath, const char* sockName, 
 swl_rc_ne wld_wpaCtrl_queryToSockExt(const char* serverPath, const char* sockName, const char* cmd, char* reply, size_t replyLen, uint32_t tmOutMSec);
 size_t wld_wpaCtrl_getMaxMsgLen();
 swl_rc_ne wld_wpaCtrl_setMaxMsgLen(size_t msgLen);
+int32_t wld_wpaCtrl_detectKeywordsSupp(swl_mapCharInt32_t* mapKwSup, const char* exeBinPath, const char* reqKws[], uint32_t nReqKws, const char* optKwPfx);
 
 #endif /* __WLD_WPA_CTRL_API_H__ */
