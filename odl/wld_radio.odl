@@ -817,6 +817,15 @@ define probelist_t{
 		}
 
 		/**
+		 * Comma-separated list of strings.
+		 * These are the currenly applicable values of SupportedOperatingChannelBandwidth
+		 * based on the runtime enabled radio standards and phy supported channel bandwidths.
+		 */
+		%protected %read-only string ApplicableOperatingChannelBandwidths{
+			default "";
+		}
+
+		/**
 		 * The desired channel bandwidth (applicable to 802.11n specifications
 		 * only).
 		 * The value MUST be a member of the list reported by the SupportedOperatingChannelBandwidths parameter.

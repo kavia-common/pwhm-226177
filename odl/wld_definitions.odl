@@ -373,6 +373,8 @@ include "wld_endpoint.odl";
 		filter 'path matches "WiFi\.Radio\.[0-9]+\." && (contains("parameters.OperatingChannelBandwidth") || contains("parameters.Channel"))';
 	on event "dm:object-changed" call wld_rad_updatePossibleChannels_ocf
 		filter 'path matches "WiFi\.Radio\.[0-9]+\." && (contains("parameters.OperatingFrequencyBand") || contains("parameters.RegulatoryDomain"))';
+	on event "dm:object-changed" call wld_rad_setApplicableRadBws
+		filter 'path matches "WiFi\.Radio\.[0-9]+\." && (contains("parameters.ApplicableOperatingChannelBandwidths"))';
 }
 
 /** @location sah_lib_wld /wld.odl */

@@ -502,7 +502,7 @@ static int TRAP_mfn_misc_has_support(T_Radio* rad, T_AccessPoint* vap, char* buf
     _UNUSED_(buf);
     _UNUSED_(bufsize);
     SAH_TRACEZ_NOTICE(ME, "%p %p %p %d", rad, vap, buf, bufsize);
-    return -1;
+    return 0; //no support
 }
 
 static swl_rc_ne TRAP_mfn_wifi_supvend_modes(T_Radio* rad, T_AccessPoint* dstAP, amxd_object_t* object, amxc_var_t* params _UNUSED) {

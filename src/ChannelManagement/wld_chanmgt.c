@@ -549,7 +549,8 @@ swl_radBw_e wld_chanmgt_getAutoBwExt(wld_rad_bwSelectMode_e autoBwMode, swl_band
 
 swl_radBw_e wld_chanmgt_getAutoBw(T_Radio* pR, swl_chanspec_t tgtChspec) {
     ASSERT_NOT_NULL(pR, SWL_RAD_BW_AUTO, ME, "NULL");
-    return wld_chanmgt_getAutoBwExt(pR->autoBwSelectMode, pR->maxChannelBandwidth, tgtChspec);
+    swl_bandwidth_e maxAppBw = wld_chanmgt_getHighestApplicableBw(pR);
+    return wld_chanmgt_getAutoBwExt(pR->autoBwSelectMode, maxAppBw, tgtChspec);
 }
 
 /**
@@ -586,6 +587,14 @@ swl_rc_ne wld_chanmgt_setTargetChanspec(T_Radio* pR, swl_chanspec_t chanspec, bo
     }
     ASSERT_TRUE(tgtChanspec.bandwidth > 0, SWL_RC_ERROR, ME, "%s: channel / bw not available %s",
                 pR->Name, swl_type_toBuf32(&gtSwl_type_chanspecExt, &chanspec).buf);
+    swl_bandwidth_e maxAppBw = wld_chanmgt_getHighestApplicableBw(pR);
+    if(tgtChanspec.bandwidth > maxAppBw) {
+        SAH_TRACEZ_WARNING(ME, "%s: reduce tgt bw %s to max runtime applicable bw %s",
+                           pR->Name,
+                           swl_bandwidth_str[tgtChanspec.bandwidth],
+                           swl_bandwidth_str[maxAppBw]);
+        tgtChanspec.bandwidth = maxAppBw;
+    }
 
     const char* checkReason = s_isTargetChanspecValid(pR, tgtChanspec);
     ASSERT_NULL(checkReason, SWL_RC_ERROR, ME, "%s: %s <%s>", pR->Name, checkReason, swl_type_toBuf32(&gtSwl_type_chanspecExt, &chanspec).buf);
@@ -819,6 +828,94 @@ swl_bandwidth_e wld_chanmgt_getDefaultSupportedBandwidth(T_Radio* pRad) {
         defBw--;
     }
     return defBw;
+}
+
+/*
+ * returns bitmask of applicable channel bandwidths (dm bw)
+ * among the supported ones, based on the enabled operating standards
+ */
+swl_radBw_m wld_chanmgt_getApplicableRadBwMask(T_Radio* pRad) {
+    ASSERTS_NOT_NULL(pRad, 0, ME, "NULL");
+    swl_radStd_m enaStds = swl_radStd_getEnabledRadStd(pRad->supportedStandards, pRad->operatingStandards);
+    if(pRad->operatingFrequencyBand < SWL_FREQ_BAND_EXT_NONE) {
+        enaStds &= swl_freqBand_radStd[pRad->operatingFrequencyBand];
+    }
+    if(SWL_BIT_IS_SET(enaStds, SWL_RADSTD_BE) && !wld_rad_is11beUsable(pRad)) {
+        W_SWL_BIT_CLEAR(enaStds, SWL_RADSTD_BE);
+    }
+    /*
+     * ensure as minimum the legacy bw if no match between supported and selected rad std list
+     */
+    if(enaStds < M_SWL_RADSTD_AUTO) {
+        swl_radStd_m legRadStdMask = SWL_BIT_SHIFT(swl_mcs_radStdFromMcsStd(SWL_MCS_STANDARD_LEGACY, pRad->operatingFrequencyBand));
+        enaStds |= swl_radStd_getEnabledRadStd(pRad->supportedStandards, legRadStdMask);
+    }
+    return swl_chanspec_getApplicableRadBwMask(pRad->supportedChannelBandwidth, enaStds);
+}
+
+static void s_updateDmAppRadBws(T_Radio* pR) {
+    if(!(pR && pR->pBus && pR->hasDmReady)) {
+        return;
+    }
+    swl_radBw_m appRadBws = wld_chanmgt_getApplicableRadBwMask(pR);
+    amxd_trans_t trans;
+    ASSERT_TRANSACTION_INIT(pR->pBus, &trans, , ME, "%s : trans init failure", pR->Name);
+    swl_conv_transParamSetMask(&trans, "ApplicableOperatingChannelBandwidths", appRadBws, swl_radBw_str, SWL_RAD_BW_MAX);
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "%s : trans apply failure", pR->Name);
+}
+
+static void s_mldChange(wld_mldChange_t* event) {
+    ASSERT_NOT_NULL(event, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "detect mld event %d mldtype %d unit %d", event->event, event->mldType, event->mldUnit);
+    ASSERTI_NOT_EQUALS(event->mldType, WLD_SSID_TYPE_UNKNOWN, , ME, "untyped mld");
+    T_SSID* pSSID = event->pEvtLinkSsid;
+    ASSERT_NOT_NULL(pSSID, , ME, "No link ssid");
+    T_Radio* pRad = pSSID->RADIO_PARENT;
+    ASSERT_NOT_NULL(pRad, , ME, "No link radio");
+    wld_chanmgt_updateApplicableRadBwMask(pRad);
+}
+
+static wld_event_callback_t s_onMldChange = {
+    .callback = (wld_event_callback_fun) s_mldChange,
+};
+
+swl_rc_ne wld_chanmgt_initApplicableRadBwMask(T_Radio* pRad) {
+    ASSERTS_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    pRad->applicableChannelBandwidths = wld_chanmgt_getApplicableRadBwMask(pRad);
+    wld_event_add_callback(gWld_queue_mld_onChangeEvent, &s_onMldChange);
+    return SWL_RC_OK;
+}
+
+swl_rc_ne wld_chanmgt_updateApplicableRadBwMask(T_Radio* pRad) {
+    ASSERTS_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    swl_radBw_m appRadBws = wld_chanmgt_getApplicableRadBwMask(pRad);
+    if(appRadBws != pRad->applicableChannelBandwidths) {
+        swla_delayExec_add((swla_delayExecFun_cbf) s_updateDmAppRadBws, pRad);
+        return SWL_RC_CONTINUE;
+    }
+    return SWL_RC_DONE;
+}
+
+swl_radBw_e wld_chanmgt_getHighestApplicableRadBw(T_Radio* pRad) {
+    if(pRad->applicableChannelBandwidths <= M_SWL_RAD_BW_AUTO) {
+        wld_chanmgt_initApplicableRadBwMask(pRad);
+    }
+    swl_radBw_e resBw = SWL_RAD_BW_AUTO;
+    uint32_t resBwInt = 0;
+    for(uint32_t i = 0; i < SWL_RAD_BW_MAX; i++) {
+        if(SWL_BIT_IS_SET(pRad->applicableChannelBandwidths, i)) {
+            uint32_t tmpBwInt = swl_chanspec_radBwToInt(i);
+            if(tmpBwInt > resBwInt) {
+                resBwInt = tmpBwInt;
+                resBw = i;
+            }
+        }
+    }
+    return resBw;
+}
+
+swl_bandwidth_e wld_chanmgt_getHighestApplicableBw(T_Radio* pRad) {
+    return swl_chanspec_radBwToPhyBw(wld_chanmgt_getHighestApplicableRadBw(pRad));
 }
 
 /**

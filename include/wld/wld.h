@@ -1523,6 +1523,7 @@ struct WLD_RADIO {
     swl_radBw_e operatingChannelBandwidth;                  /* bandwidth as requested by user */
     swl_radBw_e runningChannelBandwidth;                    /* bandwidth currently configured */
     swl_radBw_m supportedChannelBandwidth;                  /* SupportedBandwidths */
+    swl_radBw_m applicableChannelBandwidths;                /* Applicable channel bandwidths based on supported list, frequency band, and enabled radio standards */
     wld_channelChangeReason_e channelBandwidthChangeReason; /* The cause of the last channel's Bandwidth change */
     swl_bandwidth_e maxChannelBandwidth;                    /* max available bandwidth */
     wld_rad_channelInternalStatus_e channelShowing;

@@ -539,6 +539,9 @@ bool wld_mld_checkUsableLinkBasicConditions(wld_mldLink_t* pLink) {
     if(!wld_ssid_hasMloSupport(pSSID)) {
         return false;
     }
+    if(pSSID->mldUnit < 0) {
+        return false;
+    }
     if(swl_mac_binIsNull((swl_macBin_t*) pSSID->MACAddress)) {
         return false;
     }

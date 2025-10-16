@@ -948,7 +948,6 @@ swl_rc_ne wifiGen_rad_setChanspec(T_Radio* pRad, bool direct) {
          */
         SAH_TRACEZ_WARNING(ME, "%s: connected cold applying of chanspec %s",
                            pRad->Name, swl_typeChanspecExt_toBuf32(pRad->targetChanspec.chanspec).buf);
-        wld_rad_hostapd_setChannel(pRad);
         if(detState != CM_RAD_DOWN) {
             setBitLongArray(actionArray, FSM_BW, GEN_FSM_DISABLE_HOSTAPD);
         }
@@ -959,6 +958,8 @@ swl_rc_ne wifiGen_rad_setChanspec(T_Radio* pRad, bool direct) {
     }
     rc = SWL_RC_OK;
 saveConf:
+    /* update conf in memory */
+    wld_rad_hostapd_setChannel(pRad);
     /* update conf file */
     setBitLongArray(actionArray, FSM_BW, GEN_FSM_MOD_HOSTAPD);
     if(needCommit) {

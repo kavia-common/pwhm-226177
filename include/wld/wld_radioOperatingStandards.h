@@ -71,6 +71,18 @@
 void wld_rad_update_operating_standard(T_Radio* pRad, amxd_trans_t* trans);
 
 /*
+ * @brief: returns enabled radio standards based on supported list
+ * and user's operating standards selection.
+ * For secDmn config consistency, at least legacy radStd is returned when no match
+ * between supported and selected radio standards
+ *
+ * @param pRad pointer to radio context
+ *
+ * @return swl_radStd_m bitmask of enabled radio standards
+ */
+swl_radStd_m wld_rad_getEnabledRadStd(T_Radio* pRad);
+
+/*
  * @brief: checks wither a specific radio standard is enabled
  * in the user's operating standards selection
  *

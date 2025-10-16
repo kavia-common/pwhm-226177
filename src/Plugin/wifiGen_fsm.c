@@ -608,6 +608,10 @@ static bool s_doDisableHostapd(T_Radio* pRad) {
 
 static bool s_doEnableHostapd(T_Radio* pRad) {
     ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), true, ME, "%s: hostapd stopped", pRad->Name);
+    if(wld_secDmn_isRestarting(pRad->hostapd)) {
+        SAH_TRACEZ_INFO(ME, "%s: hostapd already is restarting: no need to force immediate enabling", pRad->Name);
+        return true;
+    }
     wld_rad_hostapd_enable(pRad);
     pRad->fsmRad.timeout_msec = 500;
     return true;

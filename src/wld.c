@@ -506,6 +506,9 @@ T_Radio* wld_createRadio(const char* name, vendor_t* vendor, int idx) {
 
     wld_extMod_initDataList(&pR->extDataList);
 
+    W_SWL_BIT_SET(pR->operatingStandards, SWL_RADSTD_AUTO);
+    wld_chanmgt_initApplicableRadBwMask(pR);
+
     wld_chanmgt_checkInitChannel(pR);
 
     return pR;

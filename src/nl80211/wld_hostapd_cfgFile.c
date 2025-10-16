@@ -229,12 +229,12 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
         tgtChspec.bandwidth = wld_chanmgt_getDefaultSupportedBandwidth(pRad);
     }
 
-    bool enableRad11be = wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_BE) && wld_rad_hasUsableApMld(pRad, 1);
+    bool enableRad11be = wld_rad_is11beUsable(pRad);
     /*
      * hostapd: Enabling HE is mandatory to enable EHT mode
      * ref: https://git.w1.fi/cgit/hostap/commit/?id=8dcc2139ff8f9d767e46bc09276b55e33561cc35
      */
-    bool enableRad11ax = (wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AX) || enableRad11be);
+    bool enableRad11ax = (wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AX) || wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_BE));
     bool enableRad11n = wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_N);
     bool enableRad11ac = wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AC);
 
@@ -800,17 +800,18 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
         swl_mapChar_add(vapConfigMap, "qos_map_set", pAP->cfg11u.qosMapSet);
     }
 
-    bool enableVap11be = false;
-    if(wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_BE)) {
+    bool enableRad11be = wld_rad_is11beUsable(pRad);
+    bool enableVap11be = enableRad11be;
+    if(enableRad11be && wld_rad_isMloCapable(pRad)) {
         if(wld_mld_isLinkUsable(pSSID->pMldLink)) {
             /* AP MLD - Whether this AP is a part of an AP MLD
              * 0 = no (no MLO)
              * 1 = yes (MLO) */
             swl_mapCharFmt_addValInt32(vapConfigMap, "mld_ap", 1);
-            enableVap11be = true;
         } else {
             /* if no MLO, then no 11BE */
             swl_mapCharFmt_addValInt32(vapConfigMap, "disable_11be", 1);
+            enableVap11be = false;
         }
     }
 

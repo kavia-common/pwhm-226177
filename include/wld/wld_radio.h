@@ -217,6 +217,7 @@ bool wld_rad_hasActiveApMldMultiLink(T_Radio* pRad);
 bool wld_rad_hasActiveApMld(T_Radio* pRad, uint32_t minNLinks);
 void wld_rad_setAllMldLinksUnconfigured(T_Radio* pRad);
 bool wld_rad_hasUsableApMld(T_Radio* pRad, uint32_t minNLinks);
+bool wld_rad_is11beUsable(T_Radio* pRad);
 
 uint32_t wld_rad_getFirstEnabledIfaceIndex(T_Radio* pRad);
 uint32_t wld_rad_getFirstActiveIfaceIndex(T_Radio* pRad);

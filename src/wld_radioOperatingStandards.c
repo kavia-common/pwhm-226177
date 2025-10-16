@@ -70,6 +70,7 @@
 #include "wld.h"
 #include "wld_util.h"
 #include "wld_radio.h"
+#include "wld_chanmgt.h"
 #include "Utils/wld_autoCommitMgr.h"
 #include "swl/swl_assert.h"
 
@@ -125,6 +126,7 @@ static void s_processOperatingStandards(T_Radio* pR, const char* newVal) {
         pR->pFA->mfn_wrad_supstd(pR, newStandards);
         wld_autoCommitMgr_notifyRadEdit(pR);
         wld_rad_setAllMldLinksUnconfigured(pR);
+        wld_chanmgt_updateApplicableRadBwMask(pR);
     }
 }
 
@@ -201,12 +203,29 @@ void wld_rad_update_operating_standard(T_Radio* pRad, amxd_trans_t* trans) {
 
     amxc_string_clean(&operatingStandardsText);
 
+    wld_chanmgt_updateApplicableRadBwMask(pRad);
+
     SAH_TRACEZ_OUT(ME);
 }
 
+swl_radStd_m wld_rad_getEnabledRadStd(T_Radio* pRad) {
+    ASSERTS_NOT_NULL(pRad, 0, ME, "NULL");
+    swl_radStd_m enaStds = swl_radStd_getEnabledRadStd(pRad->supportedStandards, pRad->operatingStandards);
+    if(pRad->operatingFrequencyBand < SWL_FREQ_BAND_EXT_NONE) {
+        enaStds &= swl_freqBand_radStd[pRad->operatingFrequencyBand];
+    }
+    /*
+     * ensure including at least the legacy operStd of the current rad freqBand
+     * this prevents secDmn crash when no radStd is selected
+     */
+    if(enaStds < M_SWL_RADSTD_AUTO) {
+        swl_radStd_m legRadStdMask = SWL_BIT_SHIFT(swl_mcs_radStdFromMcsStd(SWL_MCS_STANDARD_LEGACY, pRad->operatingFrequencyBand));
+        enaStds = swl_radStd_getEnabledRadStd(pRad->supportedStandards, legRadStdMask);
+    }
+    return enaStds;
+}
+
 bool wld_rad_checkEnabledRadStd(T_Radio* pRad, swl_radStd_e radStd) {
-    ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
-    return ((SWL_BIT_IS_SET(pRad->operatingStandards, radStd)) ||
-            ((pRad->operatingStandards == M_SWL_RADSTD_AUTO) && (SWL_BIT_IS_SET(pRad->supportedStandards, radStd))));
+    return SWL_BIT_IS_SET(wld_rad_getEnabledRadStd(pRad), radStd);
 }
 

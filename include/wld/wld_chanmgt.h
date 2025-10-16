@@ -106,5 +106,10 @@ swl_radBw_e wld_chanmgt_getAutoBw(T_Radio* pR, swl_chanspec_t tgtChspec);
 swl_channel_t wld_chanmgt_getBetterDefaultChannel(swl_freqBandExt_e freqBand, swl_channel_t curChan, swl_channel_t newChan);
 swl_channel_t wld_chanmgt_getDefaultSupportedChannel(T_Radio* pRad);
 swl_bandwidth_e wld_chanmgt_getDefaultSupportedBandwidth(T_Radio* pRad);
+swl_rc_ne wld_chanmgt_initApplicableRadBwMask(T_Radio* pRad);
+swl_rc_ne wld_chanmgt_updateApplicableRadBwMask(T_Radio* pRad);
+swl_radBw_m wld_chanmgt_getApplicableRadBwMask(T_Radio* pRad);
+swl_radBw_e wld_chanmgt_getHighestApplicableRadBw(T_Radio* pRad);
+swl_bandwidth_e wld_chanmgt_getHighestApplicableBw(T_Radio* pRad);
 
 #endif /* _WLD_CHANMGT_PCB_H_ */
