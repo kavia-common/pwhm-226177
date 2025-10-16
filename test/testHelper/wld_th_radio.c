@@ -181,6 +181,43 @@ wld_th_radCap_t* s_findCap(const char* radName) {
     return NULL;
 }
 
+int wld_th_rad_miscHasSupport(T_Radio* pRad, T_AccessPoint* pAp, char* buf, int bufsize) {
+    ASSERTS_NOT_NULL(buf, 0, ME, "NULL");
+    uint32_t band = 0;
+    if((pRad != NULL) || ((pAp != NULL) && ((pRad = pAp->pRadio) != NULL))) {
+        band = pRad->operatingFrequencyBand;
+    }
+    ttb_assert_non_null(pRad);
+    /* mock: set initial drv rad caps if not provided by the test */
+    if(swl_str_isEmpty(pRad->suppDrvCaps[band])) {
+        if(SWL_BIT_IS_SET(pRad->supportedChannelBandwidth, SWL_RAD_BW_320MHZ1) ||
+           SWL_BIT_IS_SET(pRad->supportedChannelBandwidth, SWL_RAD_BW_320MHZ2)) {
+            wld_rad_addSuppDrvCap(pRad, band, "320MHz");
+        }
+        if(SWL_BIT_IS_SET(pRad->supportedChannelBandwidth, SWL_RAD_BW_160MHZ)) {
+            wld_rad_addSuppDrvCap(pRad, band, "160MHz");
+        }
+        /* mock: trick: approx estim. of sec Caps based on operStd version */
+        if(pRad->supportedStandards >= M_SWL_RADSTD_N) {
+            wld_rad_addSuppDrvCap(pRad, band, "UAPSD");
+            wld_rad_addSuppDrvCap(pRad, band, "WME");
+            wld_rad_addSuppDrvCap(pRad, band, "AES");
+        }
+        if(pRad->supportedStandards >= M_SWL_RADSTD_AC) {
+            wld_rad_addSuppDrvCap(pRad, band, "SAE");
+            wld_rad_addSuppDrvCap(pRad, band, "SAE_PWE");
+            wld_rad_addSuppDrvCap(pRad, band, "OWE");
+        }
+    }
+    if(!buf[0]) {
+        /* Get full list */
+        swl_str_copy(buf, bufsize, wld_rad_getSuppDrvCaps(pRad, band));
+        return 1;
+    }
+    bool ret = (wld_rad_findSuppDrvCap(pRad, band, buf) == SWL_TRL_TRUE);
+    return ret;
+}
+
 int wld_th_rad_vendorCb_poschans(T_Radio* rad, uint8_t* buf _UNUSED, int bufsize _UNUSED) {
     assert_non_null(rad);
     wld_channel_init_channels(rad);

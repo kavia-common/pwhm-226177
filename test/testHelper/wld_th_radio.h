@@ -126,6 +126,7 @@ swl_rc_ne wld_th_mfn_wrad_regdomain(T_Radio* pRad, char* val, int bufsize, int s
 FSM_STATE wld_th_wrad_fsm(T_Radio* rad);
 int wld_th_rad_enable(T_Radio* rad, int val, int set);
 int wld_th_rad_vendorCb_poschans(T_Radio* pRad, uint8_t* buf, int bufsize);
+int wld_th_rad_miscHasSupport(T_Radio* pRad, T_AccessPoint* pAp, char* buf, int bufsize);
 
 
 void wld_th_rad_setRadEnable(T_Radio* rad, bool enable, bool commit);

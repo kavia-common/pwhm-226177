@@ -82,16 +82,9 @@
 #include "../testHelper/wld_th_radio.h"
 
 static wld_th_dm_t dm;
-
-static int s_setupSuite(void** state _UNUSED) {
-    assert_true(wld_th_dmEnv_init(&dm));
-    return 0;
-}
-
-static int s_teardownSuite(void** state _UNUSED) {
-    wld_th_dm_destroy(&dm);
-    return 0;
-}
+static T_Radio* pRad2 = NULL;
+static T_Radio* pRad5 = NULL;
+static T_Radio* pRad6 = NULL;
 
 wld_th_radCap_t testCap2 = {
     .name = "wifi0",
@@ -177,20 +170,33 @@ wld_th_radCap_t testCap6 = {
     }
 };
 
-static void test_radioStatus(void** state _UNUSED) {
+static int s_setupSuite(void** state _UNUSED) {
+    assert_true(wld_th_dmEnv_init(&dm));
+
     wld_th_radio_addCustomCap(&testCap2);
     wld_th_radio_addCustomCap(&testCap5);
     wld_th_radio_addCustomCap(&testCap6);
     testCap2.supportedDataTransmitRates = swl_conv_charToMask("1,2,5.5,6,9,11,12,18,24,36,48,54", swl_mcs_legacyStrList, SWL_MCS_LEGACY_LIST_SIZE);
     testCap5.supportedDataTransmitRates = swl_conv_charToMask("6,9,12,18,24,36,48,54", swl_mcs_legacyStrList, SWL_MCS_LEGACY_LIST_SIZE);
     testCap6.supportedDataTransmitRates = swl_conv_charToMask("6,9,12,18,24,36,48,54", swl_mcs_legacyStrList, SWL_MCS_LEGACY_LIST_SIZE);
-    T_Radio* pRad2 = wld_th_radio_create(dm.ttbBus->bus_ctx, dm.mockVendor, "wifi0");
-    T_Radio* pRad5 = wld_th_radio_create(dm.ttbBus->bus_ctx, dm.mockVendor, "wifi1");
-    T_Radio* pRad6 = wld_th_radio_create(dm.ttbBus->bus_ctx, dm.mockVendor, "wifi2");
+    pRad2 = wld_th_radio_create(dm.ttbBus->bus_ctx, dm.mockVendor, "wifi0");
+    pRad5 = wld_th_radio_create(dm.ttbBus->bus_ctx, dm.mockVendor, "wifi1");
+    pRad6 = wld_th_radio_create(dm.ttbBus->bus_ctx, dm.mockVendor, "wifi2");
+    pRad2->implicitBeamFormingSupported = true;
+    pRad5->implicitBeamFormingSupported = true;
+    pRad6->implicitBeamFormingSupported = true;
 
     amxp_sigmngr_trigger_signal(&dm.ttbBus->dm.sigmngr, "app:start", NULL);
     ttb_mockTimer_goToFutureMs(10000);
+    return 0;
+}
 
+static int s_teardownSuite(void** state _UNUSED) {
+    wld_th_dm_destroy(&dm);
+    return 0;
+}
+
+static void test_radioStatus(void** state _UNUSED) {
     amxd_object_t* capObj2 = amxd_object_findf(pRad2->pBus, "Capabilities");
     amxd_object_t* capObj5 = amxd_object_findf(pRad5->pBus, "Capabilities");
     amxd_object_t* capObj6 = amxd_object_findf(pRad6->pBus, "Capabilities");
@@ -215,11 +221,147 @@ static void test_radioStatus(void** state _UNUSED) {
     ttb_object_assertPrintEqFile(pRad6->pBus, 2, "rad6_base.txt");
 }
 
+static void s_checkUpdateRadBw(T_Radio* pRad, swl_radBw_m expecAppRadBws, swl_radBw_e expecRunRadBw) {
+    char* valStr;
+    swl_radBw_m radBws;
+    swl_radBw_e radBw;
+
+    valStr = amxd_object_get_cstring_t(pRad->pBus, "ApplicableOperatingChannelBandwidths", NULL);
+    radBws = swl_conv_charToMask(valStr, swl_radBw_str, SWL_RAD_BW_MAX);
+    W_SWL_FREE(valStr);
+    assert_int_equal(radBws, expecAppRadBws);
+
+    amxd_object_t* pObj = amxd_object_findf(pRad->pBus, "ChannelMgt.TargetChanspec");
+    valStr = amxd_object_get_cstring_t(pObj, "Bandwidth", NULL);
+    radBw = swl_conv_charToEnum(valStr, swl_radBw_str, SWL_RAD_BW_MAX, SWL_RAD_BW_AUTO);
+    W_SWL_FREE(valStr);
+    assert_int_equal(radBw, expecRunRadBw);
+
+    wld_chanmgt_reportCurrentChanspec(pRad, pRad->targetChanspec.chanspec, pRad->targetChanspec.reason);
+    ttb_mockTimer_goToFutureMs(100);
+
+    valStr = amxd_object_get_cstring_t(pRad->pBus, "CurrentOperatingChannelBandwidth", NULL);
+    radBw = swl_conv_charToEnum(valStr, swl_radBw_str, SWL_RAD_BW_MAX, SWL_RAD_BW_AUTO);
+    W_SWL_FREE(valStr);
+    assert_int_equal(radBw, expecRunRadBw);
+}
+
+typedef struct testRadBw {
+    T_Radio* pRad;
+    const char* operStd;
+    const char* cfgOperChBw;
+    swl_radBw_m expecAppRadBws;
+    swl_radBw_e expecRunRadBw;
+} testRadBw_t;
+
+static void s_setRadCfgAndcheckUpdateRadBw(testRadBw_t* tests, uint32_t nTests) {
+    T_Radio* pRad;
+    for(uint32_t i = 0; i < nTests; i++) {
+        pRad = tests[i].pRad;
+        amxd_trans_t trans;
+        assert_int_equal(swl_object_prepareTransaction(&trans, pRad->pBus), SWL_RC_OK);
+        amxd_trans_set_cstring_t(&trans, "OperatingStandards", tests[i].operStd);
+        if(!swl_str_isEmpty(tests[i].cfgOperChBw)) {
+            amxd_trans_set_cstring_t(&trans, "OperatingChannelBandwidth", tests[i].cfgOperChBw);
+        }
+        assert_int_equal(swl_object_finalizeTransactionOnLocalDm(&trans), SWL_RC_OK);
+        ttb_mockTimer_goToFutureMs(100);
+        s_checkUpdateRadBw(pRad, tests[i].expecAppRadBws, tests[i].expecRunRadBw);
+    }
+}
+
+static void test_changeAutoAppRadBws(void** state _UNUSED) {
+    testRadBw_t tests[] = {
+        {pRad6, "be", "", M_SWL_RAD_BW_ALL, SWL_RAD_BW_320MHZ1},
+        {pRad6, "ax", "", M_SWL_RAD_BW_320MHZ1 - 1, SWL_RAD_BW_160MHZ},
+        {pRad6, "be", "", M_SWL_RAD_BW_ALL, SWL_RAD_BW_320MHZ1},
+
+        {pRad5, "be", "", SWL_BIT_SHIFT(SWL_RAD_BW_160MHZ + 1) - 1, SWL_RAD_BW_160MHZ},
+        {pRad5, "ac", "", SWL_BIT_SHIFT(SWL_RAD_BW_160MHZ + 1) - 1, SWL_RAD_BW_160MHZ},
+        {pRad5, "n", "", SWL_BIT_SHIFT(SWL_RAD_BW_40MHZ + 1) - 1, SWL_RAD_BW_40MHZ},
+        {pRad5, "a", "", SWL_BIT_SHIFT(SWL_RAD_BW_20MHZ + 1) - 1, SWL_RAD_BW_20MHZ},
+        {pRad5, "be", "", SWL_BIT_SHIFT(SWL_RAD_BW_160MHZ + 1) - 1, SWL_RAD_BW_160MHZ},
+
+        {pRad2, "be", "", SWL_BIT_SHIFT(SWL_RAD_BW_40MHZ + 1) - 1, SWL_RAD_BW_40MHZ},
+        {pRad2, "ax", "", SWL_BIT_SHIFT(SWL_RAD_BW_40MHZ + 1) - 1, SWL_RAD_BW_40MHZ},
+        {pRad2, "n", "", SWL_BIT_SHIFT(SWL_RAD_BW_40MHZ + 1) - 1, SWL_RAD_BW_40MHZ},
+        {pRad2, "g", "", SWL_BIT_SHIFT(SWL_RAD_BW_20MHZ + 1) - 1, SWL_RAD_BW_20MHZ},
+    };
+    uint32_t nTests = SWL_ARRAY_SIZE(tests);
+
+    T_Radio* pRad;
+    for(uint32_t i = 0; i < nTests; i++) {
+        pRad = tests[i].pRad;
+        amxd_trans_t trans;
+        assert_int_equal(swl_object_prepareTransaction(&trans, pRad->pBus), SWL_RC_OK);
+        amxd_trans_set_cstring_t(&trans, "OperatingChannelBandwidth", "Auto");
+        amxd_trans_set_cstring_t(&trans, "AutoBandwidthSelectMode", "MaxAvailable");
+        assert_int_equal(swl_object_finalizeTransactionOnLocalDm(&trans), SWL_RC_OK);
+    }
+
+    s_setRadCfgAndcheckUpdateRadBw(tests, nTests);
+}
+
+static void test_changeManuAppRadBws(void** state _UNUSED) {
+    testRadBw_t tests[] = {
+        {pRad6, "ax", "320MHz-1", M_SWL_RAD_BW_320MHZ1 - 1, SWL_RAD_BW_160MHZ},
+        {pRad6, "be", "320MHz-1", M_SWL_RAD_BW_ALL, SWL_RAD_BW_320MHZ1},
+        {pRad6, "ax", "", M_SWL_RAD_BW_320MHZ1 - 1, SWL_RAD_BW_160MHZ},
+        {pRad6, "be", "80MHz", M_SWL_RAD_BW_ALL, SWL_RAD_BW_80MHZ},
+        {pRad6, "ax", "", M_SWL_RAD_BW_320MHZ1 - 1, SWL_RAD_BW_80MHZ},
+        {pRad6, "be", "", M_SWL_RAD_BW_ALL, SWL_RAD_BW_80MHZ},
+        {pRad6, "be", "Auto", M_SWL_RAD_BW_ALL, SWL_RAD_BW_320MHZ1},
+    };
+
+    s_setRadCfgAndcheckUpdateRadBw(tests, SWL_ARRAY_SIZE(tests));
+}
+
+static int s_test_changeMldAppRadBws_setup(void** state _UNUSED) {
+    /* add the MLO cap to require MLD conf for 11be */
+    wld_rad_addSuppDrvCap(pRad6, wld_rad_getFreqBand(pRad6), "MLO");
+    return 0;
+}
+
+static int s_test_changeMldAppRadBw_teardown(void** state _UNUSED) {
+    wld_rad_clearSuppDrvCaps(pRad6);
+    wld_rad_addSuppDrvCap(pRad6, wld_rad_getFreqBand(pRad6), "");
+    return 0;
+}
+
+static void test_changeMldAppRadBws(void** state _UNUSED) {
+    testRadBw_t testsPreMld[] = {
+        {pRad6, "ax", "", M_SWL_RAD_BW_320MHZ1 - 1, SWL_RAD_BW_160MHZ},
+        {pRad6, "be", "320MHz-1", M_SWL_RAD_BW_320MHZ1 - 1, SWL_RAD_BW_160MHZ},
+    };
+    s_setRadCfgAndcheckUpdateRadBw(testsPreMld, SWL_ARRAY_SIZE(testsPreMld));
+
+    amxd_object_t* pSSIDObj = amxd_object_findf(get_wld_object(), "SSID.%s", "wlan2");
+    assert_true(swl_typeInt32_commitObjectParam(pSSIDObj, "MLDUnit", 0));
+    ttb_mockTimer_goToFutureMs(100);
+
+    testRadBw_t testsPostMld[] = {
+        {pRad6, "be", "", M_SWL_RAD_BW_ALL, SWL_RAD_BW_320MHZ1},
+    };
+    s_setRadCfgAndcheckUpdateRadBw(testsPostMld, SWL_ARRAY_SIZE(testsPreMld));
+
+    assert_true(swl_typeInt32_commitObjectParam(pSSIDObj, "MLDUnit", -1));
+    ttb_mockTimer_goToFutureMs(100);
+
+    s_setRadCfgAndcheckUpdateRadBw(testsPreMld, SWL_ARRAY_SIZE(testsPreMld));
+}
+
 int main(int argc _UNUSED, char* argv[] _UNUSED) {
     sahTraceSetLevel(TRACE_LEVEL_INFO);
-    sahTraceAddZone(TRACE_LEVEL_APP_INFO, "ssid");
+    sahTraceAddZone(sahTraceLevel(), "rad");
+    sahTraceAddZone(sahTraceLevel(), "radOStd");
+    sahTraceAddZone(sahTraceLevel(), "chanMgt");
+    sahTraceAddZone(sahTraceLevel(), "mld");
+    sahTraceAddZone(sahTraceLevel(), "ssid");
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_radioStatus),
+        cmocka_unit_test(test_changeAutoAppRadBws),
+        cmocka_unit_test(test_changeManuAppRadBws),
+        cmocka_unit_test_setup_teardown(test_changeMldAppRadBws, s_test_changeMldAppRadBws_setup, s_test_changeMldAppRadBw_teardown),
     };
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);
     sahTraceClose();

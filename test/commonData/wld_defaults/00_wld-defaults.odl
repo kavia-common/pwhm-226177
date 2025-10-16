@@ -181,7 +181,7 @@
                 parameter SSIDReference = "WiFi.SSID.wlan0";
                 parameter Enable = 1;
                 parameter RetryLimit = 0;
-                parameter WMMEnable = 0;
+                parameter WMMEnable = 1;
                 parameter DefaultDeviceType = "Data";
                 parameter BridgeInterface = "br-lan";
                 parameter WDSEnable = 1;
@@ -204,7 +204,7 @@
             instance add ("wlan1") {
                 parameter SSIDReference = "WiFi.SSID.wlan1";
                 parameter Enable = 1;
-                parameter WMMEnable = 0;
+                parameter WMMEnable = 1;
                 parameter DefaultDeviceType = "Data";
                 parameter BridgeInterface = "br-lan";
                 parameter MultiAPType = "FronthaulBSS,BackhaulBSS";
@@ -225,7 +225,7 @@
             instance add ("wlan2") {
                 parameter SSIDReference = "WiFi.SSID.wlan2";
                 parameter Enable = 1;
-                parameter WMMEnable = 0;
+                parameter WMMEnable = 1;
                 parameter DefaultDeviceType = "Data";
                 parameter BridgeInterface = "br-lan";
                 parameter MultiAPType = "FronthaulBSS,BackhaulBSS";

@@ -71,6 +71,7 @@
 #include "wld_th_fsm.h"
 
 static T_CWLD_FUNC_TABLE s_functionTable = {
+    .mfn_misc_has_support = wld_th_rad_miscHasSupport,
     .mfn_wrad_create_hook = wld_th_rad_create_hook,
     .mfn_wrad_destroy_hook = wld_th_rad_destroy_hook,
     .mfn_wrad_supports = wld_th_radio_vendorCb_supports,
