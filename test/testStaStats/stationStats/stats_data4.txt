@@ -74,7 +74,7 @@
         "MaxBandwidthSupported": "20MHz",
         "DownlinkMCS": 10,
         "VendorCapabilities": "",
-        "RxErrors": 0,
+        "RxErrors": 13,
         "DownlinkShortGuard": false,
         "TxSupportedVhtMCS": "",
         "ConnectionDuration": 6,

@@ -83,6 +83,7 @@
 #include "swl/swl_common.h"
 #include "swl/swl_80211.h"
 #include "test-toolbox/ttb_amx.h"
+#include "test-toolbox/ttb_mockTimer.h"
 
 static int s_loIfIndex = 0;
 static wld_nl80211_state_t* s_sharedState = NULL;
@@ -728,6 +729,8 @@ static int s_nlSend_wiphyInfoChunk(int fd, wld_nl80211_wiphyInfo_t* pWiphyInfo, 
         if(SWL_BIT_IS_SET(pBand->radStdsMask, SWL_RADSTD_AX)) {
             NL_ATTR_NESTED(bandIfTypeDataAttr, NL80211_BAND_ATTR_IFTYPE_DATA);
             NL_ATTR_NESTED(bandIfTypeDataApAttr, 1);
+            uint8_t heCapMac[] = {0x0d, 0x00, 0x08, 0x12, 0x00, 0x10, };
+            NL_ATTRS_ADD(&bandIfTypeDataApAttr.data.attribs, NL_ATTR_DATA(NL80211_BAND_IFTYPE_ATTR_HE_CAP_MAC, sizeof(heCapMac), heCapMac));
             uint8_t heCapPhy[] = {0x0e, 0x3f, 0x02, 0x00, 0xfd, 0x09, 0x80, 0x0e, 0xcf, 0xf2, 0x00, };
             NL_ATTRS_ADD(&bandIfTypeDataApAttr.data.attribs, NL_ATTR_DATA(NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY, sizeof(heCapPhy), heCapPhy));
             uint8_t heMcsMapLe80[] = {0xfa, 0xff, 0xfa, 0xff};
