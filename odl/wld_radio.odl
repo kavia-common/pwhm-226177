@@ -862,7 +862,10 @@ define probelist_t{
 		 * Possible values:
 		 * MaxAvailable. The targeted bandwidth is the MaxChannelBandwidth
 		 * MaxCleared. The targeted bandwidth is the MaxChannelBandwidth if it is cleared and available.
-		 * Default. In other cases when autochannel is disabled, targeted bandwidth is 80MHz for 5GHz.
+		 * Default. In other cases when autochannel is disabled, targeted bandwidth is
+		 *   20MHz in the 2.4GHz band
+		 *   80MHz in the 5GHz band
+		 *   160MHz in the 6GHz band
 		 * @version 10.0
 		 */
 		%persistent string AutoBandwidthSelectMode {

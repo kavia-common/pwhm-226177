@@ -397,12 +397,7 @@ static void s_updateBandAndStandard(T_Radio* pRad, wld_nl80211_bandDef_t bands[]
     if(pOperBand->chanWidthMask > 0) {
         pRad->maxChannelBandwidth = swl_bit32_getHighest(pOperBand->chanWidthMask);
         if(pRad->runningChannelBandwidth == SWL_RAD_BW_AUTO) {
-            swl_bandwidth_e autoBw = wld_chanmgt_getAutoBw(pRad, wld_rad_getSwlChanspec(pRad));
-            if(autoBw < SWL_BW_320MHZ) {
-                pRad->runningChannelBandwidth = (swl_radBw_e) autoBw;
-            } else {
-                pRad->runningChannelBandwidth = SWL_RAD_BW_320MHZ1;
-            }
+            pRad->runningChannelBandwidth = wld_chanmgt_getAutoBw(pRad, wld_rad_getSwlChanspec(pRad));
         }
     } else if(pRad->runningChannelBandwidth == SWL_RAD_BW_AUTO) {
         switch(pRad->operatingFrequencyBand) {
