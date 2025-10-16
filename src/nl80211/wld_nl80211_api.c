@@ -839,7 +839,7 @@ static uint32_t s_getScanFlags(wld_nl80211_scanFlags_t* pFlags) {
 swl_rc_ne wld_nl80211_startScan(wld_nl80211_state_t* state, uint32_t ifIndex, wld_nl80211_scanParams_t* params) {
     SAH_TRACEZ_IN(ME);
     swl_rc_ne rc = SWL_RC_INVALID_PARAM;
-    NL_ATTRS(attribs, ARR());
+    NL_ATTRS_EMPTY(attribs);
     if(params) {
         uint32_t flags = s_getScanFlags(&params->flags);
         if(flags) {
@@ -1009,7 +1009,7 @@ swl_rc_ne wld_nl80211_getScanResults(wld_nl80211_state_t* state, uint32_t ifInde
 swl_rc_ne wld_nl80211_setRegDomain(wld_nl80211_state_t* state, uint32_t wiphy, const char* alpha2) {
     swl_rc_ne rc = SWL_RC_INVALID_PARAM;
     ASSERT_EQUALS(swl_str_len(alpha2), 2, rc, ME, "invalid alpha2");
-    NL_ATTRS(attribs, ARR());
+    NL_ATTRS_EMPTY(attribs);
     if((wiphy != WLD_NL80211_ID_ANY) && (wiphy != WLD_NL80211_ID_UNDEF)) {
         //No specific wiphy for global regulatory domain
         NL_ATTRS_ADD(&attribs, NL_ATTR_VAL(NL80211_ATTR_WIPHY, wiphy));
@@ -1027,7 +1027,7 @@ swl_rc_ne wld_nl80211_bgDfsStart(wld_nl80211_state_t* state, uint32_t ifIndex, i
     SAH_TRACEZ_INFO(ME, "Starting BG_DFS ifIndex(%d) %u/%s",
                     ifIndex, bgDfsChanspec.channel, swl_bandwidth_str[bgDfsChanspec.bandwidth]);
 
-    NL_ATTRS(attribs, ARR());
+    NL_ATTRS_EMPTY(attribs);
     if((ifMloLinkId != MLO_LINK_ID_UNKNOWN) && (ifMloLinkId >= 0)) {
         NL_ATTRS_ADD(&attribs, NL_ATTR_VAL(NL80211_ATTR_MLO_LINK_ID, ifMloLinkId));
     }
@@ -1057,7 +1057,7 @@ swl_rc_ne wld_nl80211_bgDfsStop(wld_nl80211_state_t* state, uint32_t ifIndex, in
 
     SAH_TRACEZ_INFO(ME, "Stopping BG_DFS ifIndex(%d)", ifIndex);
 
-    NL_ATTRS(attribs, ARR());
+    NL_ATTRS_EMPTY(attribs);
     if((ifMloLinkId != MLO_LINK_ID_UNKNOWN) && (ifMloLinkId >= 0)) {
         NL_ATTRS_ADD(&attribs, NL_ATTR_VAL(NL80211_ATTR_MLO_LINK_ID, ifMloLinkId));
     }

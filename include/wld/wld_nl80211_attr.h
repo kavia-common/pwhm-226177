@@ -151,11 +151,17 @@ void wld_nl80211_cleanNlAttrList(wld_nl80211_nlAttrList_t* pAttrList);
     } while(0);
 
 /*
+ * @brief macro to define nl empty attributes list
+ */
+#define NL_ATTRS_EMPTY(attrList) \
+    wld_nl80211_nlAttrList_t attrList; \
+    wld_nl80211_initNlAttrList(&attrList);
+
+/*
  * @brief macro to define nl attributes list and fill it with array of attribute values
  */
 #define NL_ATTRS(attrList, attrValues) \
-    wld_nl80211_nlAttrList_t attrList; \
-    wld_nl80211_initNlAttrList(&attrList); \
+    NL_ATTRS_EMPTY(attrList) \
     do { \
         wld_nl80211_nlAttr_t attrArray[] = attrValues; \
         for(uint32_t i = 0; i < SWL_ARRAY_SIZE(attrArray); i++) { \
