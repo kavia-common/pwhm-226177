@@ -349,12 +349,24 @@ static void s_setChannelspec(void* priv _UNUSED, amxd_object_t* object, const am
     swl_radBw_e radBw = swl_conv_charToEnum(GETP_CHAR(newParamValues, "OperatingChannelBandwidth"), swl_radBw_str, SWL_RAD_BW_MAX, pR->operatingChannelBandwidth);
     wld_rad_bwSelectMode_e autoBwSelectMode = swl_conv_charToEnum(GETP_CHAR(newParamValues, "AutoBandwidthSelectMode"), wld_rad_autoBwSelectMode_str, BW_SELECT_MODE_MAX, pR->autoBwSelectMode);
 
+    SAH_TRACEZ_INFO(ME, "%s: CFG(chan:%d,bw:%s,bwSelectMode:%s) Oper(chan:%d,bw:%s,bwSelectMode:%s) TGT(chan:%d,bw:%s) RUN(chan:%d,bw:%s)",
+                    pR->Name,
+                    channel, swl_radBw_str[radBw], wld_rad_autoBwSelectMode_str[autoBwSelectMode],
+                    pR->channel, swl_radBw_str[pR->operatingChannelBandwidth], wld_rad_autoBwSelectMode_str[pR->autoBwSelectMode],
+                    wld_chanmgt_getTgtChannel(pR), swl_radBw_str[swl_chanspec_toRadBw(&pR->targetChanspec.chanspec)],
+                    wld_chanmgt_getCurChannel(pR), swl_radBw_str[pR->runningChannelBandwidth]);
+
     if((channel == pR->channel) &&
-       (radBw == pR->operatingChannelBandwidth) && (radBw == pR->runningChannelBandwidth) &&
+       (((radBw != SWL_RAD_BW_AUTO) && (radBw == pR->operatingChannelBandwidth) && (radBw == pR->runningChannelBandwidth)) ||
+        ((radBw == SWL_RAD_BW_AUTO) && (swl_chanspec_toRadBw(&pR->targetChanspec.chanspec) == pR->runningChannelBandwidth))) &&
        (autoBwSelectMode == pR->autoBwSelectMode) &&
        (!swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pR), (swl_chanspec_t) SWL_CHANSPEC_EMPTY))) {
         SAH_TRACEZ_INFO(ME, "%s: Same channel %d, bandwidth %s and bwSelectMode %s, not updating",
                         pR->Name, channel, swl_radBw_str[radBw], wld_rad_autoBwSelectMode_str[autoBwSelectMode]);
+        if(radBw != pR->operatingChannelBandwidth) {
+            pR->operatingChannelBandwidth = radBw;
+            pR->channelBandwidthChangeReason = CHAN_REASON_MANUAL;
+        }
         SAH_TRACEZ_OUT(ME);
         return;
     }
