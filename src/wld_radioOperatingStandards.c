@@ -128,35 +128,38 @@ static void s_processOperatingStandards(T_Radio* pR, const char* newVal) {
     }
 }
 
-// Callback called when `OperatingStandardsFormat` is set.
-void wld_rad_setOperatingStandardsFormat_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_param_t* param _UNUSED, const amxc_var_t* const newValue) {
+// Callback called when `OperatingStandardsFormat` or `OperatingStandards` change values.
+void wld_rad_handleOperStdsAndFormatNewValues(void* priv _UNUSED, amxd_object_t* object, const amxc_var_t* const newParamValues) {
     SAH_TRACEZ_IN(ME);
 
     T_Radio* pR = wld_rad_fromObj(object);
-    ASSERT_NOT_NULL(pR, , ME, "NULL");
-    const char* newValChar = amxc_var_constcast(cstring_t, newValue);
-    ASSERTW_STR(newValChar, , ME, "Missing param");
-    const swl_radStd_format_e newVal = swl_radStd_charToFormat(newValChar);
-    ASSERTI_NOT_EQUALS(newVal, pR->operatingStandardsFormat, , ME, "same value");
-    pR->operatingStandardsFormat = newVal;
+    ASSERT_NOT_NULL(pR, , ME, "No radio mapped");
 
-    // How to interpret the argument value of the "OperatingStandards" parameter could have changed,
-    // so parse it again.
-    char* operStds = amxd_object_get_cstring_t(object, "OperatingStandards", NULL);
-    s_processOperatingStandards(pR, operStds);
-    free(operStds);
+    const char* newOperStandards = GET_CHAR(newParamValues, "OperatingStandards");
+    const char* newOperStandardsFormat = GET_CHAR(newParamValues, "OperatingStandardsFormat");
 
-    SAH_TRACEZ_OUT(ME);
-}
+    if(newOperStandardsFormat == NULL) {
+        ASSERTI_NOT_NULL(newOperStandards, , ME, "%s: no operStd changes detected", pR->Name);
+    } else {
+        const swl_radStd_format_e newVal = swl_radStd_charToFormat(newOperStandardsFormat);
+        if(newVal != pR->operatingStandardsFormat) {
+            pR->operatingStandardsFormat = newVal;
+        }
+    }
 
-// Callback called when `OperatingStandards` is set.
-void wld_rad_setOperatingStandards_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_param_t* param _UNUSED, const amxc_var_t* const newValue) {
-    SAH_TRACEZ_IN(ME);
+    char operStdsStr[128] = {0};
+    if(newOperStandards == NULL) {
+        swl_radStd_toChar(operStdsStr, sizeof(operStdsStr), pR->operatingStandards, pR->operatingStandardsFormat, pR->supportedStandards);
+    } else {
+        swl_str_copy(operStdsStr, sizeof(operStdsStr), newOperStandards);
+    }
+    ASSERT_STR(operStdsStr, , ME, "%s: empty operStd", pR->Name);
 
-    T_Radio* pR = wld_rad_fromObj(object);
-    ASSERT_NOT_NULL(pR, , ME, "NULL");
-    const char* newValChar = amxc_var_constcast(cstring_t, newValue);
-    s_processOperatingStandards(pR, newValChar);
+    SAH_TRACEZ_INFO(ME, "%s: OperStds: cfg(%s)/new(%s), operStdsFmt: cfg(%s)/new(%s)",
+                    pR->Name, operStdsStr, newOperStandards,
+                    swl_radStd_formatToChar(pR->operatingStandardsFormat), newOperStandardsFormat);
+
+    s_processOperatingStandards(pR, operStdsStr);
 
     SAH_TRACEZ_OUT(ME);
 }

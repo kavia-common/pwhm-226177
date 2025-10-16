@@ -82,7 +82,16 @@ void wld_rad_update_operating_standard(T_Radio* pRad, amxd_trans_t* trans);
  */
 bool wld_rad_checkEnabledRadStd(T_Radio* pRad, swl_radStd_e radStd);
 
-void wld_rad_setOperatingStandards_pwf(void* priv, amxd_object_t* object, amxd_param_t* param, const amxc_var_t* const newValue);
-void wld_rad_setOperatingStandardsFormat_pwf(void* priv, amxd_object_t* object, amxd_param_t* param, const amxc_var_t* const newValue);
+/**
+ * @brief Callback function to handle changes to both OperatingStandards and OperatingStandardsFormat parameters
+ *
+ * This function is called when both parameters are changed together as a group.
+ * It updates the radio's operating standards format and processes the new operating standards.
+ *
+ * @param priv Unused private data
+ * @param object The radio object being modified
+ * @param newParamValues Container with the new parameter values
+ */
+void wld_rad_handleOperStdsAndFormatNewValues(void* priv, amxd_object_t* object, const amxc_var_t* const newParamValues);
 
 #endif /* __WLD_RADIOOPERATINGSTANDARDS_H__ */

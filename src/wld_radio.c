@@ -4706,8 +4706,6 @@ SWLA_DM_HDLRS(sRadioDmHdlrs,
                   SWLA_DM_PARAM_HDLR("IntelligentAirtimeSchedulingEnable", s_setIntelligentAirtime_pwf),
                   SWLA_DM_PARAM_HDLR("dbgRADEnable", s_setDbgEnable_pwf),
                   SWLA_DM_PARAM_HDLR("dbgRADFile", s_setDbgFile_pwf),
-                  SWLA_DM_PARAM_HDLR("OperatingStandards", wld_rad_setOperatingStandards_pwf),
-                  SWLA_DM_PARAM_HDLR("OperatingStandardsFormat", wld_rad_setOperatingStandardsFormat_pwf),
                   SWLA_DM_PARAM_HDLR("DelayApUpPeriod", wld_rad_delayMgr_setDelayApUpPeriod_pwf),
                   SWLA_DM_PARAM_HDLR("Enable", s_setEnable_pwf),
                   SWLA_DM_PARAM_HDLR("OperationalDataTransmitRates", s_setOperationalDataTransmitRates_pwf),
@@ -4716,7 +4714,9 @@ SWLA_DM_HDLRS(sRadioDmHdlrs,
               .instAddedCb = s_addInstance_oaf);
 
 SWLA_DM_GRP_HDLRS(sRadioDmGrpHdlrs,
-                  ARR(SWLA_DM_PARAMGRP_HDLR(s_setChannelspec, SWLA_DM_PARAMGRP("Channel", "OperatingChannelBandwidth", "AutoBandwidthSelectMode"))));
+                  ARR(SWLA_DM_PARAMGRP_HDLR(wld_rad_handleOperStdsAndFormatNewValues, SWLA_DM_PARAMGRP("OperatingStandards", "OperatingStandardsFormat")),
+                      SWLA_DM_PARAMGRP_HDLR(s_setChannelspec, SWLA_DM_PARAMGRP("Channel", "OperatingChannelBandwidth", "AutoBandwidthSelectMode")),
+                      ));
 
 void _wld_radio_setConf_ocf(const char* const sig_name,
                             const amxc_var_t* const data,
