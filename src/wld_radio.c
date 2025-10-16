@@ -374,7 +374,8 @@ static void s_setChannelspec(void* priv _UNUSED, amxd_object_t* object, const am
     /* Disable autochannel if valid channel and first commit has been done
      * I.e. use case where user writes channel manually.
      */
-    if((channel != pR->channel) && pR->autoChannelEnable && wld_rad_firstCommitFinished(pR)) {
+    bool autoChannelEnable = amxd_object_get_bool(pR->pBus, "AutoChannelEnable", NULL);
+    if((channel != pR->channel) && autoChannelEnable && wld_rad_firstCommitFinished(pR)) {
         SAH_TRACEZ_WARNING(ME, "%s: disable autochan from chan config", pR->Name);
         swl_typeUInt8_commitObjectParam(pR->pBus, "AutoChannelEnable", 0);
     }
