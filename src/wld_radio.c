@@ -357,8 +357,9 @@ static void s_setChannelspec(void* priv _UNUSED, amxd_object_t* object, const am
                     wld_chanmgt_getCurChannel(pR), swl_radBw_str[pR->runningChannelBandwidth]);
 
     if((channel == pR->channel) &&
-       (((radBw != SWL_RAD_BW_AUTO) && (radBw == pR->operatingChannelBandwidth) && (radBw == pR->runningChannelBandwidth)) ||
-        ((radBw == SWL_RAD_BW_AUTO) && (swl_chanspec_toRadBw(&pR->targetChanspec.chanspec) == pR->runningChannelBandwidth))) &&
+       ((radBw == pR->operatingChannelBandwidth) &&
+        (((radBw != SWL_RAD_BW_AUTO) && (radBw == pR->runningChannelBandwidth)) ||
+         ((radBw == SWL_RAD_BW_AUTO) && (swl_chanspec_toRadBw(&pR->targetChanspec.chanspec) == pR->runningChannelBandwidth)))) &&
        (autoBwSelectMode == pR->autoBwSelectMode) &&
        (!swl_typeChanspec_equals(wld_chanmgt_getTgtChspec(pR), (swl_chanspec_t) SWL_CHANSPEC_EMPTY))) {
         SAH_TRACEZ_INFO(ME, "%s: Same channel %d, bandwidth %s and bwSelectMode %s, not updating",

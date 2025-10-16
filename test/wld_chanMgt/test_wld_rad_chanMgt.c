@@ -359,6 +359,80 @@ static void test_wld_setChannel(void** state _UNUSED) {
     assert_int_equal(112, swl_typeUInt8_fromObjectParamDef(radObj, "Channel", 0));
 }
 
+static void test_wld_setOperChanBw(void** state _UNUSED) {
+    T_Radio* rad = dm.bandList[SWL_FREQ_BAND_EXT_2_4GHZ].rad;
+    rad->channel = 6;
+    rad->currentChanspec.chanspec.channel = 6;
+    rad->targetChanspec.chanspec.channel = 6;
+    rad->runningChannelBandwidth = SWL_RAD_BW_20MHZ;
+    rad->currentChanspec.chanspec.bandwidth = SWL_BW_20MHZ;
+    rad->targetChanspec.chanspec.bandwidth = SWL_BW_20MHZ;
+    ttb_object_t* radObj = dm.bandList[SWL_FREQ_BAND_EXT_2_4GHZ].radObj;
+    ttb_object_t* targetObj = ttb_object_getChildObject(radObj, "ChannelMgt.TargetChanspec");
+
+    /* Set manually bw to 40MHz */
+    swl_typeCharPtr_commitObjectParam(radObj, "OperatingChannelBandwidth", "40MHz");
+
+    ttb_amx_handleEvents();
+    ttb_mockTimer_goToFutureMs(100);
+
+    char* valStr = swl_typeCharPtr_fromObjectParamDef(radObj, "OperatingChannelBandwidth", "");
+    assert_string_equal("40MHz", valStr);
+    W_SWL_FREE(valStr);
+    assert_int_equal(6, rad->channel);
+    assert_int_equal(6, rad->targetChanspec.chanspec.channel);
+    assert_int_equal(SWL_BW_40MHZ, rad->targetChanspec.chanspec.bandwidth);
+    valStr = swl_typeCharPtr_fromObjectParamDef(targetObj, "Bandwidth", "");
+    printf("testOperChBw %p %s\n", targetObj, valStr);
+
+    assert_string_equal("40MHz", valStr);
+    W_SWL_FREE(valStr);
+
+    wld_chanmgt_reportCurrentChanspec(rad, rad->targetChanspec.chanspec, rad->targetChanspec.reason);
+    ttb_mockTimer_goToFutureMs(100);
+    assert_int_equal(SWL_BW_40MHZ, rad->runningChannelBandwidth);
+    valStr = swl_typeCharPtr_fromObjectParamDef(radObj, "CurrentOperatingChannelBandwidth", "");
+    assert_string_equal("40MHz", valStr);
+    W_SWL_FREE(valStr);
+
+
+    /* Restore auto bw => shall set 20mhz as default bw for 2.4g band*/
+    swl_typeCharPtr_commitObjectParam(radObj, "OperatingChannelBandwidth", "Auto");
+    ttb_mockTimer_goToFutureMs(100);
+    assert_int_equal(6, rad->channel);
+    assert_int_equal(6, rad->targetChanspec.chanspec.channel);
+    assert_int_equal(SWL_BW_20MHZ, rad->targetChanspec.chanspec.bandwidth);
+    valStr = swl_typeCharPtr_fromObjectParamDef(targetObj, "Bandwidth", "");
+    assert_string_equal("20MHz", valStr);
+    W_SWL_FREE(valStr);
+
+    wld_chanmgt_reportCurrentChanspec(rad, rad->targetChanspec.chanspec, rad->targetChanspec.reason);
+    ttb_mockTimer_goToFutureMs(100);
+    assert_int_equal(SWL_BW_20MHZ, rad->runningChannelBandwidth);
+    valStr = swl_typeCharPtr_fromObjectParamDef(radObj, "CurrentOperatingChannelBandwidth", "");
+    assert_string_equal("20MHz", valStr);
+    W_SWL_FREE(valStr);
+
+    /* Set bw to 40MHz using rpc, with reason Auto => bw changes but OperChBw remains Auto in dm */
+    swl_chanspec_t chanspec2 = SWL_CHANSPEC_NEW(1, SWL_BW_40MHZ, SWL_FREQ_BAND_EXT_2_4GHZ);
+    assert_int_equal(SWL_RC_OK, s_setTargetAndWait(rad, chanspec2, true, CHAN_REASON_AUTO, NULL));
+    assert_int_equal(1, rad->channel);
+    assert_int_equal(1, rad->targetChanspec.chanspec.channel);
+    assert_int_equal(SWL_BW_40MHZ, rad->targetChanspec.chanspec.bandwidth);
+    assert_int_equal(1, swl_typeUInt8_fromObjectParamDef(radObj, "Channel", 0));
+
+    wld_chanmgt_reportCurrentChanspec(rad, rad->targetChanspec.chanspec, rad->targetChanspec.reason);
+    ttb_mockTimer_goToFutureMs(100);
+    assert_int_equal(SWL_BW_40MHZ, rad->runningChannelBandwidth);
+    valStr = swl_typeCharPtr_fromObjectParamDef(radObj, "CurrentOperatingChannelBandwidth", "");
+    assert_string_equal("40MHz", valStr);
+    W_SWL_FREE(valStr);
+    assert_int_equal(SWL_RAD_BW_AUTO, rad->operatingChannelBandwidth);
+    valStr = swl_typeCharPtr_fromObjectParamDef(radObj, "OperatingChannelBandwidth", "");
+    assert_string_equal("Auto", valStr);
+    W_SWL_FREE(valStr);
+}
+
 /* Test sync */
 static void test_wld_checkSync(void** state _UNUSED) {
     T_Radio* rad = dm.bandList[SWL_FREQ_BAND_EXT_5GHZ].rad;
@@ -757,8 +831,11 @@ static void test_wld_compareDefaultChannel(void** state _UNUSED) {
 
 int main(int argc _UNUSED, char* argv[] _UNUSED) {
     sahTraceSetLevel(TRACE_LEVEL_INFO);
+    sahTraceAddZone(sahTraceLevel(), "rad");
+    sahTraceAddZone(sahTraceLevel(), "chanMgt");
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_wld_setTargetChanspec),
+        cmocka_unit_test(test_wld_setOperChanBw),
         cmocka_unit_test(test_wld_reportCurrentChanspec),
         cmocka_unit_test(test_wld_setChannel),
         cmocka_unit_test(test_wld_checkSync),
