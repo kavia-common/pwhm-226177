@@ -249,11 +249,13 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
     SAH_TRACEZ_INFO(ME, "%s: operStd:0x%x suppStd:0x%x operChw:%d maxChW:%d tgtChW:%d chan:%d",
                     pRad->Name, pRad->operatingStandards, pRad->supportedStandards,
                     pRad->operatingChannelBandwidth, pRad->maxChannelBandwidth, tgtChW, tgtChan);
+    char htCaps[256] = {0};
     if(SWL_BIT_IS_SET(pRad->supportedStandards, SWL_RADSTD_N)) {
         swl_mapCharFmt_addValInt32(radConfigMap, "ieee80211n", enableRad11n);
-    }
-    if(enableRad11n) {
-        char htCaps[256] = {0};
+        /*
+         * bw greater than 20MHz requires setting second channel offset htcap HT40
+         * for 11n and all higer operating standards
+         */
         if(wld_channel_hasChannelWidthCovered(tgtChspec, SWL_BW_40MHZ)) {
             wld_channel_extensionPos_e extChanPos = wld_channel_getExtensionChannel(tgtChspec, pRad->extensionChannel);
             if(extChanPos == WLD_CHANNEL_EXTENTION_POS_ABOVE) {
@@ -261,6 +263,10 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
             } else if(extChanPos == WLD_CHANNEL_EXTENTION_POS_BELOW) {
                 swl_str_cat(htCaps, sizeof(htCaps), "[HT40-]");
             }
+        }
+    }
+    if(enableRad11n) {
+        if(wld_channel_hasChannelWidthCovered(tgtChspec, SWL_BW_40MHZ)) {
             if(s_checkSGI(pRad, SWL_SGI_400)) {
                 swl_str_cat(htCaps, sizeof(htCaps), "[SHORT-GI-40]");
             }
@@ -287,12 +293,12 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
         if(pRad->htCapabilities & M_SWL_80211_HTCAPINFO_MAX_AMSDU) {
             swl_str_cat(htCaps, sizeof(htCaps), "[MAX-AMSDU-7935]");
         }
-        /*
-         * only add ht_caps tags when they are really supported by the driver (nl80211 phy caps).
-         */
-        if(!swl_str_isEmpty(htCaps)) {
-            swl_mapChar_add(radConfigMap, "ht_capab", htCaps);
-        }
+    }
+    /*
+     * only add ht_caps tags when they are really supported by the driver (nl80211 phy caps).
+     */
+    if(!swl_str_isEmpty(htCaps)) {
+        swl_mapChar_add(radConfigMap, "ht_capab", htCaps);
     }
     uint32_t* pChWId = (uint32_t*) swl_table_getMatchingValue(&sChWidthIDsMaps, 0, 2, &tgtChW);
     uint32_t* pEhtChWId = (uint32_t*) swl_table_getMatchingValue(&sChWidthIDsMaps, 1, 2, &tgtChW);
