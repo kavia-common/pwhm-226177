@@ -230,6 +230,13 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
     }
 
     bool enableRad11be = wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_BE) && wld_rad_hasUsableApMld(pRad, 1);
+    /*
+     * hostapd: Enabling HE is mandatory to enable EHT mode
+     * ref: https://git.w1.fi/cgit/hostap/commit/?id=8dcc2139ff8f9d767e46bc09276b55e33561cc35
+     */
+    bool enableRad11ax = (wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AX) || enableRad11be);
+    bool enableRad11n = wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_N);
+    bool enableRad11ac = wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AC);
 
     swl_channel_t tgtChan = tgtChspec.channel;
     swl_mapCharFmt_addValInt32(radConfigMap, "channel", tgtChan);
@@ -243,9 +250,9 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
                     pRad->Name, pRad->operatingStandards, pRad->supportedStandards,
                     pRad->operatingChannelBandwidth, pRad->maxChannelBandwidth, tgtChW, tgtChan);
     if(SWL_BIT_IS_SET(pRad->supportedStandards, SWL_RADSTD_N)) {
-        swl_mapCharFmt_addValInt32(radConfigMap, "ieee80211n", wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_N));
+        swl_mapCharFmt_addValInt32(radConfigMap, "ieee80211n", enableRad11n);
     }
-    if(wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_N)) {
+    if(enableRad11n) {
         char htCaps[256] = {0};
         if(wld_channel_hasChannelWidthCovered(tgtChspec, SWL_BW_40MHZ)) {
             wld_channel_extensionPos_e extChanPos = wld_channel_getExtensionChannel(tgtChspec, pRad->extensionChannel);
@@ -294,9 +301,9 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
     bool explicitBf = (pRad->explicitBeamFormingSupported && pRad->explicitBeamFormingEnabled);
     bool muMimo = (pRad->multiUserMIMOSupported && pRad->multiUserMIMOEnabled);
     if(SWL_BIT_IS_SET(pRad->supportedStandards, SWL_RADSTD_AC)) {
-        swl_mapCharFmt_addValInt32(radConfigMap, "ieee80211ac", wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AC));
+        swl_mapCharFmt_addValInt32(radConfigMap, "ieee80211ac", enableRad11ac);
     }
-    if(wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AC)) {
+    if(enableRad11ac) {
         if(pChWId) {
             if(pEhtChWId && (*pChWId != *pEhtChWId)) {
                 tgtChspec.bandwidth = *(uint32_t*) swl_table_getMatchingValue(&sChWidthIDsMaps, 2, 0, pChWId);
@@ -378,9 +385,9 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
         }
     }
     if(SWL_BIT_IS_SET(pRad->supportedStandards, SWL_RADSTD_AX)) {
-        swl_mapCharFmt_addValInt32(radConfigMap, "ieee80211ax", wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AX));
+        swl_mapCharFmt_addValInt32(radConfigMap, "ieee80211ax", enableRad11ax);
     }
-    if(wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_AX)) {
+    if(enableRad11ax) {
         if(pChWId) {
             if(pEhtChWId && (*pChWId != *pEhtChWId)) {
                 tgtChspec.bandwidth = *(uint32_t*) swl_table_getMatchingValue(&sChWidthIDsMaps, 2, 0, pChWId);
