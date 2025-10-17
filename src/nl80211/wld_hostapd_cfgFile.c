@@ -808,9 +808,11 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
              * 0 = no (no MLO)
              * 1 = yes (MLO) */
             swl_mapCharFmt_addValInt32(vapConfigMap, "mld_ap", 1);
+            swl_mapCharFmt_addValInt32(vapConfigMap, "disable_11be", 0);
         } else {
             /* if no MLO, then no 11BE */
             swl_mapCharFmt_addValInt32(vapConfigMap, "disable_11be", 1);
+            swl_mapCharFmt_addValInt32(vapConfigMap, "mld_ap", 0);
             enableVap11be = false;
         }
     }

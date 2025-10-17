@@ -382,14 +382,29 @@ swl_rc_ne wld_ap_hostapd_setParamAction(const char* paramName, wld_secDmn_action
 
 static bool s_setParam(T_AccessPoint* pAP, const char* param, const char* value, wld_secDmn_action_rc_ne* pAction) {
     ASSERTS_NOT_NULL(param, false, ME, "NULL");
-    bool ret = wld_ap_hostapd_setParamValue(pAP, param, value, param);
     wld_secDmn_action_rc_ne* pMappedAction = (wld_secDmn_action_rc_ne*) swl_table_getMatchingValue(&sHapdCfgParamsActionMap, 1, 0, param);
+    bool ret = true;
+
+    /* AP disabled (set the runtime value anyway) */
     if((pAP->status == APSTI_DISABLED) && !pAP->enable) {
         W_SWL_SETPTR(pAction, SECDMN_ACTION_OK_DONE);
-    } else if(pMappedAction != NULL) {
+        return wld_ap_hostapd_setParamValue(pAP, param, value, param);
+    }
+
+    /* set param with action (if needed SET runtime value) */
+    if(pMappedAction != NULL) {
         //keep most critical action
         W_SWL_SETPTR(pAction, SWL_MAX(*pAction, *pMappedAction));
-    } else if(ret) {
+        /* if within the action there is a conf file relaod, no need to set hostapd memory
+         * (reduce invalid conf window) */
+        if(*pAction < SECDMN_ACTION_OK_NEED_RESTART) {
+            ret = wld_ap_hostapd_setParamValue(pAP, param, value, param);
+        }
+        return ret;
+    }
+
+    ret = wld_ap_hostapd_setParamValue(pAP, param, value, param);
+    if(ret) {
         /*
          * If param is successfully set but has no specific applying action,
          * then reload whole save hostapd conf
