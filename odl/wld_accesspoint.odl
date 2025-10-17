@@ -346,7 +346,7 @@ define rrm_t{
 		 * @version 9.3
 		 */
 		%persistent bool MBOEnable{
-			default false;
+			default true;
 		}
 
 		/**

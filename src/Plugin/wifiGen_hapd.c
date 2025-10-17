@@ -375,6 +375,7 @@ void wifiGen_hapd_initDynCfgParamSupp(T_Radio* pRad) {
     bool hasRnr = (swl_bit32_getHighest(pRad->supportedStandards) >= SWL_RADSTD_AX);
     wld_secDmn_setCfgParamSupp(pRad->hostapd, "rnr", hasRnr ? SWL_TRL_TRUE : SWL_TRL_UNKNOWN);
     wld_secDmn_setCfgParamSupp(pRad->hostapd, "config_id", SWL_TRL_TRUE);
+    wld_secDmn_setCfgParamSupp(pRad->hostapd, "mbo", SWL_TRL_UNKNOWN);
 
     const char* mrsnoParams[] = {
         "rsn_override_key_mgmt", "rsn_override_pairwise", "rsn_override_mfp",

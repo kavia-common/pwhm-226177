@@ -1132,7 +1132,7 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
     s_checkAndSetParamValueInt32(pAP->wpaCtrlInterface, vapConfigMap, "rnr", isRnrEnabled);
     // Multiband Operation (MBO)
     if(pAP->mboEnable) {
-        swl_mapCharFmt_addValInt32(vapConfigMap, "mbo", pAP->mboEnable);
+        s_checkAndSetParamValueInt32(pAP->wpaCtrlInterface, vapConfigMap, "mbo", pAP->mboEnable);
     }
     /* WDS */
     if(pAP->wdsEnable) {
