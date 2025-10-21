@@ -215,7 +215,7 @@ swl_rc_ne wld_ap_nl80211_copyStationInfoToAssocDev(T_AccessPoint* pAP, T_Associa
     pAD->RxPacketCount = pStationInfo->rxPackets;
     pAD->TxPacketCount = pStationInfo->txPackets;
     pAD->TxFailures = pStationInfo->txFailed;
-    pAD->RxFailures = pStationInfo->rxFailed;
+    pAD->RxFailures = pStationInfo->rxErrors;
     pAD->Tx_Retransmissions = pStationInfo->txRetries;
 
     pAD->SignalStrength = pStationInfo->rssiDbm;

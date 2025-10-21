@@ -260,7 +260,6 @@ swl_rc_ne wld_nl80211_dumpStationInfo(wld_nl80211_stationInfo_t* pStationInfo, a
         amxc_var_add_key(uint64_t, var, "txBytes", pStationInfo->linksInfo[i].stats.txBytes);
         amxc_var_add_key(uint32_t, var, "rxPackets", pStationInfo->linksInfo[i].stats.rxPackets);
         amxc_var_add_key(uint32_t, var, "txPackets", pStationInfo->linksInfo[i].stats.txPackets);
-        amxc_var_add_key(uint32_t, var, "rxRetries", pStationInfo->linksInfo[i].stats.rxRetries);
         amxc_var_add_key(uint32_t, var, "txRetries", pStationInfo->linksInfo[i].stats.txRetries);
         amxc_var_add_key(uint64_t, var, "rxFailed", pStationInfo->linksInfo[i].stats.rxErrors);
         amxc_var_add_key(uint32_t, var, "txFailed", pStationInfo->linksInfo[i].stats.txErrors);
@@ -273,8 +272,9 @@ swl_rc_ne wld_nl80211_dumpStationInfo(wld_nl80211_stationInfo_t* pStationInfo, a
     amxc_var_add_key(uint32_t, pMap, "rxPackets", pStationInfo->rxPackets);
     amxc_var_add_key(uint32_t, pMap, "txPackets", pStationInfo->txPackets);
     amxc_var_add_key(uint32_t, pMap, "txRetries", pStationInfo->txRetries);
+    amxc_var_add_key(uint64_t, pMap, "rxFailed", pStationInfo->rxErrors);
     amxc_var_add_key(uint32_t, pMap, "txFailed", pStationInfo->txFailed);
-    amxc_var_add_key(uint64_t, pMap, "rxFailed", pStationInfo->rxFailed);
+    amxc_var_add_key(uint64_t, pMap, "rxFailed", pStationInfo->rxErrors);
     amxc_var_add_key(int8_t, pMap, "rssiDbm", pStationInfo->rssiDbm);
     amxc_var_add_key(int8_t, pMap, "rssiAvgDbm", pStationInfo->rssiAvgDbm);
     amxc_var_t* rxRate = amxc_var_add_key(amxc_htable_t, pMap, "rxRate", NULL);

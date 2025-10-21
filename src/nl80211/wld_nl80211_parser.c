@@ -188,7 +188,7 @@ swl_rc_ne wld_nl80211_parseMgmtFrameTxStatus(struct nlattr* tb[], wld_nl80211_mg
     return SWL_RC_OK;
 }
 
-static swl_rc_ne s_parseMloLink(struct nlattr* tb[], struct nlattr* pAggSinfo[], wld_nl80211_mloLinkInfo_t* pMloLink) {
+static swl_rc_ne s_parseMloLink(struct nlattr* tb[], wld_nl80211_mloLinkInfo_t* pMloLink) {
     ASSERTS_NOT_NULL(pMloLink, SWL_RC_INVALID_PARAM, ME, "NULL");
     memset(pMloLink, 0, sizeof(*pMloLink));
     pMloLink->linkId = -1;
@@ -197,43 +197,83 @@ static swl_rc_ne s_parseMloLink(struct nlattr* tb[], struct nlattr* pAggSinfo[],
     pMloLink->linkId = nla_get_u8(tb[NL80211_ATTR_MLO_LINK_ID]);
     NLA_GET_DATA(pMloLink->linkMac.bMac, tb[NL80211_ATTR_MAC], SWL_MAC_BIN_LEN);
     NLA_GET_DATA(pMloLink->mldMac.bMac, tb[NL80211_ATTR_MLD_ADDR], SWL_MAC_BIN_LEN);
+    return SWL_RC_OK;
+}
+
+static swl_rc_ne s_parseMloLinkStats(struct nlattr* tb[], wld_nl80211_mloLinkInfoStats_t* pMloLinkStats) {
+    ASSERTS_NOT_NULL(pMloLinkStats, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_NOT_NULL(tb, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    wld_nl80211_mloLinkInfoStats_t oldStats = *pMloLinkStats;
 
     /* In Linux < 6.4 version, MLO (Multi-Link Operation) is not officially
      * supported in mainline cfg80211 or mac80211, so there is no native support to retrieve
-     * per-link station signal (e.g., RSSI per link) using NL80211_MLO_LINK_ATTR_STA_INFO or NL80211_ATTR_MLO_LINKS.
-     * station info will shows aggregated station info, not per-link until supporting that.
+     * per-link station statistics
      */
-    ASSERTS_NOT_NULL(pAggSinfo, SWL_RC_OK, ME, "NULL");
-    if(pAggSinfo[NL80211_STA_INFO_TX_BYTES64]) {
-        pMloLink->stats.txBytes = nla_get_u64(pAggSinfo[NL80211_STA_INFO_TX_BYTES64]);
-    } else if(pAggSinfo[NL80211_STA_INFO_TX_BYTES]) {
-        pMloLink->stats.txBytes = nla_get_u32(pAggSinfo[NL80211_STA_INFO_TX_BYTES]);
+    if(tb[NL80211_STA_INFO_TX_BYTES64]) {
+        pMloLinkStats->txBytes = nla_get_u64(tb[NL80211_STA_INFO_TX_BYTES64]);
+    } else if(tb[NL80211_STA_INFO_TX_BYTES]) {
+        pMloLinkStats->txBytes = nla_get_u32(tb[NL80211_STA_INFO_TX_BYTES]);
     }
-    if(pAggSinfo[NL80211_STA_INFO_TX_PACKETS]) {
-        pMloLink->stats.txPackets = nla_get_u32(pAggSinfo[NL80211_STA_INFO_TX_PACKETS]);
+    if(tb[NL80211_STA_INFO_RX_BYTES64]) {
+        pMloLinkStats->rxBytes = nla_get_u64(tb[NL80211_STA_INFO_RX_BYTES64]);
+    } else if(tb[NL80211_STA_INFO_RX_BYTES]) {
+        pMloLinkStats->rxBytes = nla_get_u32(tb[NL80211_STA_INFO_RX_BYTES]);
     }
-    if(pAggSinfo[NL80211_STA_INFO_RX_PACKETS]) {
-        pMloLink->stats.rxPackets = nla_get_u32(pAggSinfo[NL80211_STA_INFO_RX_PACKETS]);
+    if(tb[NL80211_STA_INFO_TX_PACKETS]) {
+        pMloLinkStats->txPackets = nla_get_u32(tb[NL80211_STA_INFO_TX_PACKETS]);
     }
-    if(pAggSinfo[NL80211_STA_INFO_TX_RETRIES]) {
-        pMloLink->stats.txRetries = nla_get_u32(pAggSinfo[NL80211_STA_INFO_TX_RETRIES]);
+    if(tb[NL80211_STA_INFO_RX_PACKETS]) {
+        pMloLinkStats->rxPackets = nla_get_u32(tb[NL80211_STA_INFO_RX_PACKETS]);
     }
-    if(pAggSinfo[NL80211_STA_INFO_RX_RETRIES]) {
-        pMloLink->stats.txRetries = nla_get_u32(pAggSinfo[NL80211_STA_INFO_RX_RETRIES]);
+    if(tb[NL80211_STA_INFO_TX_RETRIES]) {
+        pMloLinkStats->txRetries = nla_get_u32(tb[NL80211_STA_INFO_TX_RETRIES]);
     }
-    if(pAggSinfo[NL80211_STA_INFO_TX_FAILED]) {
-        pMloLink->stats.txErrors = nla_get_u32(pAggSinfo[NL80211_STA_INFO_TX_FAILED]);
+    if(tb[NL80211_STA_INFO_TX_FAILED]) {
+        pMloLinkStats->txErrors = nla_get_u32(tb[NL80211_STA_INFO_TX_FAILED]);
     }
-    if(pAggSinfo[NL80211_STA_INFO_RX_DROP_MISC]) {
-        pMloLink->stats.rxErrors = nla_get_u64(pAggSinfo[NL80211_STA_INFO_RX_DROP_MISC]);
+    if(tb[NL80211_STA_INFO_RX_DROP_MISC]) {
+        pMloLinkStats->rxErrors = nla_get_u64(tb[NL80211_STA_INFO_RX_DROP_MISC]);
     }
-    if(pAggSinfo[NL80211_STA_INFO_SIGNAL]) {
-        pMloLink->stats.rssiDbm = nla_get_u8(pAggSinfo[NL80211_STA_INFO_SIGNAL]);
+    if(tb[NL80211_STA_INFO_SIGNAL]) {
+        pMloLinkStats->rssiDbm = nla_get_u8(tb[NL80211_STA_INFO_SIGNAL]);
     }
-    if(pAggSinfo[NL80211_STA_INFO_SIGNAL_AVG]) {
-        pMloLink->stats.rssiAvgDbm = nla_get_u8(pAggSinfo[NL80211_STA_INFO_SIGNAL_AVG]);
+    if(tb[NL80211_STA_INFO_SIGNAL_AVG]) {
+        pMloLinkStats->rssiAvgDbm = nla_get_u8(tb[NL80211_STA_INFO_SIGNAL_AVG]);
     }
 
+    bool hasNewStats = (memcmp(&oldStats, pMloLinkStats, sizeof(oldStats)) != 0);
+    pMloLinkStats->available |= hasNewStats;
+    if(!pMloLinkStats->available) {
+        return SWL_RC_NOT_AVAILABLE;
+    }
+
+    return SWL_RC_OK;
+}
+
+static swl_rc_ne s_fillMissingMloLinkStats(wld_nl80211_stationInfo_t* pStation) {
+    ASSERTS_NOT_NULL(pStation, SWL_RC_INVALID_PARAM, ME, "NULL");
+    /*
+     * When per-link stats are not supported by the kernel
+     * provide an rough estimation with averaged station aggregated traffic counters,
+     * over the links, and assume same signal strength
+     */
+    for(uint32_t i = 0; i < pStation->nrLinks; i++) {
+        wld_nl80211_mloLinkInfoStats_t* pMloLinkStats = &pStation->linksInfo[i].stats;
+        if(pMloLinkStats->available) {
+            continue;
+        }
+        pMloLinkStats->txBytes = pStation->txBytes / pStation->nrLinks;
+        pMloLinkStats->rxBytes = pStation->rxBytes / pStation->nrLinks;
+        pMloLinkStats->txPackets = pStation->txPackets / pStation->nrLinks;
+        pMloLinkStats->rxPackets = pStation->rxPackets / pStation->nrLinks;
+        pMloLinkStats->txRetries = pStation->txRetries / pStation->nrLinks;
+        pMloLinkStats->txErrors = pStation->txFailed / pStation->nrLinks;
+        pMloLinkStats->rxErrors = pStation->rxErrors / pStation->nrLinks;
+
+        pMloLinkStats->rssiDbm = pStation->rssiDbm;
+        pMloLinkStats->rssiAvgDbm = pStation->rssiAvgDbm;
+    }
     return SWL_RC_OK;
 }
 
@@ -250,7 +290,7 @@ static uint32_t s_parseMloLinks(struct nlattr* tb[], wld_nl80211_ifaceMloLinkInf
     nla_for_each_nested(list, tb[NL80211_ATTR_MLO_LINKS], rem) {
         nla_parse_nested(link, NL80211_ATTR_MAX, list, NULL);
         wld_nl80211_mloLinkInfo_t linkInfo;
-        if((s_parseMloLink(link, NULL, &linkInfo) < SWL_RC_OK) || (linkInfo.linkId < 0) || (swl_mac_binIsNull(&linkInfo.linkMac))) {
+        if((s_parseMloLink(link, &linkInfo) < SWL_RC_OK) || (linkInfo.linkId < 0) || (swl_mac_binIsNull(&linkInfo.linkMac))) {
             SAH_TRACEZ_WARNING(ME, "skip link %d: missing info", linkInfo.linkId);
             continue;
         }
@@ -1282,6 +1322,7 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
     };
     statsPolicy[NL80211_STA_INFO_RX_BYTES64].type = NLA_U64;
     statsPolicy[NL80211_STA_INFO_TX_BYTES64].type = NLA_U64;
+    statsPolicy[NL80211_STA_INFO_RX_DROP_MISC].type = NLA_U64;
     statsPolicy[NL80211_STA_INFO_CHAIN_SIGNAL].type = NLA_NESTED;
     statsPolicy[NL80211_STA_INFO_CHAIN_SIGNAL_AVG].type = NLA_NESTED;
 
@@ -1306,12 +1347,13 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
                 break;
             }
             nla_parse_nested(link, NL80211_ATTR_MAX, list, NULL);
-            if((s_parseMloLink(link, pSinfo, &pStation->linksInfo[i]) < SWL_RC_OK) ||
+            if((s_parseMloLink(link, &pStation->linksInfo[i]) < SWL_RC_OK) ||
                (pStation->linksInfo[i].linkId < 0) ||
                (swl_mac_binIsNull(&pStation->linksInfo[i].linkMac))) {
                 SAH_TRACEZ_WARNING(ME, "skip link %d: missing info", pStation->linksInfo[i].linkId);
                 continue;
             }
+            s_parseMloLinkStats(link, &pStation->linksInfo[i].stats);
             pStation->nrLinks = ++i;
         }
     }
@@ -1349,7 +1391,7 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
         pStation->txFailed = nla_get_u32(pSinfo[NL80211_STA_INFO_TX_FAILED]);
     }
     if(pSinfo[NL80211_STA_INFO_RX_DROP_MISC]) {
-        pStation->rxFailed = nla_get_u64(pSinfo[NL80211_STA_INFO_RX_DROP_MISC]);
+        pStation->rxErrors = nla_get_u64(pSinfo[NL80211_STA_INFO_RX_DROP_MISC]);
     }
     if(pSinfo[NL80211_STA_INFO_SIGNAL]) {
         pStation->rssiDbm = nla_get_u8(pSinfo[NL80211_STA_INFO_SIGNAL]);
@@ -1365,6 +1407,9 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
     }
     if(pSinfo[NL80211_STA_INFO_CONNECTED_TIME]) {
         pStation->connectedTime = nla_get_u32(pSinfo[NL80211_STA_INFO_CONNECTED_TIME]);
+    }
+    if(pStation->nrLinks > 0) {
+        s_fillMissingMloLinkStats(pStation);
     }
     struct nl80211_sta_flag_update* pSFlags = NULL;
     pStation->flags.authorized = SWL_TRL_UNKNOWN;

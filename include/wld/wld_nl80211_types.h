@@ -100,12 +100,12 @@ typedef struct {
 } wld_nl80211_chanSpec_t;
 
 typedef struct {
+    bool available;           //flag indicating nl80211 providing link stats
     uint64_t txBytes;
     uint64_t rxBytes;
     uint32_t txPackets;
     uint32_t rxPackets;
     uint32_t txRetries;
-    uint32_t rxRetries;
     uint32_t txErrors;
     uint64_t rxErrors;
     int8_t rssiDbm;
@@ -280,7 +280,7 @@ typedef struct {
     uint32_t txPackets;                       // total transmitted packets (MSDUs and MMPDUs)
     uint32_t txRetries;                       // total retries (MPDUs)
     uint32_t txFailed;                        // total failed packets
-    uint64_t rxFailed;                        // rx packets dropped for unspecified reasons
+    uint64_t rxErrors;                        // rx packets dropped for unspecified reasons
     int8_t rssiDbm;                           // signal strength of last received PPDU (dBm)
     int8_t rssiAvgDbm;                        // signal strength average (dBm)
     wld_nl80211_rateInfo_t txRate;            // tx rate (kbps), nested attributes
