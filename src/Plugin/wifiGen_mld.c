@@ -68,7 +68,7 @@
 #include "wld/wld_wpaCtrl_api.h"
 #include "wld/wld_wpaCtrlMngr.h"
 #include "wld/wld_nl80211_api.h"
-#include "wld/wld_rad_hostapd_api.h"
+#include "wld/wld_hostapd_ap_api.h"
 #include "wld/Utils/wld_autoCommitMgr.h"
 #include "wifiGen_hapd.h"
 
@@ -217,6 +217,13 @@ T_SSID* wifiGen_mld_selectPrimLinkSSID(T_SSID* pSSID) {
     return pSSID;
 }
 
+static wld_mldLink_t* s_getHapdCfgPrimAPMldLink(T_AccessPoint* pAP) {
+    char primIface[128] = {0};
+    wld_ap_hostapd_getCfgInterface(pAP, primIface, sizeof(primIface));
+    T_SSID* pPrimSSID = wld_ssid_getSsidByIfName(primIface);
+    return (pPrimSSID ? pPrimSSID->pMldLink : NULL);
+}
+
 swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
     ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
     if(!wld_rad_firstCommitFinished(pSSID->RADIO_PARENT)) {
@@ -225,16 +232,22 @@ swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
     }
 
     wld_mldLink_t* pLink = pSSID->pMldLink;
+    T_AccessPoint* aNgAPs[wld_mld_countNeighLinks(pLink) + 1];
+    memset(aNgAPs, 0, sizeof(aNgAPs));
+    size_t nNgAPs = 0;
     wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
-        if(pNgLink == pLink) {
-            continue;
+        T_SSID* pNgSSID = NULL;
+        if((pNgLink != pLink) && ((pNgSSID = wld_mld_getLinkSsid(pNgLink)) != NULL) && (pNgSSID->AP_HOOK != NULL)) {
+            aNgAPs[nNgAPs++] = pNgSSID->AP_HOOK;
         }
-        T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
-        if(pNgSSID->AP_HOOK != NULL) {
-            T_AccessPoint* pNgAP = pNgSSID->AP_HOOK;
+    }
+    for(size_t i = 0; i < nNgAPs; i++) {
+        T_AccessPoint* pNgAP = aNgAPs[i];
+        if(pNgAP && pNgAP->pSSID && pNgAP->pSSID->pMldLink) {
+            wld_mldLink_t* pNgLink = pNgAP->pSSID->pMldLink;
             bool isConfigured = wld_mld_isLinkConfigured(pNgLink);
             bool isUsable = wld_mld_isLinkUsable(pNgLink);
-            wld_mldLink_t* pPrimLink = wld_mld_getPrimaryLink(pNgLink);
+            wld_mldLink_t* pPrimLink = s_getHapdCfgPrimAPMldLink(pNgAP);
             bool needUpdateConf = false;
             if(isConfigured != isUsable) {
                 needUpdateConf = isConfigured;

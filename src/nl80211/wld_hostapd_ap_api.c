@@ -1534,3 +1534,34 @@ swl_rc_ne wld_ap_hostapd_deauthKnownStations(T_AccessPoint* pAP) {
     }
     return SWL_RC_OK;
 }
+
+swl_rc_ne wld_ap_hostapd_getCfgInterface(T_AccessPoint* pAP, char* valStr, size_t valStrSize) {
+    ASSERTS_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    T_SSID* pSSID = pAP->pSSID;
+    ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    T_Radio* pRad = pAP->pRadio;
+    ASSERTS_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_NOT_NULL(pRad->hostapd, SWL_RC_INVALID_STATE, ME, "NULL");
+    wld_hostapd_config_t* config = NULL;
+    bool ret = wld_hostapd_loadConfig(&config, pRad->hostapd->cfgFile);
+    ASSERTI_TRUE(ret, SWL_RC_ERROR, ME, "no saved config");
+    swl_rc_ne rc = SWL_RC_ERROR;
+    swl_mapEntry_t* entry = NULL;
+    swl_macBin_t* bssid = (swl_macBin_t*) pSSID->MACAddress;
+    swl_mapChar_t* configMap = wld_hostapd_getConfigMapByBssid(config, bssid);
+    if(!configMap) {
+        SAH_TRACEZ_INFO(ME, "%s: no section with bssid (%s) not found in %s",
+                        pAP->alias, swl_typeMacBin_toBuf32Ref(bssid).buf, pRad->hostapd->cfgFile);
+    } else if(((entry = swl_mapChar_getEntry(configMap, "interface")) == NULL) &&
+              ((entry = swl_mapChar_getEntry(configMap, "bss")) == NULL)) {
+        SAH_TRACEZ_INFO(ME, "%s: no iface for bssid (%s) in %s",
+                        pAP->alias, swl_typeMacBin_toBuf32Ref(bssid).buf, pRad->hostapd->cfgFile);
+    } else if(!swl_str_copy(valStr, valStrSize, swl_map_getEntryValueValue(configMap, entry))) {
+        SAH_TRACEZ_INFO(ME, "fail to copy result");
+    } else {
+        rc = SWL_RC_OK;
+    }
+    wld_hostapd_deleteConfig(config);
+    return rc;
+}
+

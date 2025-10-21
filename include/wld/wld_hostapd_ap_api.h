@@ -149,6 +149,7 @@ swl_rc_ne wld_ap_hostapd_requestRRMReport_ext(T_AccessPoint* pAP, const swl_macC
 swl_trl_e wld_hostapd_ap_getCfgParamSupp(T_AccessPoint* pAP, const char* param);
 swl_rc_ne wld_hostapd_ap_sendCfgParam(T_AccessPoint* pAP, const char* param, const char* value);
 bool wld_hostapd_ap_needWpaCtrlIface(T_AccessPoint* pAP);
+swl_rc_ne wld_ap_hostapd_getCfgInterface(T_AccessPoint* pAP, char* valStr, size_t valStrSize);
 
 const char* wld_hostapd_ap_selectApLinkIface(T_AccessPoint* pAP);
 bool wld_ap_hostapd_isMainStaMldLink(T_AccessPoint* pAP, swl_macBin_t* pMacBin);
