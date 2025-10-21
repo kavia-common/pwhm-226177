@@ -290,6 +290,12 @@ bool wld_wpaCtrlInterface_setConnectionInfo(wld_wpaCtrlInterface_t* pIface, cons
     return ret;
 }
 
+bool wld_wpaCtrlInterface_testConnection(const char* serverPath, const char* sockName) {
+    char reply[128] = {0};
+    swl_rc_ne rc = wld_wpaCtrl_queryToSock(serverPath, sockName, "PING", reply, sizeof(reply));
+    return (swl_rc_isOk(rc) && swl_str_startsWith(reply, "PONG"));
+}
+
 bool wld_wpaCtrlInterface_initWithSockName(wld_wpaCtrlInterface_t** ppIface, char* interfaceName, const char* serverPath, const char* sockName) {
     ASSERTS_NOT_NULL(ppIface, false, ME, "NULL");
     ASSERT_STR(interfaceName, false, ME, "empty iface name");

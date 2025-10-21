@@ -69,6 +69,7 @@
 bool wld_wpaCtrlInterface_init(wld_wpaCtrlInterface_t** ppIface, char* interfaceName, char* serverPath);
 bool wld_wpaCtrlInterface_initWithSockName(wld_wpaCtrlInterface_t** ppIface, char* interfaceName, const char* serverPath, const char* sockName);
 bool wld_wpaCtrlInterface_setConnectionInfo(wld_wpaCtrlInterface_t* pIface, const char* serverPath, const char* sockName);
+bool wld_wpaCtrlInterface_testConnection(const char* serverPath, const char* sockName);
 bool wld_wpaCtrlInterface_setEvtHandlers(wld_wpaCtrlInterface_t* pIface, void* userdata, wld_wpaCtrl_evtHandlers_cb* pHandlers);
 bool wld_wpaCtrlInterface_getEvtHandlers(wld_wpaCtrlInterface_t* pIface, void** userdata, wld_wpaCtrl_evtHandlers_cb* pHandlers);
 bool wld_wpaCtrlInterface_open(wld_wpaCtrlInterface_t* pIface);

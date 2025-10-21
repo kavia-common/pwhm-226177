@@ -106,8 +106,26 @@ swl_rc_ne wld_wpaCtrlMngr_checkAllIfaces(wld_wpaCtrlMngr_t* pMgr) {
         wld_wpaCtrlInterface_t* pIface = wld_ssid_getWpaCtrlIface(pSSID);
         wld_wpaCtrlMngr_t* pCurrMgr = wld_wpaCtrlInterface_getMgr(pIface);
         if((pCurrMgr != NULL) && (wld_secDmn_isRunning(pCurrMgr->pSecDmn))) {
-            if(!swl_str_matches(wld_wpaCtrlInterface_getConnectionSockName(pIface), sockName)) {
-                wld_wpaCtrlInterface_setConnectionInfo(pIface, ctrlDirPath, sockName);
+            const char* currSockName = wld_wpaCtrlInterface_getConnectionSockName(pIface);
+            if(!swl_str_matches(currSockName, sockName)) {
+                /*
+                 * replace wpactrl iface srv socket when:
+                 * - mlo link socket superseds default iface socket
+                 * - default iface socket superseds inactive mlo link socket
+                 */
+                if(swl_str_startsWith(currSockName, sockName) &&
+                   wld_wpaCtrlInterface_testConnection(ctrlDirPath, currSockName)) {
+                    SAH_TRACEZ_INFO(ME, "%s: keep current srv sock(%s) vs (%s)",
+                                    pIface->name, currSockName, sockName);
+                } else {
+                    bool wasMngrConnected = wld_wpaCtrlMngr_isConnected(pCurrMgr);
+                    SAH_TRACEZ_INFO(ME, "%s: set current srv sock(%s) to (%s)",
+                                    pIface->name, currSockName, sockName);
+                    wld_wpaCtrlInterface_setConnectionInfo(pIface, ctrlDirPath, sockName);
+                    if((pCurrMgr != pMgr) && wasMngrConnected) {
+                        wld_wpaCtrlMngr_connect(pCurrMgr);
+                    }
+                }
             }
             if((pCurrMgr == pMgr) && (!wld_wpaCtrlInterface_isReady(pIface))) {
                 bool isEnabled = wld_wpaCtrlInterface_isEnabled(pIface);
