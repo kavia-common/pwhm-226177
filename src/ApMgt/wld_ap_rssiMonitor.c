@@ -366,6 +366,8 @@ void wld_apRssiMon_createStaHistory(T_AssociatedDevice* pAD, uint32_t historyLen
 
     if(pAD->staHistory->samples == NULL) {
         SAH_TRACEZ_ERROR(ME, "%s: Samples calloc failed!", pAD->Name);
+        free(pAD->staHistory);
+        pAD->staHistory = NULL;
         return;
     }
 }
@@ -546,6 +548,7 @@ bool wld_apRssiMon_getMinMaxSignal(T_AccessPoint* pAP, T_AssociatedDevice* pAD, 
 void wld_apRssiMon_updateStaHistory(T_AccessPoint* pAP, T_AssociatedDevice* pAD) {
     ASSERT_NOT_NULL(pAP, , ME, "NULL");
     ASSERT_NOT_NULL(pAD, , ME, "NULL");
+    ASSERT_NOT_NULL(pAD->staHistory, , ME, "NULL");
 
     uint32_t historyLen = pAP->rssiEventing.historyLen;
     uint32_t historyIntervalCoeff = pAP->rssiEventing.historyIntervalCoeff;
