@@ -457,7 +457,7 @@ static void s_dfsCacDoneCb(void* userData, char* ifName, swl_chanspec_t* chanSpe
     if(wld_bgdfs_isRunning(pRad)) {
         wld_bgdfs_notifyClearEnded(pRad, (success ? DFS_RESULT_OK : DFS_RESULT_OTHER));
     }
-    wld_rad_updateState(pRad, false);
+    wld_rad_updateState(pRad, true);
 }
 
 static void s_dfsCacExpiredCb(void* userData, char* ifName, swl_chanspec_t* chanSpec) {

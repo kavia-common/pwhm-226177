@@ -2404,7 +2404,7 @@ uint32_t wld_ap_getMaxNbrSta(T_AccessPoint* pAP) {
     return curMaxNumSta < 0 ? 0 : (uint32_t) curMaxNumSta;
 }
 
-void wld_vap_updateState(T_AccessPoint* pAP) {
+static void s_vap_updateState(T_AccessPoint* pAP) {
     ASSERT_NOT_NULL(pAP, , ME, "NULL");
 
     T_Radio* pRad = (T_Radio*) pAP->pRadio;
@@ -2456,6 +2456,23 @@ void wld_vap_updateState(T_AccessPoint* pAP) {
 
     wld_wps_updateState(pAP);
     wld_apRssiMon_updateEnable(pAP);
+}
+
+void wld_vap_updateState(T_AccessPoint* pAP) {
+    ASSERT_NOT_NULL(pAP, , ME, "NULL");
+    s_vap_updateState(pAP);
+    T_SSID* pSSID = (T_SSID*) pAP->pSSID;
+    ASSERT_NOT_NULL(pSSID, , ME, "%s: SSID reference is NULL", pAP->alias);
+    wld_mldLink_t* pLink = pSSID->pMldLink;
+    if(pLink != NULL) {
+        /* if part of an MLD, update all links */
+        wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
+            T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
+            if(pNgSSID && pNgSSID->AP_HOOK && (pNgSSID->AP_HOOK != pAP)) {
+                s_vap_updateState(pNgSSID->AP_HOOK);
+            }
+        }
+    }
 }
 
 /**
