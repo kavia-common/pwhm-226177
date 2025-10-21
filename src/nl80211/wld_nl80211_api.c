@@ -68,6 +68,7 @@
 #include "wld_nl80211_parser.h"
 #include "wld_nl80211_utils.h"
 #include "wld_linuxIfUtils.h"
+#include "wld_radio.h"
 #include "dirent.h"
 
 #include "swl/swl_common.h"
@@ -973,11 +974,7 @@ scanFinish:
         requestData->fScanResultsCb(requestData->priv, rc, &requestData->results);
     }
     SAH_TRACEZ_INFO(ME, "clean request data");
-    amxc_llist_for_each(it, &requestData->results.ssids) {
-        pResult = amxc_llist_it_get_data(it, wld_scanResultSSID_t, it);
-        amxc_llist_it_take(&pResult->it);
-        free(pResult);
-    }
+    wld_scan_cleanupScanResults(&requestData->results);
     free(requestData);
     ASSERT_TRUE((rc <= SWL_RC_ERROR) || (rc == SWL_RC_DONE), rc, ME, "unexpectedly cleaned up scan request while returning %s", swl_rc_toString(rc));
     return rc;
