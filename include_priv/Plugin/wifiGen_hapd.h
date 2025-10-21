@@ -89,5 +89,6 @@ void wifiGen_hapd_enableVapWpaCtrlIface(T_AccessPoint* pAP);
 bool wifiGen_hapd_parseSockName(const char* sockName, char* linkName, size_t linkNameSize, int32_t* pLinkId);
 T_AccessPoint* wifiGen_hapd_fetchSockApLink(T_AccessPoint* pAPMld, const char* sockName);
 swl_rc_ne wifiGen_hapd_getConfiguredCountryCode(T_Radio* pRad, char* country, size_t countrySize);
+void wifiGen_hapd_deauthKnownStations(T_Radio* pRad, bool noAck);
 
 #endif /* INCLUDE_PRIV_PLUGIN_WIFIGEN_HAPD_H_ */

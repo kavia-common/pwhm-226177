@@ -1506,3 +1506,19 @@ const char* wld_hostapd_ap_selectApLinkIface(T_AccessPoint* pAP) {
     return wld_ssid_getIfName(pLinkSSID);
 }
 
+swl_rc_ne wld_ap_hostapd_deauthKnownStations(T_AccessPoint* pAP) {
+    ASSERTS_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_TRUE(pAP->ActiveAssociatedDeviceNumberOfEntries > 0, SWL_RC_OK, ME, "%s: AP has not active stations", pAP->alias);
+    for(int i = 0; i < pAP->AssociatedDeviceNumberOfEntries; i++) {
+        T_AssociatedDevice* pAD = pAP->AssociatedDevice[i];
+        swl_macChar_t sta_mac_str;
+        swl_macBin_t* sta_mac_bin = (swl_macBin_t*) pAD->MACAddress;
+        swl_mac_binToChar(&sta_mac_str, sta_mac_bin);
+        if(pAD && pAD->Active) {
+            SAH_TRACEZ_INFO(ME, "%s:deauth known station %s", pAP->alias, sta_mac_str.cMac);
+            wld_ap_hostapd_kickStation(pAP, (swl_macBin_t*) pAD->MACAddress, SWL_IEEE80211_DEAUTH_REASON_AUTH_NO_LONGER_VALID);
+        }
+
+    }
+    return SWL_RC_OK;
+}

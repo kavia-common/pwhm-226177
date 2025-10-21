@@ -412,16 +412,6 @@ static bool s_doRadSync(T_Radio* pRad) {
     return true;
 }
 
-static void s_deauthAllRadSta(T_Radio* pRad, bool noAck) {
-    T_AccessPoint* pAP;
-    wld_rad_forEachAp(pAP, pRad) {
-        wld_ap_hostapd_deauthAllStations(pAP);
-        if(noAck) {
-            wld_vap_remove_all(pAP);
-        }
-    }
-}
-
 static bool s_doStopHostapd(T_Radio* pRad) {
     ASSERTI_TRUE(wld_secDmn_hasAvailableCtrlIface(pRad->hostapd), true, ME, "%s: hapd has no available socket", pRad->Name);
     ASSERTI_TRUE(wld_dmn_isEnabled(pRad->hostapd->dmnProcess), true, ME, "%s: hapd stopped", pRad->Name);
@@ -429,7 +419,7 @@ static bool s_doStopHostapd(T_Radio* pRad) {
      * as we are stopping radio, no need to wait for deauth notif
      * so we can cleanup ap's AD list
      */
-    s_deauthAllRadSta(pRad, true);
+    wifiGen_hapd_deauthKnownStations(pRad, true);
     swl_rc_ne rc;
     if(wld_secDmn_checkRestartNeeded(pRad->hostapd)) {
         SAH_TRACEZ_INFO(ME, "%s: restarting hostapd", pRad->Name);
@@ -602,7 +592,7 @@ static bool s_doDisableHostapd(T_Radio* pRad) {
          * as we are stopping radio, no need to wait for deauth notif
          * so we can cleanup ap's AD list
          */
-        s_deauthAllRadSta(pRad, true);
+        wifiGen_hapd_deauthKnownStations(pRad, true);
     }
     wld_rad_hostapd_disable(pRad);
     pRad->fsmRad.timeout_msec = 500;

@@ -75,6 +75,7 @@
 #include "wifiGen_events.h"
 #include "wifiGen_fsm.h"
 #include "wifiGen_rad.h"
+#include "wld/wld_common.h"
 
 #define ME "genHapd"
 #define HOSTAPD_CONF_FILE_PATH_FORMAT "/tmp/%s_hapd.conf"
@@ -212,6 +213,16 @@ void wifiGen_hapd_restoreMainIface(T_Radio* pRad) {
     }
 }
 
+void wifiGen_hapd_deauthKnownStations(T_Radio* pRad, bool noAck) {
+    T_AccessPoint* pAP;
+    wld_rad_forEachAp(pAP, pRad) {
+        wld_ap_hostapd_deauthKnownStations(pAP);
+        if(noAck) {
+            wld_vap_remove_all(pAP);
+        }
+    }
+}
+
 static const char* s_getMainIface(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, NULL, ME, "NULL");
     const char* mainIface = pRad->Name;
@@ -294,6 +305,7 @@ static bool s_stopHapdCb(wld_secDmn_t* pSecDmn, void* userdata _UNUSED) {
     if(wld_wpaCtrlInterface_checkConnectionPath(pIface) && wld_secDmn_isActiveAlone(pSecDmn)) {
         swl_str_copy(sockName, sizeof(sockName), wld_wpaCtrlInterface_getConnectionSockName(pIface));
     }
+    wifiGen_hapd_deauthKnownStations(pRad, true);
     wld_wpaCtrlMngr_disconnect(pMgr);
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRad) {

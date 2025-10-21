@@ -103,6 +103,7 @@ wld_secDmn_action_rc_ne wld_ap_hostapd_enableVap(T_AccessPoint* pAP, bool enable
 swl_rc_ne wld_ap_hostapd_kickStation(T_AccessPoint* pAP, swl_macBin_t* mac, swl_IEEE80211deauthReason_ne reason);
 swl_rc_ne wld_ap_hostapd_deauthAllStations(T_AccessPoint* pAP);
 swl_rc_ne wld_ap_hostapd_disassocStation(T_AccessPoint* pAP, swl_macBin_t* mac, swl_IEEE80211deauthReason_ne reason);
+swl_rc_ne wld_ap_hostapd_deauthKnownStations(T_AccessPoint* pAP);
 swl_rc_ne wld_ap_hostapd_transferStation(T_AccessPoint* pAP, wld_transferStaArgs_t* params);
 swl_rc_ne wld_ap_hostapd_startWps(T_AccessPoint* pAP);
 
