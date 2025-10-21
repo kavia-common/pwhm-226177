@@ -124,10 +124,17 @@ static void s_sendStateChangeEvent(T_SSID* pSSID, const char* wpsState, const ch
     wld_event_trigger_callback(gWld_queue_wps_onStateChange, &changeEvent);
 }
 
+bool wld_wps_isPairingTimerRunning(wld_wpsSessionInfo_t* pCtx) {
+    ASSERTS_NOT_NULL(pCtx, false, ME, "NULL");
+    amxp_timer_state_t timerSt = amxp_timer_get_state(pCtx->sessionTimer);
+    return ((timerSt == amxp_timer_running) || (timerSt == amxp_timer_started));
+}
+
 amxd_status_t doCancelPairing(amxd_object_t* object) {
     ASSERTI_NOT_NULL(object, amxd_status_unknown_error, ME, "NULL");
     wld_wpsSessionInfo_t* pWpsSessionInfo = (wld_wpsSessionInfo_t*) object->priv;
     ASSERTI_NOT_NULL(pWpsSessionInfo, amxd_status_unknown_error, ME, "NULL");
+    bool hasActiveTimer = wld_wps_isPairingTimerRunning(pWpsSessionInfo);
     wld_wps_clearPairingTimer(pWpsSessionInfo);
     T_AccessPoint* pAP = wld_ap_fromObj(pWpsSessionInfo->intfObj);
     ASSERTI_NOT_NULL(pAP, amxd_status_ok, ME, "Not ap wps");
@@ -138,7 +145,7 @@ amxd_status_t doCancelPairing(amxd_object_t* object) {
         pAP->WPS_PBC_Delay.timer = NULL;
         pAP->WPS_PBC_Delay.intf.vap = NULL;
     }
-    if(pAP->WPS_Enable) {
+    if(hasActiveTimer) {
         pAP->pFA->mfn_wvap_wps_sync(pAP, strbuf, SWL_ARRAY_SIZE(strbuf), SET);
 
         SAH_TRACEZ_ERROR(ME, "WPS cancel %s", pAP->alias);
@@ -207,8 +214,8 @@ static void s_pairingTimeoutHandler(amxp_timer_t* timer _UNUSED, void* userdata)
     ASSERT_NOT_NULL(pCtx->intfObj, , ME, "NULL");
     const char* name = amxd_object_get_name(pCtx->intfObj, AMXD_OBJECT_NAMED);
     SAH_TRACEZ_ERROR(ME, "%s: wps pairing timeout (triggered by safety timer)", name);
-    wld_wps_sendPairingNotification(pCtx->intfObj, NOTIFY_PAIRING_DONE, WPS_CAUSE_TIMEOUT, NULL, NULL);
     doCancelPairing(amxd_object_get(pCtx->intfObj, "WPS"));
+    wld_wps_sendPairingNotification(pCtx->intfObj, NOTIFY_PAIRING_DONE, WPS_CAUSE_TIMEOUT, NULL, NULL);
 }
 
 void s_startPairingTimer(wld_wpsSessionInfo_t* pCtx) {
