@@ -135,10 +135,9 @@ swl_rc_ne wld_ssid_nl80211_getInterfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo
 uint32_t wld_ssid_nl80211_getPrimaryLinkIfIndex(T_SSID* pSSID) {
     int32_t ifIndex = 0;
     ASSERTS_NOT_NULL(pSSID, ifIndex, ME, "NULL");
+    ifIndex = wld_ssid_getIfIndex(pSSID);
     if(wld_mld_isLinkActive(pSSID->pMldLink)) {
         ifIndex = wld_mld_getPrimaryLinkIfIndex(pSSID->pMldLink);
-    } else {
-        ifIndex = wld_ssid_getIfIndex(pSSID);
     }
     return SWL_MAX(0, ifIndex);
 }
