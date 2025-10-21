@@ -450,6 +450,7 @@ static bool s_doStopHostapd(T_Radio* pRad) {
         if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_MOD_MLD) &&
            wld_rad_hostapd_hasActiveApMld(pRad, 2)) {
             SAH_TRACEZ_INFO(ME, "%s: let mld handler manage radio disabling", pRad->Name);
+            wld_rad_fsm_clearFsmBitForAll(pRad, GEN_FSM_DISABLE_HOSTAPD);
             return true;
         }
         SAH_TRACEZ_INFO(ME, "%s: need to disable hostapd", pRad->Name);
@@ -506,6 +507,18 @@ static void s_syncOnRadUp(void* userData, char* ifName, bool state) {
         } else {
             SAH_TRACEZ_WARNING(ME, "%s: enable hostapd iface %s expected to start", pRad->Name, ifName);
             setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_ENABLE_HOSTAPD);
+        }
+        if(wld_rad_hasMloSupport(pRad)) {
+            T_AccessPoint* pTmpAP = NULL;
+            wld_rad_forEachAp(pTmpAP, pRad) {
+                if(!pTmpAP->pSSID || wld_vap_isDummyVap(pTmpAP)) {
+                    continue;
+                }
+                if(!state && !wld_mld_isLinkUsable(pTmpAP->pSSID->pMldLink)) {
+                    continue;
+                }
+                setBitLongArray(pTmpAP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_MOD_MLD);
+            }
         }
         wld_rad_doCommitIfUnblocked(pRad);
         return;

@@ -218,17 +218,14 @@ T_SSID* wifiGen_mld_selectPrimLinkSSID(T_SSID* pSSID) {
 }
 
 static wld_mldLink_t* s_getHapdCfgPrimAPMldLink(T_AccessPoint* pAP) {
-    const char* primIface = wld_hostapd_ap_selectApLinkIface(pAP);
+    char primIface[128] = {0};
+    wld_ap_hostapd_getCfgInterface(pAP, primIface, sizeof(primIface));
     T_SSID* pPrimSSID = wld_ssid_getSsidByIfName(primIface);
     return (pPrimSSID ? pPrimSSID->pMldLink : NULL);
 }
 
 swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
     ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
-    if(!wld_rad_firstCommitFinished(pSSID->RADIO_PARENT)) {
-        SAH_TRACEZ_INFO(ME, "%s: still in first commit, no need to reconfigure", pSSID->Name);
-        return SWL_RC_OK;
-    }
 
     wld_mldLink_t* pLink = pSSID->pMldLink;
     T_AccessPoint* aNgAPs[wld_mld_countNeighLinks(pLink) + 1];
@@ -258,15 +255,15 @@ swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
             if(needUpdateConf) {
                 wld_mld_saveLinkConfigured(pNgLink, false);
             }
-            SAH_TRACEZ_INFO(ME, "reconfigure Neigh AP mld %s (triggered by change in %s)",
-                            wld_mld_getLinkName(pNgLink), pSSID->Name);
+            SAH_TRACEZ_WARNING(ME, "reconfigure Neigh AP mld %s (triggered by change in %s)",
+                               wld_mld_getLinkName(pNgLink), pSSID->Name);
             pNgAP->pFA->mfn_wvap_setMldUnit(pNgAP);
             wld_autoCommitMgr_notifyVapEdit(pNgAP);
         }
     }
     if(pSSID->AP_HOOK != NULL) {
         T_AccessPoint* pAP = pSSID->AP_HOOK;
-        SAH_TRACEZ_INFO(ME, "mark AP %s for mld conf refresh", pSSID->Name);
+        SAH_TRACEZ_WARNING(ME, "mark AP %s for mld conf refresh", pSSID->Name);
         pAP->pFA->mfn_wvap_setMldUnit(pAP);
     }
     return SWL_RC_OK;
