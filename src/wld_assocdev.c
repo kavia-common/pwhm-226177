@@ -1203,8 +1203,8 @@ void wld_ad_checkRoamSta(T_AccessPoint* pAP, T_AssociatedDevice* pAD) {
             wld_rad_incrementCounterStr(pRad, &pRad->genericCounters, WLD_RAD_EV_DOUBLE_ASSOC,
                                         "%s @ %s => %s", pAD->Name, testAp->alias, pAP->alias);
             if(pRad->kickRoamStaEnabled && testRad->kickRoamStaEnabled) {
-                SAH_TRACEZ_ERROR(ME, "Kicking %s @ %s, connecting @ %s",
-                                 pAD->Name, testAp->alias, pAP->alias);
+                SAH_TRACEZ_WARNING(ME, "Kicking %s @ %s, connecting @ %s",
+                                   pAD->Name, testAp->alias, pAP->alias);
                 int retCode = testAp->pFA->mfn_wvap_clean_sta(testAp, pAD->Name, strlen(pAD->Name));
                 if(retCode == WLD_ERROR_NOT_IMPLEMENTED) {
                     testAp->pFA->mfn_wvap_kick_sta(testAp, (char*) pAD->Name, strlen(pAD->Name), SET);
