@@ -498,7 +498,7 @@ static void s_apEnabledEvt(wld_wpaCtrlInterface_t* pInterface, char* event, char
     // Example: AP-ENABLED
     // This event notifies that hapd main interface has setup completed
     SAH_TRACEZ_INFO(ME, "%s: %s", pInterface->name, event);
-    if(pInterface == wld_wpaCtrlMngr_getInterface(pInterface->pMgr, 0)) {
+    if(pInterface == wld_wpaCtrlMngr_getFirstReadyInterface(pInterface->pMgr)) {
         CALL_MGR_I_NA(pInterface, fMainApSetupCompletedCb);
     }
 }
@@ -507,7 +507,7 @@ static void s_apDisabledEvt(wld_wpaCtrlInterface_t* pInterface, char* event, cha
     // Example: AP-DISABLED
     // This event notifies that hapd main interface is disabled, or that secondary bss is removed from conf
     SAH_TRACEZ_INFO(ME, "%s: %s", pInterface->name, event);
-    if(pInterface == wld_wpaCtrlMngr_getInterface(pInterface->pMgr, 0)) {
+    if(pInterface == wld_wpaCtrlMngr_getFirstReadyInterface(pInterface->pMgr)) {
         CALL_MGR_I_NA(pInterface, fMainApDisabledCb);
     }
 }
