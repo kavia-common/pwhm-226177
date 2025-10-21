@@ -96,7 +96,7 @@ static void s_deamonStarter(amxp_timer_t* timer _UNUSED, void* userdata) {
 
 static int s_cmdBuilder(amxc_array_t* cmd, amxc_var_t* settings) {
     ASSERT_NOT_NULL(settings, -1, ME, "No settings");
-    wld_process_t* dmn_process = (wld_process_t*) settings->data.data;
+    wld_process_t* dmn_process = (wld_process_t*) ((uintptr_t) amxc_var_get_const_uint64_t(settings));
     ASSERT_NOT_NULL(dmn_process, -1, ME, "NULL");
     uint32_t i = 0;
     while(dmn_process->argList && dmn_process->argList[i]) {
@@ -133,6 +133,9 @@ bool wld_dmn_initializeDeamon(wld_process_t* process, char* cmd) {
 
     amxp_timer_new(&process->restart_timer, s_deamonStarter, process);
     process->failDate = time(NULL);
+
+    ASSERT_EQUALS(amxc_var_new(&process->settings), 0, false, ME, "fail to init settings var");
+    amxc_var_set_uint64_t(process->settings, (uintptr_t) process);
 
     return true;
 }
@@ -184,6 +187,8 @@ void wld_dmn_cleanupDaemon(wld_process_t* process) {
 
     amxp_timer_delete(&process->restart_timer);
     process->restart_timer = NULL;
+
+    amxc_var_delete(&process->settings);
 }
 
 swl_rc_ne wld_dmn_createDeamon(wld_process_t** pDmnProcess, char* cmd, char* startArgs, wld_deamonEvtHandlers* pEvtHdlrs, void* pEvtData) {
@@ -264,12 +269,7 @@ bool wld_dmn_startDeamon(wld_process_t* dmn_process) {
         }
     }
 
-    amxc_var_t settings;
-    amxc_var_init(&settings);
-    amxc_var_set_type(&settings, AMXC_VAR_ID_CUSTOM_BASE);
-    settings.data.data = dmn_process;
-    int ret = amxp_proc_ctrl_start(dmn_process->process, 0, &settings);
-    amxc_var_clean(&settings);
+    int ret = amxp_proc_ctrl_start(dmn_process->process, 0, dmn_process->settings);
     if(ret != 0) {
         SAH_TRACEZ_ERROR(ME, "Failed to start %s dmn_process", dmn_process->cmd);
         return false;

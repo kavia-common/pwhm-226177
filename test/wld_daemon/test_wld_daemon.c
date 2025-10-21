@@ -82,6 +82,7 @@ static void test_wld_daemon_setArgList(void** state) {
     char* command = "hostapd";
     wld_process_t dmnProcess = {0};
     assert_true(wld_dmn_initializeDeamon(&dmnProcess, command));
+    assert_ptr_equal((void*) ((uintptr_t) amxc_var_get_const_uint64_t(dmnProcess.settings)), &dmnProcess);
 
     char* args = "-ddt -s";
     wld_dmn_setArgList(&dmnProcess, args);

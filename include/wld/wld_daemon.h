@@ -168,6 +168,7 @@ struct wld_process {
     wld_deamonExitInfo_t lastExitInfo; /* Last process termination details. */
     wld_deamonEvtHandlers handlers;    /* Optional handlers of daemon process events. */
     void* userData;                    /* Optional userdata for process */
+    amxc_var_t* settings;              /* internal amxp proc settings. */
 };
 
 typedef struct {
