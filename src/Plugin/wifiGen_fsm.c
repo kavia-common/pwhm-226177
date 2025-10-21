@@ -425,13 +425,11 @@ static void s_deauthAllRadSta(T_Radio* pRad, bool noAck) {
 static bool s_doStopHostapd(T_Radio* pRad) {
     ASSERTI_TRUE(wld_secDmn_hasAvailableCtrlIface(pRad->hostapd), true, ME, "%s: hapd has no available socket", pRad->Name);
     ASSERTI_TRUE(wld_dmn_isEnabled(pRad->hostapd->dmnProcess), true, ME, "%s: hapd stopped", pRad->Name);
-    if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_DISABLE_RAD)) {
-        /*
-         * as we are stopping radio, no need to wait for deauth notif
-         * so we can cleanup ap's AD list
-         */
-        s_deauthAllRadSta(pRad, true);
-    }
+    /*
+     * as we are stopping radio, no need to wait for deauth notif
+     * so we can cleanup ap's AD list
+     */
+    s_deauthAllRadSta(pRad, true);
     swl_rc_ne rc;
     if(wld_secDmn_checkRestartNeeded(pRad->hostapd)) {
         SAH_TRACEZ_INFO(ME, "%s: restarting hostapd", pRad->Name);
