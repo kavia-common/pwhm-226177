@@ -370,6 +370,7 @@ static void s_mngrReadyCb(void* userData, char* ifName, bool isReady) {
             wld_channel_clear_passive_band(wld_rad_getSwlChanspec(pRad));
         }
         CALL_SECDMN_MGR_EXT(pRad->hostapd, fSyncOnRadioUp, ifName, isRadReady);
+        wld_rad_updateState(pRad, false);
         return;
     }
     ASSERTS_TRUE(isReady, , ME, "Not ready");
@@ -382,9 +383,9 @@ static void s_mngrReadyCb(void* userData, char* ifName, bool isReady) {
             wld_endpoint_setConnectionStatus(pEP, connState, EPE_NONE);
         }
         CALL_SECDMN_MGR_EXT(pEP->wpaSupp, fSyncOnRadioUp, ifName, true);
+        wld_rad_updateState(pRad, false);
         return;
     }
-    wld_rad_updateState(pRad, false);
 }
 
 static void s_mainApSetupCompletedCb(void* userData, char* ifName) {
@@ -579,6 +580,7 @@ static void s_newInterfaceCb(void* pRef, void* pData _UNUSED, wld_nl80211_ifaceI
                 if(isRadReady || isRadStarting) {
                     const char* ifName = wld_wpaCtrlInterface_getName(pAP->wpaCtrlInterface);
                     CALL_SECDMN_MGR_EXT(pRad->hostapd, fSyncOnRadioUp, (char*) ifName, isRadReady);
+                    wld_rad_updateState(pRad, false);
                 }
             }
         }

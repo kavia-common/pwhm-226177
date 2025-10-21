@@ -1868,6 +1868,7 @@ swl_rc_ne wld_ad_syncInfo(T_AssociatedDevice* pAD) {
         wld_ad_syncCapabilities(&trans, &pAD->probeReqCaps);
         wld_ad_syncdetailedMcsCapabilities(&trans, &pAD->probeReqCaps);
         wld_ad_syncRrmCapabilities(&trans, &pAD->probeReqCaps);
+        amxd_trans_select_object(&trans, object);
     }
 
     if(!hasData) {
@@ -1880,12 +1881,12 @@ swl_rc_ne wld_ad_syncInfo(T_AssociatedDevice* pAD) {
     amxd_status_t status = swl_object_finalizeTransactionOnLocalDm(&trans);
     SWLA_DM_OBJ_ALLOW_READ_HDLR_CALL(onActionReadCtx);
 
+    pAD->lastSampleSyncTime = pAD->lastSampleTime;
+    pAD->lastProbeCapUpdateTime = pAD->probeReqCaps.updateTime;
     if(status != amxd_status_ok) {
         SAH_TRACEZ_ERROR(ME, "%s : trans apply failure", pAD->Name);
         return SWL_RC_ERROR;
     }
-    pAD->lastSampleSyncTime = pAD->lastSampleTime;
-    pAD->lastProbeCapUpdateTime = pAD->probeReqCaps.updateTime;
 
     if(syncAfSta) {
         amxc_llist_for_each(it, &pAD->affiliatedStaList) {
