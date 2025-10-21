@@ -105,25 +105,6 @@ swl_rc_ne wld_ap_nl80211_delVapInterface(T_AccessPoint* pAP) {
     }
 }
 
-static bool s_matchVapIfSta(T_AccessPoint* pAP, wld_nl80211_stationInfo_t* pStationInfo) {
-    ASSERTS_NOT_NULL(pAP, false, ME, "NULL");
-    ASSERTS_NOT_NULL(pStationInfo, false, ME, "NULL");
-    ASSERTW_FALSE(swl_mac_binIsNull(&pStationInfo->macAddr), false, ME, "null mac addr");
-    int16_t apLinkId = wld_mld_getLinkId(pAP->pSSID->pMldLink);
-    if((pStationInfo->nrLinks > 0) && (apLinkId >= 0)) {
-        //match stations connected to AP MLD link
-        for(uint32_t i = 0; i < pStationInfo->nrLinks; i++) {
-            if(pStationInfo->linksInfo[i].linkId == apLinkId) {
-                return true;
-            }
-        }
-    } else if((pStationInfo->nrLinks == 0) && (apLinkId < 0)) {
-        //match legacy stations seen on legacy AP (non APMLD)
-        return true;
-    }
-    return false;
-}
-
 swl_rc_ne wld_ap_nl80211_getStationInfo(T_AccessPoint* pAP, const swl_macBin_t* pMac, wld_nl80211_stationInfo_t* pStationInfo) {
     ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
     swl_rc_ne rc;
@@ -137,6 +118,7 @@ swl_rc_ne wld_ap_nl80211_getStationInfo(T_AccessPoint* pAP, const swl_macBin_t* 
             if(rc < SWL_RC_OK) {
                 break;
             }
+            pStationInfo->linkId = wld_ssid_nl80211_getPrefStaLinkId(pAP->pSSID, pStationInfo);
             return rc;
         }
     }
@@ -144,7 +126,8 @@ swl_rc_ne wld_ap_nl80211_getStationInfo(T_AccessPoint* pAP, const swl_macBin_t* 
     wld_nl80211_stationInfo_t stationInfo;
     rc = wld_nl80211_getStationInfo(wld_nl80211_getSharedState(), index, pMac, &stationInfo);
     ASSERTS_TRUE(swl_rc_isOk(rc), rc, ME, "fail to get single sta info");
-    if(s_matchVapIfSta(pAP, &stationInfo)) {
+    if(wld_ssid_nl80211_matchIfSta(pAP->pSSID, &stationInfo)) {
+        stationInfo.linkId = wld_ssid_nl80211_getPrefStaLinkId(pAP->pSSID, &stationInfo);
         W_SWL_SETPTR(pStationInfo, stationInfo);
         return SWL_RC_OK;
     }
@@ -167,7 +150,8 @@ swl_rc_ne wld_ap_nl80211_getAllStationsInfo(T_AccessPoint* pAP, wld_nl80211_stat
         pApStaInfo = calloc(nrStation, sizeof(wld_nl80211_stationInfo_t));
         ASSERT_NOT_NULL(pApStaInfo, rc, ME, "memory allocation failed");
         for(uint32_t i = 0; i < nrStation; i++) {
-            if(s_matchVapIfSta(pAP, &staInfo[i])) {
+            if(wld_ssid_nl80211_matchIfSta(pAP->pSSID, &staInfo[i])) {
+                staInfo[i].linkId = wld_ssid_nl80211_getPrefStaLinkId(pAP->pSSID, &staInfo[i]);
                 pApStaInfo[nrApSta++] = staInfo[i];
             }
         }
@@ -188,6 +172,7 @@ swl_rc_ne wld_ap_nl80211_getAllStationsInfo(T_AccessPoint* pAP, wld_nl80211_stat
             if(rc < SWL_RC_OK) {
                 continue;
             }
+            wdsStaInfo.linkId = wld_ssid_nl80211_getPrefStaLinkId(pAP->pSSID, &wdsStaInfo);
             memcpy(&staInfo[nrStation], &wdsStaInfo, sizeof(wld_nl80211_stationInfo_t));
             nrStation++;
         }

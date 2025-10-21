@@ -1171,7 +1171,9 @@ static swl_rc_ne s_parseRateInfo(struct nlattr* pBitrateAttributre, wld_nl80211_
     ratePolicy[NL80211_RATE_INFO_EHT_MCS].type = NLA_U8;
     ratePolicy[NL80211_RATE_INFO_EHT_NSS].type = NLA_U8;
     ratePolicy[NL80211_RATE_INFO_EHT_GI].type = NLA_U8;
-    ratePolicy[NL80211_RATE_INFO_EHT_RU_ALLOC].type = NLA_U8;
+    if(NL80211_RATE_INFO_IS_SPECIFIED(NL80211_RATE_INFO_EHT_RU_ALLOC)) {
+        ratePolicy[NL80211_RATE_INFO_EHT_RU_ALLOC].type = NLA_U8;
+    }
     ratePolicy[NL80211_RATE_INFO_320_MHZ_WIDTH].type = NLA_FLAG;
 
 
@@ -1363,10 +1365,12 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
     /* In kernel older than 6.3, NL80211_STA_INFO_PRIMARY_LINK_ID is missing
      * In this case: to retrieve the Primary Link ID of a station,
      * we can try inferring the primary link from NL80211_ATTR_MLO_LINKS
-     * (e.g., the one with lowest link ID or the only one present).
+     * (e.g., the one of best link ID or the only one present).
      */
-    if(pStation->nrLinks) {
+    if(pStation->nrLinks == 1) {
         pStation->linkId = pStation->linksInfo[0].linkId;
+    } else if(tb[NL80211_ATTR_MLO_LINK_ID] != NULL) {
+        pStation->linkId = nla_get_u8(tb[NL80211_ATTR_MLO_LINK_ID]);
     }
     if(pSinfo[NL80211_STA_INFO_INACTIVE_TIME]) {
         pStation->inactiveTime = nla_get_u32(pSinfo[NL80211_STA_INFO_INACTIVE_TIME]);

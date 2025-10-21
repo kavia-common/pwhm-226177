@@ -66,6 +66,7 @@
 #include "wld_ssid_nl80211_priv.h"
 #include "swl/swl_common.h"
 #include "wld_mld.h"
+#include "wld_radio.h"
 
 #define ME "nlSSID"
 
@@ -139,5 +140,76 @@ uint32_t wld_ssid_nl80211_getPrimaryLinkIfIndex(T_SSID* pSSID) {
 int8_t wld_ssid_nl80211_getMldLinkId(T_SSID* pSSID) {
     ASSERTS_NOT_NULL(pSSID, MLO_LINK_ID_UNKNOWN, ME, "NULL");
     return wld_mld_getLinkId(pSSID->pMldLink);
+}
+
+bool wld_ssid_nl80211_matchIfSta(T_SSID* pSSID, wld_nl80211_stationInfo_t* pStationInfo) {
+    ASSERTS_NOT_NULL(pSSID, false, ME, "NULL");
+    ASSERTS_NOT_NULL(pStationInfo, false, ME, "NULL");
+    ASSERTW_FALSE(swl_mac_binIsNull(&pStationInfo->macAddr), false, ME, "null mac addr");
+    int16_t linkId = wld_ssid_nl80211_getMldLinkId(pSSID);
+    if((pStationInfo->nrLinks > 0) && (linkId >= 0)) {
+        //match stations connected to MLD link
+        for(uint32_t i = 0; i < pStationInfo->nrLinks; i++) {
+            if(pStationInfo->linksInfo[i].linkId == linkId) {
+                return true;
+            }
+        }
+    } else if((pStationInfo->nrLinks == 0) && (linkId < 0)) {
+        //match legacy stations seen on legacy AP/EP (non MLD)
+        return true;
+    }
+    return false;
+}
+
+/*
+ * @brief return the station main staLinkId when relevant (MLO station):
+ * - first use, when possible, the main linkId provided by nl80211
+ * - otherwise, fetch the preferred linkId based on matching linkIds with local APMLD links freqBand
+ * (preference order 6/5/2.4): this is practically used on all the mlo stations
+ *
+ * @param pSSID pointer to mld link ssid ctx
+ * @param pStationInfo pointer to nl80211 station info ctx (already including parsed nl80211 MLO_LINKS)
+ *
+ * @return the main station link id, or -1 when irrelevant
+ */
+int16_t wld_ssid_nl80211_getPrefStaLinkId(T_SSID* pSSID, wld_nl80211_stationInfo_t* pStationInfo) {
+    ASSERT_NOT_NULL(pStationInfo, -1, ME, "NULL");
+    if(pStationInfo->nrLinks < 1) {
+        return -1;
+    }
+    if(pStationInfo->nrLinks == 1) {
+        return pStationInfo->linksInfo[0].linkId;
+    }
+    if(pStationInfo->linkId >= 0) {
+        return pStationInfo->linkId;
+    }
+    int16_t refLinkId = wld_ssid_nl80211_getMldLinkId(pSSID);
+    int16_t prefStaLinkId = -1;
+    swl_freqBand_e prefStaLinkBand = SWL_FREQ_BAND_2_4GHZ;
+    for(uint32_t i = 0; i < pStationInfo->nrLinks; i++) {
+        int16_t staLinkId = pStationInfo->linksInfo[i].linkId;
+        if(staLinkId < 0) {
+            continue;
+        }
+        T_SSID* pNgSSID = NULL;
+        if(staLinkId == refLinkId) {
+            pNgSSID = pSSID;
+        } else if(pSSID != NULL) {
+            pNgSSID = wld_mld_getLinkSsidByLinkId(pSSID->pMldLink, staLinkId);
+        }
+        if(pNgSSID == NULL) {
+            continue;
+        }
+        swl_freqBand_e staLinkBand = wld_rad_getFreqBand(pNgSSID->RADIO_PARENT);
+        /*
+         * if sta main MLD linkId is not filled by the driver,
+         * then use preferred matching linkId based on freqBand (6/5/2.4)
+         */
+        if(staLinkBand >= prefStaLinkBand) {
+            prefStaLinkBand = staLinkBand;
+            prefStaLinkId = staLinkId;
+        }
+    }
+    return prefStaLinkId;
 }
 

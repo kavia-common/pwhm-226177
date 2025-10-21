@@ -100,3 +100,15 @@ swl_rc_ne wld_ep_nl80211_getInterfaceInfo(T_EndPoint* pEP, wld_nl80211_ifaceInfo
     return wld_ssid_nl80211_getInterfaceInfo(pEP->pSSID, pIfaceInfo);
 }
 
+swl_rc_ne wld_ep_nl80211_getStationInfo(T_EndPoint* pEP, const swl_macBin_t* pMac, wld_nl80211_stationInfo_t* pStationInfo) {
+    ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    swl_rc_ne rc;
+    uint32_t index = wld_ssid_nl80211_getPrimaryLinkIfIndex(pEP->pSSID);
+    wld_nl80211_stationInfo_t stationInfo;
+    rc = wld_nl80211_getStationInfo(wld_nl80211_getSharedState(), index, pMac, &stationInfo);
+    ASSERTS_TRUE(swl_rc_isOk(rc), rc, ME, "fail to get single sta info");
+    stationInfo.linkId = wld_ssid_nl80211_getPrefStaLinkId(pEP->pSSID, &stationInfo);
+    W_SWL_SETPTR(pStationInfo, stationInfo);
+    return rc;
+}
+

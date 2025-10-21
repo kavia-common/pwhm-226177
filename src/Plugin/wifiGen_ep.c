@@ -332,7 +332,7 @@ swl_rc_ne wifiGen_ep_stats(T_EndPoint* pEP, T_EndPointStats* stats) {
     memcpy(bssid.bMac, pEP->pSSID->BSSID, SWL_MAC_BIN_LEN);
     ASSERTI_FALSE(swl_mac_binIsNull(&bssid), SWL_RC_INVALID_STATE, ME, "%s: no remote bssid", pEP->Name);
     wld_nl80211_stationInfo_t stationInfo;
-    if(wld_nl80211_getStationInfo(wld_nl80211_getSharedState(), pEP->index, &bssid, &stationInfo) < SWL_RC_OK) {
+    if(wld_ep_nl80211_getStationInfo(pEP, &bssid, &stationInfo) < SWL_RC_OK) {
         SAH_TRACEZ_INFO(ME, "get stats for %s fail", pEP->Name);
         return SWL_RC_ERROR;
     }

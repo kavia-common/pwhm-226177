@@ -88,4 +88,16 @@ swl_rc_ne wld_ep_nl80211_set4Mac(T_EndPoint* pEP, bool use4Mac);
  */
 swl_rc_ne wld_ep_nl80211_getInterfaceInfo(T_EndPoint* pEP, wld_nl80211_ifaceInfo_t* pMldIfaceInfo);
 
+/*
+ * @brief get remoteAP station info
+ *
+ * @param pEP pointer to endpoint context
+ * @param pMac remoteAP BSSID
+ * @param pStationInfo pointer to station info context
+ *
+ * @return SWL_RC_OK on success
+ *         <= SWL_RC_ERROR otherwise
+ */
+swl_rc_ne wld_ep_nl80211_getStationInfo(T_EndPoint* pEP, const swl_macBin_t* pMac, wld_nl80211_stationInfo_t* pStationInfo);
+
 #endif /* INCLUDE_WLD_WLD_EP_NL80211_H_ */

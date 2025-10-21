@@ -70,5 +70,7 @@ swl_rc_ne wld_ssid_nl80211_getMldIfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo_
 swl_rc_ne wld_ssid_nl80211_getInterfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo_t* pIfaceInfo);
 uint32_t wld_ssid_nl80211_getPrimaryLinkIfIndex(T_SSID* pSSID);
 int8_t wld_ssid_nl80211_getMldLinkId(T_SSID* pSSID);
+bool wld_ssid_nl80211_matchIfSta(T_SSID* pSSID, wld_nl80211_stationInfo_t* pStationInfo);
+int16_t wld_ssid_nl80211_getPrefStaLinkId(T_SSID* pSSID, wld_nl80211_stationInfo_t* pStationInfo);
 
 #endif /* INCLUDE_PRIV_NL80211_WLD_SSID_NL80211_PRIV_H_ */
