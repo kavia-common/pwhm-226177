@@ -161,14 +161,15 @@ swl_rc_ne wld_ap_nl80211_getAllStationsInfo(T_AccessPoint* pAP, wld_nl80211_stat
     swl_rc_ne rc = wld_nl80211_getAllStationsInfo(wld_nl80211_getSharedState(), index, &staInfo, &nrStation);
     W_SWL_SETPTR(pnrStation, nrStation);
     W_SWL_SETPTR(ppStationInfo, staInfo);
-    ASSERTS_TRUE(swl_rc_isOk(rc), rc, ME, "fail to get all sta info");
-    ASSERTS_NOT_NULL(staInfo, rc, ME, "no results");
     uint32_t nrApSta = 0;
-    wld_nl80211_stationInfo_t* pApStaInfo = calloc(nrStation, sizeof(wld_nl80211_stationInfo_t));
-    ASSERT_NOT_NULL(pApStaInfo, rc, ME, "memory allocation failed");
-    for(uint32_t i = 0; i < nrStation; i++) {
-        if(s_matchVapIfSta(pAP, &staInfo[i])) {
-            pApStaInfo[nrApSta++] = staInfo[i];
+    wld_nl80211_stationInfo_t* pApStaInfo = NULL;
+    if((nrStation > 0) && staInfo) {
+        pApStaInfo = calloc(nrStation, sizeof(wld_nl80211_stationInfo_t));
+        ASSERT_NOT_NULL(pApStaInfo, rc, ME, "memory allocation failed");
+        for(uint32_t i = 0; i < nrStation; i++) {
+            if(s_matchVapIfSta(pAP, &staInfo[i])) {
+                pApStaInfo[nrApSta++] = staInfo[i];
+            }
         }
     }
     W_SWL_FREE(staInfo);

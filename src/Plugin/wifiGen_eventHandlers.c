@@ -882,7 +882,7 @@ static void s_apStationDisconnectedEvt(void* pRef, char* ifName, swl_macBin_t* m
 }
 
 static void s_wdsCreatedEvt(void* pRef, char* ifName, char* wdsIntfName, swl_macBin_t* macAddress) {
-    T_AccessPoint* pAP = (T_AccessPoint*) pRef;
+    T_AccessPoint* pAP = wld_ad_getAssociatedApByMac(macAddress) ? : (T_AccessPoint*) pRef;
     ASSERT_NOT_NULL(pAP, , ME, "NULL");
     ASSERT_NOT_NULL(ifName, , ME, "NULL");
 
@@ -904,7 +904,7 @@ static void s_wdsCreatedEvt(void* pRef, char* ifName, char* wdsIntfName, swl_mac
 }
 
 static void s_wdsRemovedEvt(void* pRef, char* ifName, char* wdsIntfName, swl_macBin_t* macAddress) {
-    T_AccessPoint* pAP = (T_AccessPoint*) pRef;
+    T_AccessPoint* pAP = wld_ad_getAssociatedApByMac(macAddress) ? : (T_AccessPoint*) pRef;
     ASSERT_NOT_NULL(pAP, , ME, "NULL");
     ASSERT_NOT_NULL(ifName, , ME, "NULL");
 
@@ -912,7 +912,7 @@ static void s_wdsRemovedEvt(void* pRef, char* ifName, char* wdsIntfName, swl_mac
                     MAC_PRINT_ARG(macAddress->bMac), wdsIntfName);
 
     T_AssociatedDevice* pAD = wld_vap_find_asociatedDevice(pAP, macAddress);
-    ASSERT_NOT_NULL(pAD, , ME, "NULL");
+    ASSERT_NOT_NULL(pAD, , ME, "%s: Not found station %s", pAP->alias, swl_typeMacBin_toBuf32Ref(macAddress).buf);
 
     wld_ad_delWdsEntry(pAD);
 

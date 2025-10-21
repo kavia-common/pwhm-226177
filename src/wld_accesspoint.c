@@ -2195,6 +2195,8 @@ bool wld_vap_sync_assoclist(T_AccessPoint* pAP) {
 
 /* retrieve the AssociatedDevice with given MAC from T_AccessPoint.AssociatedDevice[] */
 T_AssociatedDevice* wld_vap_get_existing_station(T_AccessPoint* pAP, swl_macBin_t* macAddress) {
+    ASSERTS_NOT_NULL(pAP, NULL, ME, "NULL");
+    ASSERTS_NOT_NULL(macAddress, NULL, ME, "NULL");
     int AssociatedDeviceIdx;
     T_AssociatedDevice* EntryWithMatchingMac = NULL;
     T_AssociatedDevice* pAD;

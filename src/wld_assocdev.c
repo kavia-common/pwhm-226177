@@ -581,10 +581,10 @@ void wld_vap_update_seen(T_AccessPoint* pAP) {
     for(i = 0; i < pAP->AssociatedDeviceNumberOfEntries; i++) {
         pAD = pAP->AssociatedDevice[i];
         if(pAD->seen && !pAD->Active) {
-            SAH_TRACEZ_INFO(ME, "Activating sta %s based on seen", pAD->Name);
+            SAH_TRACEZ_INFO(ME, "%s: Activating sta %s based on seen", pAP->alias, pAD->Name);
             wld_ad_add_connection_try(pAP, pAD);
         } else if(!pAD->seen && pAD->Active) {
-            SAH_TRACEZ_INFO(ME, "Deactivating sta %s based on seen", pAD->Name);
+            SAH_TRACEZ_INFO(ME, "%s: Deactivating sta %s based on seen", pAP->alias, pAD->Name);
             wld_ad_add_disconnection(pAP, pAD);
         }
     }
@@ -1070,6 +1070,7 @@ T_AccessPoint* wld_rad_get_associated_ap(T_Radio* pRad, const unsigned char macA
 }
 
 T_AccessPoint* wld_ad_getAssociatedApByMac(swl_macBin_t* macAddress) {
+    ASSERTS_NOT_NULL(macAddress, NULL, ME, "NULL");
     T_AccessPoint* pAP = NULL;
     T_AssociatedDevice* pAD = NULL;
     T_Radio* pRad;
@@ -2147,7 +2148,7 @@ swl_rc_ne wld_ad_addWdsEntry(T_AccessPoint* pAP, T_AssociatedDevice* pAD, char* 
 
 swl_rc_ne wld_ad_delWdsEntry(T_AssociatedDevice* pAD) {
     ASSERT_NOT_NULL(pAD, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERT_NOT_NULL(pAD->wdsIntf, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTI_NOT_NULL(pAD->wdsIntf, SWL_RC_INVALID_PARAM, ME, "No wds iface");
     SAH_TRACEZ_INFO(ME, "deletion of wds interface %s for AP %s with peer mac " SWL_MAC_FMT, pAD->wdsIntf->name, pAD->wdsIntf->ap->alias, SWL_MAC_ARG(pAD->MACAddress));
     pAD->wdsIntf->active = false;
     s_sendWdsChangeEvent(WLD_WDS_EVT_DEL, pAD->wdsIntf);
