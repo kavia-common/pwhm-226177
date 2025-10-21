@@ -253,23 +253,16 @@ static void s_zwdfsTimeout(amxp_timer_t* timer _UNUSED, void* userdata _UNUSED) 
     s_execFsm(fsm, ZWDFS_FSM_EVENT_STOP, &fsm->fsmCtx);
 }
 
-static void s_zwdfs_restart(wld_zwdfs_fsmCtx_t* pFsmCtx) {
-    ASSERT_NOT_NULL(pFsmCtx, , ME, "NULL");
-    wld_zwdfs_start(pFsmCtx->pRad, pFsmCtx->direct);
-}
-
 swl_rc_ne wld_zwdfs_start(T_Radio* pRad, bool direct) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_zwdfs_fsm_t* fsm = (wld_zwdfs_fsm_t*) pRad->zwdfsData;
     ASSERTI_NOT_NULL(fsm, SWL_RC_ERROR, ME, "%s: invalid fsm", pRad->Name);
-    fsm->fsmCtx.pRad = pRad;
-    fsm->fsmCtx.direct = direct;
     amxp_timer_state_t timerState = amxp_timer_get_state(fsm->fsmCtx.timer);
     if((timerState == amxp_timer_running) || (timerState == amxp_timer_started)) {
-        SAH_TRACEZ_INFO(ME, "%s: delay restarting zwdfs", pRad->Name);
-        swla_delayExec_add((swla_delayExecFun_cbf) s_zwdfs_restart, &fsm->fsmCtx);
-        return wld_zwdfs_stop(pRad);
+        return SWL_RC_ERROR;
     }
+    fsm->fsmCtx.pRad = pRad;
+    fsm->fsmCtx.direct = direct;
     amxp_timer_delete(&fsm->fsmCtx.timer);
     int ret = amxp_timer_new(&fsm->fsmCtx.timer, s_zwdfsTimeout, pRad);
     ASSERT_FALSE(ret != 0, SWL_RC_ERROR, ME, "%s: error timer", pRad->Name);

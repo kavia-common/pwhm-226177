@@ -175,7 +175,7 @@ int32_t wld_nl80211_freqBandSwlToNl(swl_freqBand_e swlFb) {
  */
 swl_freqBand_e wld_nl80211_freqBandNlToSwl(uint32_t nl80211Fb) {
     uint32_t* pSwlFb = (uint32_t*) swl_table_getMatchingValue(&sBandsMap, 1, 0, &nl80211Fb);
-    ASSERT_NOT_NULL(pSwlFb, SWL_FREQ_BAND_MAX, ME, "unmatch nl fb %d", nl80211Fb);
+    ASSERTS_NOT_NULL(pSwlFb, SWL_FREQ_BAND_MAX, ME, "unmatch nl fb %d", nl80211Fb);
     return (swl_freqBand_e) (*pSwlFb);
 }
 
