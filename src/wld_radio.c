@@ -3330,6 +3330,8 @@ amxd_status_t _getRadioAirStats(amxd_object_t* object,
     amxc_var_add_key(uint8_t, retval_map, "ShortPreambleErrorPercentage", stats.short_preamble_error_percentage);
     amxc_var_add_key(uint8_t, retval_map, "LongPreambleErrorPercentage", stats.long_preamble_error_percentage);
 
+    amxc_var_add_key(amxc_htable_t, retval_map, "VendorStats", amxc_var_get_const_amxc_htable_t(stats.vendorStats));
+    amxc_var_clean(&vendorStats);
     //Update parameters in data model
     amxd_object_t* radio = (amxd_object_t*) pR->pBus;
     amxd_trans_t trans;
@@ -3343,11 +3345,6 @@ amxd_status_t _getRadioAirStats(amxd_object_t* object,
         amxd_trans_set_uint16_t(&trans, "Interference", 0);
     }
     ASSERT_TRANSACTION_LOCAL_DM_END(&trans, amxd_status_unknown_error, ME, "%s : trans apply failure", pR->Name);
-
-
-    amxc_var_add_key(amxc_htable_t, retval_map, "VendorStats", amxc_var_get_const_amxc_htable_t(stats.vendorStats));
-
-    amxc_var_clean(&vendorStats);
 
     return amxd_status_ok;
 }

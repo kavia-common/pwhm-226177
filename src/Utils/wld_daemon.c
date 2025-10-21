@@ -255,7 +255,6 @@ bool wld_dmn_startDeamon(wld_process_t* dmn_process) {
 
     SAH_TRACEZ_INFO(ME, "Starting %s", dmn_process->cmd);
 
-    char* newStartArgs = NULL;
     if(dmn_process->handlers.getArgsCb != NULL) {
         char* newStartArgs = dmn_process->handlers.getArgsCb(dmn_process, dmn_process->userData);
         if(newStartArgs != NULL) {
@@ -270,6 +269,7 @@ bool wld_dmn_startDeamon(wld_process_t* dmn_process) {
     amxc_var_set_type(&settings, AMXC_VAR_ID_CUSTOM_BASE);
     settings.data.data = dmn_process;
     int ret = amxp_proc_ctrl_start(dmn_process->process, 0, &settings);
+    amxc_var_clean(&settings);
     if(ret != 0) {
         SAH_TRACEZ_ERROR(ME, "Failed to start %s dmn_process", dmn_process->cmd);
         return false;
