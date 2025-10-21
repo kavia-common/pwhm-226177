@@ -115,6 +115,7 @@ m4_ifelse(DISABLE_PERSIST,y,``
                    "apRssi" = 200,
                    "apSec" = 200,
                    "chan" = 200,
+                   "chanDfs" = 200,
                    "chanInf" = 200,
                    "chanMgt" = 200,
                    "csi" = 200,

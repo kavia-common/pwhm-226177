@@ -276,7 +276,7 @@ static void test_wld_nl80211_sendCmdSync(void** mockaState _UNUSED) {
     swl_rc_ne rc;
     testDesc_t tests[] = {
         //error case: unsupported cmd: error:-95:Operation not supported
-        {.state = s_sharedState, .cmd = NL80211_CMD_UNSPEC, .ifIndex = s_loIfIndex, .expectedRc = SWL_RC_ERROR, .expectedData = {.message = "Error", .error = -EOPNOTSUPP, }},
+        {.state = s_sharedState, .cmd = NL80211_CMD_UNSPEC, .ifIndex = s_loIfIndex, .expectedRc = SWL_RC_NOT_AVAILABLE, .expectedData = {.message = "Error", .error = -EOPNOTSUPP, }},
         //error case: not nl80211 interface: error:-19:No such device
         {.state = s_sharedState, .cmd = NL80211_CMD_GET_INTERFACE, .ifIndex = s_loIfIndex, .expectedRc = SWL_RC_ERROR, .expectedData = {.message = "Error", .error = -ENODEV, }},
         //error case: invalid ifIndex: error:-22:Invalid argument
@@ -348,7 +348,7 @@ static void test_wld_nl80211_sendCmdAsync(void** mockaState _UNUSED) {
     swl_rc_ne rc;
     testDesc_t tests[] = {
         //error case: unsupported cmd: error:-95:Operation not supported
-        {.state = s_sharedState, .cmd = NL80211_CMD_UNSPEC, .ifIndex = s_loIfIndex, .expectedRc = SWL_RC_ERROR, .expectedData = {.message = "Error", .error = -EOPNOTSUPP, }},
+        {.state = s_sharedState, .cmd = NL80211_CMD_UNSPEC, .ifIndex = s_loIfIndex, .expectedRc = SWL_RC_NOT_AVAILABLE, .expectedData = {.message = "Error", .error = -EOPNOTSUPP, }},
         //error case: not nl80211 interface: error:-19:No such device
         {.state = s_sharedState, .cmd = NL80211_CMD_GET_INTERFACE, .ifIndex = s_loIfIndex, .expectedRc = SWL_RC_ERROR, .expectedData = {.message = "Error", .error = -ENODEV, }},
         //error case: invalid ifIndex: error:-22:Invalid argument

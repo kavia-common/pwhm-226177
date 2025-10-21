@@ -128,6 +128,9 @@ int wifiGen_rad_miscHasSupport(T_Radio* pRad, T_AccessPoint* pAp, char* buf, int
             //Only consider MLO capability when running multiband single hostapd
             ret &= (wifiGen_hapd_countGrpMembers(pRad) > 1);
         }
+        if(swl_str_matches(buf, "RADAR_BACKGROUND")) {
+            ret &= (pRad && pRad->bgdfs_config.available);
+        }
     }
     return ret;
 }

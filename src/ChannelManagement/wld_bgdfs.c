@@ -74,7 +74,7 @@
 #include "wld_bgdfs.h"
 #include "wld_channel.h"
 
-#define ME "wld"
+#define ME "chanDfs"
 
 static const char* wld_bgdfsStatus_str[BGDFS_STATUS_MAX] = {
     "Off",
@@ -326,6 +326,11 @@ void wld_bgdfs_update(T_Radio* pRad, amxd_trans_t* trans) {
 }
 
 swl_rc_ne wld_bgdfs_startExt(T_Radio* pRad, wld_startBgdfsArgs_t* args) {
+    ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_NOT_NULL(args, SWL_RC_INVALID_PARAM, ME, "No args");
+    ASSERTW_TRUE(pRad->bgdfs_config.available, SWL_RC_NOT_AVAILABLE, ME, "BgDfs Not supported");
+    ASSERTW_NOT_EQUALS(pRad->bgdfs_config.status, BGDFS_STATUS_OFF, SWL_RC_INVALID_STATE, ME, "BgDfs Disabled");
+
     bool legacy = false;
     swl_rc_ne ret = pRad->pFA->mfn_wrad_bgdfs_start_ext(pRad, args);
     if(ret < 0) {
@@ -335,9 +340,15 @@ swl_rc_ne wld_bgdfs_startExt(T_Radio* pRad, wld_startBgdfsArgs_t* args) {
             legacy = true;
         }
     }
+    if(ret >= 0) {
+        SAH_TRACEZ_INFO(ME, "%s : Starting BG_DFS %u/%s legacy %u",
+                        pRad->Name, args->channel, swl_bandwidth_str[args->bandwidth], legacy);
+    } else if((ret == SWL_RC_NOT_IMPLEMENTED) || (ret == SWL_RC_NOT_AVAILABLE)) {
+        SAH_TRACEZ_WARNING(ME, "%s: bgdfs seems not supported when trying cac %d/%d => mark as unavailable",
+                           pRad->Name, args->channel, args->bandwidth);
+        wld_bgdfs_setAvailable(pRad, false);
+    }
 
-    SAH_TRACEZ_INFO(ME, "%s : Starting BG_DFS %u/%s legacy %u",
-                    pRad->Name, args->channel, swl_bandwidth_str[args->bandwidth], legacy);
     return ret;
 }
 

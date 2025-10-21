@@ -91,6 +91,8 @@ static void clearStructs() {
     memset(&args, 0, sizeof(wld_startBgdfsArgs_t));
     memset(&dfsArgs, 0, sizeof(wld_startBgdfsArgs_t));
     memset(&functionTable, 0, sizeof(struct S_CWLD_FUNC_TABLE));
+    pRad.bgdfs_config.enable = true;
+    wld_bgdfs_setAvailable(&pRad, true);
 }
 
 /**

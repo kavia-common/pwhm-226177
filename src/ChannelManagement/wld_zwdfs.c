@@ -83,7 +83,6 @@ static wld_zwdfs_fsmState_e s_handleFsmStartEvent(const wld_zwdfs_fsmCtx_t* pCtx
     T_Radio* pRad = pCtx->pRad;
     ASSERT_NOT_NULL(pRad, ZWDFS_FSM_STATE_INIT, ME, "NULL");
     swl_rc_ne rc = SWL_RC_OK;
-    bool isBgDfsEnabled = (pRad->bgdfs_config.status != BGDFS_STATUS_OFF);
     s_setZwdfsTgtChspec((wld_zwdfs_fsmCtx_t*) pCtx, pRad->targetChanspec.chanspec);
     if(pRad->detailedState == CM_RAD_FG_CAC) {
         /* next state */
@@ -110,9 +109,9 @@ static wld_zwdfs_fsmState_e s_handleFsmStartEvent(const wld_zwdfs_fsmCtx_t* pCtx
         args.bandwidth = wld_chanmgt_getCurBw(pRad);
     }
     SAH_TRACEZ_INFO(ME, "%s: ZW_DFS OFFLOAD CAC start", pRad->Name);
-    rc = pRad->pFA->mfn_wrad_bgdfs_start_ext(pRad, &args);
+    rc = wld_bgdfs_startExt(pRad, &args);
     if(rc < SWL_RC_OK) {
-        SAH_TRACEZ_INFO(ME, "%s: ZW_DFS error starting OFFLOAD CAC", pRad->Name);
+        SAH_TRACEZ_WARNING(ME, "%s: ZW_DFS error (%d) starting OFFLOAD CAC", pRad->Name, rc);
         SWL_CALL(pRad->pFA->mfn_wrad_setChanspec, pRad, pCtx->direct);
         /* next state */
         return ZWDFS_FSM_STATE_SWITCHING;

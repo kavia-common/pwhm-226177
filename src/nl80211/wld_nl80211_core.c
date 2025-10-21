@@ -504,6 +504,10 @@ static swl_rc_ne s_handleReply(wld_nl80211_state_t* state, struct nlmsghdr* nlh)
                          e->error, errId, errMsg,
                          cmdId, cmdStr);
         rc = SWL_RC_ERROR;
+        if(errId == EOPNOTSUPP) {
+            //special error code when detecting unsupported command at execution time
+            rc = SWL_RC_NOT_AVAILABLE;
+        }
     }
     return s_updateRequest(pReq, nlh, rc);
 }

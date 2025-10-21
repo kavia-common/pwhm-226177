@@ -260,8 +260,6 @@ DEF_TRAP(T_Radio, mfn_wrad_update_chaninfo);
 DEF_TRAP(T_Radio, mfn_wrad_update_prob_req);
 DEF_TRAP(T_Radio, mfn_wrad_fsm_reset);
 DEF_TRAP_int(T_Radio, mfn_wrad_bgdfs_enable);
-DEF_TRAP_int(T_Radio, mfn_wrad_bgdfs_start);
-DEF_TRAP(T_Radio, mfn_wrad_bgdfs_stop);
 DEF_TRAP(T_Radio, mfn_wrad_delayApUpDone);
 DEF_TRAP(T_Radio, mfn_wrad_sensing_cmd);
 DEF_TRAP(T_Radio, mfn_wrad_sensing_resetStats);
@@ -360,10 +358,20 @@ static swl_rc_ne TRAP_mfn_wvap_get_single_station_stats(T_AssociatedDevice* ad) 
     return SWL_RC_NOT_IMPLEMENTED;
 }
 
+static int TRAP_mfn_wrad_bgdfs_start(T_Radio* rad, int channel) {
+    SAH_TRACEZ_NOTICE(ME, "%p %d", rad, channel);
+    return SWL_RC_NOT_IMPLEMENTED;
+}
+
 static int TRAP_mfn_wrad_bgdfs_start_ext(T_Radio* rad, wld_startBgdfsArgs_t* args) {
     _UNUSED_(rad);
     _UNUSED_(args);
-    return WLD_ERROR_NOT_IMPLEMENTED;
+    return SWL_RC_NOT_IMPLEMENTED;
+}
+
+static int TRAP_mfn_wrad_bgdfs_stop(T_Radio* rad) {
+    SAH_TRACEZ_NOTICE(ME, "%p", rad);
+    return SWL_RC_NOT_IMPLEMENTED;
 }
 
 static int TRAP_mfn_wrad_poschans(T_Radio* rad, unsigned char* buf, int bufsize) {
