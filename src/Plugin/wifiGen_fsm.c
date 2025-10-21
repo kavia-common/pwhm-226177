@@ -452,6 +452,11 @@ static bool s_doStopHostapd(T_Radio* pRad) {
      * Therefore, hapd rad iface need to be disabled to force stop all vaps
      */
     if((rc == SWL_RC_CONTINUE) && (wifiGen_hapd_countGrpMembers(pRad) > 1)) {
+        if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_MOD_MLD) &&
+           wld_rad_hostapd_hasActiveApMld(pRad, 2)) {
+            SAH_TRACEZ_INFO(ME, "%s: let mld handler manage radio disabling", pRad->Name);
+            return true;
+        }
         SAH_TRACEZ_INFO(ME, "%s: need to disable hostapd", pRad->Name);
         setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_DISABLE_HOSTAPD);
     }
