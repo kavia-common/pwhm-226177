@@ -158,4 +158,8 @@ swl_rc_ne wld_ad_registerExtModData(T_AssociatedDevice* pAD, uint32_t extModId, 
 void* wld_ad_getExtModData(T_AssociatedDevice* pAD, uint32_t extModId);
 swl_rc_ne wld_ad_unregisterExtModData(T_AssociatedDevice* pAD, uint32_t extModId);
 
+swl_rc_ne wld_ad_addWdsEntry(T_AccessPoint* pAP, T_AssociatedDevice* pAD, char* wdsIntfName);
+swl_rc_ne wld_ad_delWdsEntry(T_AssociatedDevice* pAD);
+
+
 #endif /* SRC_INCLUDE_WLD_WLD_ASSOCDEV_H_ */

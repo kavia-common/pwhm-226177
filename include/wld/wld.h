@@ -779,6 +779,22 @@ typedef struct {
     T_AccessPoint* ap;
 } wld_wds_intf_t;
 
+/*
+ * event related to wds iface
+ */
+typedef enum {
+    WLD_WDS_EVT_ADD,           // when wds iface is added
+    WLD_WDS_EVT_DEL,           // when wds iface is deleted
+} wld_wdsChangeEvent_e;
+
+/**
+ * Event called when a mld unit or link has changed
+ */
+typedef struct {
+    wld_wdsChangeEvent_e event;
+    wld_wds_intf_t* pWdsItf;
+} wld_wdsChange_t;
+
 typedef struct {
     char Name[32];                            /* Name tag.*/
     unsigned char MACAddress[ETHER_ADDR_LEN]; /* MAC address of station */

@@ -75,6 +75,7 @@
 
 #include "wld.h"
 #include "wld_util.h"
+#include "wld_linuxIfUtils.h"
 #include "wld_accesspoint.h"
 #include "wld_ssid.h"
 #include "wld_radio.h"
@@ -1796,7 +1797,13 @@ swl_rc_ne wld_ad_syncInfo(T_AssociatedDevice* pAD) {
         amxd_trans_set_value(cstring_t, &trans, "OperatingStandard", swl_radStd_unknown_str[pAD->operatingStandard]);
         amxd_trans_set_value(uint32_t, &trans, "MUGroupId", pAD->staMuMimoInfo.muGroupId);
         amxd_trans_set_value(uint32_t, &trans, "MUUserPositionId", pAD->staMuMimoInfo.muUserPosId);
-
+        if(pAD->Active) {
+            if((pAD->wdsIntf != NULL) && (pAD->wdsIntf->name != NULL)) {
+                amxd_trans_set_value(cstring_t, &trans, "WdsInterfaceName", pAD->wdsIntf->name);
+            }
+        } else {
+            amxd_trans_set_value(cstring_t, &trans, "WdsInterfaceName", "");
+        }
         wld_ad_syncCapabilities(&trans, &pAD->assocCaps);
         wld_ad_syncdetailedMcsCapabilities(&trans, &pAD->assocCaps);
         wld_ad_syncRrmCapabilities(&trans, &pAD->assocCaps);
@@ -2101,4 +2108,53 @@ swl_rc_ne wld_ad_unregisterExtModData(T_AssociatedDevice* pAD, uint32_t extModId
     return wld_extMod_unregisterData(&pAD->extDataList, extModId);
 }
 
+static void s_sendWdsChangeEvent(wld_wdsChangeEvent_e event, wld_wds_intf_t* pWdsItf) {
+    wld_wdsChange_t change;
+    memset(&change, 0, sizeof(change));
+    change.event = event;
+    change.pWdsItf = pWdsItf;
+    wld_event_trigger_callback(gWld_queue_wdsInterface, &change);
+}
 
+swl_rc_ne wld_ad_addWdsEntry(T_AccessPoint* pAP, T_AssociatedDevice* pAD, char* wdsIntfName) {
+    ASSERT_NOT_NULL(pAD, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_STR(wdsIntfName, SWL_RC_INVALID_PARAM, ME, "NULL/empty");
+    int32_t index = -1;
+    swl_rc_ne rc = wld_linuxIfUtils_getIfIndexExt(wdsIntfName, &index);
+    ASSERT_FALSE((rc < SWL_RC_OK), SWL_RC_ERROR, ME, "WDS '%s' intf index not found", wdsIntfName);
+    if(pAD->wdsIntf != NULL) {
+        if((!swl_str_matches(pAD->wdsIntf->name, wdsIntfName)) ||
+           (pAD->wdsIntf->index != index) ||
+           (pAD->wdsIntf->ap != pAP)) {
+            wld_ad_delWdsEntry(pAD);
+        }
+    }
+    if(pAD->wdsIntf == NULL) {
+        pAD->wdsIntf = calloc(1, sizeof(wld_wds_intf_t));
+        ASSERT_NOT_NULL(pAD->wdsIntf, SWL_RC_ERROR, ME, "no wds interface created");
+    }
+    SAH_TRACEZ_INFO(ME, "creation of wds interface %s for AP %s with peer mac " SWL_MAC_FMT, wdsIntfName, pAP->alias, SWL_MAC_ARG(pAD->MACAddress));
+    pAD->wdsIntf->active = true;
+    swl_str_copyMalloc(&pAD->wdsIntf->name, wdsIntfName);
+    pAD->wdsIntf->index = index;
+    pAD->wdsIntf->ap = pAP;
+    memcpy(&pAD->wdsIntf->bStaMac, pAD->MACAddress, sizeof(swl_macBin_t));
+    amxc_llist_append(&pAP->llIntfWds, &pAD->wdsIntf->entry);
+    s_sendWdsChangeEvent(WLD_WDS_EVT_ADD, pAD->wdsIntf);
+    return SWL_RC_OK;
+}
+
+swl_rc_ne wld_ad_delWdsEntry(T_AssociatedDevice* pAD) {
+    ASSERT_NOT_NULL(pAD, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_NOT_NULL(pAD->wdsIntf, SWL_RC_INVALID_PARAM, ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "deletion of wds interface %s for AP %s with peer mac " SWL_MAC_FMT, pAD->wdsIntf->name, pAD->wdsIntf->ap->alias, SWL_MAC_ARG(pAD->MACAddress));
+    pAD->wdsIntf->active = false;
+    s_sendWdsChangeEvent(WLD_WDS_EVT_DEL, pAD->wdsIntf);
+    pAD->wdsIntf->index = -1;
+    amxc_llist_it_take(&pAD->wdsIntf->entry);
+    free(pAD->wdsIntf->name);
+    free(pAD->wdsIntf);
+    pAD->wdsIntf = NULL;
+    return SWL_RC_OK;
+}

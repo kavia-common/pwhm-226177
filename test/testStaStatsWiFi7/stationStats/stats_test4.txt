@@ -4,6 +4,7 @@
         "UplinkShortGuard": false,
         "TxPacketCount": 0,
         "DownlinkBandwidth": 0,
+        "WdsInterfaceName": "",
         "RxMulticastPacketCount": 0,
         "RxSupportedHeMCS": "",
         "TxSupportedHe160MCS": "",
@@ -85,8 +86,8 @@
             }
         ],
         "Noise": 0,
-        "TxMulticastPacketCount": 0,
         "ObjectIndex": 1,
+        "TxMulticastPacketCount": 0,
         "AvgSignalStrengthByChain": 0,
         "Rx_RetransmissionsFailed": 0,
         "PowerSave": false,

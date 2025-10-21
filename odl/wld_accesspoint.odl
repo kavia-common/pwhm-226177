@@ -1751,6 +1751,13 @@ define rrm_t{
 			%read-only string FrequencyCapabilities;
 
 			/**
+			 * Name of the WdsInterface
+			 * wds interface is used by the repeater when connecting through wlan backhaul to the HGW or  
+			 * previous repeater of the daisy chain  
+			 */
+			%read-only string WdsInterfaceName;
+
+			/**
 			 * UNIIBands Capabilities
 			 * Comma-separated list of strings.
 			 * It can be a single or combination of following values:
@@ -1935,6 +1942,7 @@ define rrm_t{
 				 */
 				%read-only string FrequencyCapabilities;
 			}
+
 			/**
 			 * get the last assoc request sent by a station to a vap
 			 * @return
