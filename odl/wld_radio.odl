@@ -1796,9 +1796,7 @@ define probelist_t{
 				%read-only uint16 Channel;
 
 				/**
-				 * Resulting accesspoint from the scan. Multiple BSSID's from the same accesspoint
-				 * should be grouped under this accesspoints. To group bssids, we check that they only
-				 * differ in 1 byte, and that their RSSI values are the same, and broadcast on the same channel.
+				 * Resulting accesspoint from the scan.
 				 */
 				%read-only object Accesspoint[]{
 
@@ -2767,8 +2765,8 @@ define probelist_t{
 			/**
 			 * Enable the ScanResults datamodel update.
 			 */
-			%protected %persistent bool EnableScanResultsDm {
-				default true;
+			%persistent bool EnableScanResultsDm {
+				default false;
 			}
 
 			/**

@@ -1176,6 +1176,8 @@ typedef struct wld_scanResultSSID {
     //BSS load elements
     uint16_t stationCount;
     uint8_t channelUtilization;
+
+    bool dmUpdated;                 // This result has been updated in the DM
 } wld_scanResultSSID_t;
 
 typedef struct wld_scanResults {

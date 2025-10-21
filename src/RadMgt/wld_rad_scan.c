@@ -173,7 +173,7 @@ void wld_radio_copySsidsToResult(wld_scanResults_t* results, amxc_llist_t* ssid_
     }
 }
 
-//@deprecated. Please use wld_scan_cleanupScanResultSSID
+//@deprecated. Please use wld_scan_cleanupScanResults
 bool wld_radio_scanresults_cleanup(wld_scanResults_t* results) {
     SAH_TRACEZ_INFO(ME, "Cleanup scanresults");
     wld_scan_cleanupScanResults(results);
@@ -1071,21 +1071,20 @@ static swl_rc_ne s_getOrAddChannelObj(amxd_object_t* objScan, uint16_t channel, 
             return SWL_RC_OK;
         }
     }
+
     amxd_trans_t trans;
-    amxd_status_t status = swl_object_prepareTransaction(&trans, chanTemplate);
-    ASSERT_EQUALS(status, amxd_status_ok, SWL_RC_ERROR, ME, "Fail to prepare scan Chan %d trans: %s",
-                  channel, amxd_status_string(status));
+    ASSERT_TRANSACTION_INIT(chanTemplate, &trans, SWL_RC_ERROR, ME, "Fail to prepare scan channel %d trans", channel);
+
     amxd_object_t* lastInst = amxc_container_of(amxc_llist_get_last(&chanTemplate->instances), amxd_object_t, it);
     uint32_t newIdx = amxd_object_get_index(lastInst) + 1;
     amxd_trans_add_inst(&trans, newIdx, NULL);
     amxd_trans_set_value(uint16_t, &trans, "Channel", channel);
-    status = swl_object_finalizeTransaction(&trans, swl_lib_getLocalDm());
-    ASSERT_EQUALS(status, amxd_status_ok, SWL_RC_ERROR, ME, "Fail to create scan channel obj[%d] ch:%d: %s",
-                  newIdx, channel, amxd_status_string(status));
+
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, SWL_RC_ERROR, ME, "Fail to create scan channel obj[%d] ch:%d", newIdx, channel);
     chanObj = amxd_object_get_instance(chanTemplate, NULL, newIdx);
-    ASSERT_NOT_NULL(chanObj, SWL_RC_ERROR, ME, "fail to locate new channel obj[%d] ch:%d",
-                    newIdx, channel);
+    ASSERT_NOT_NULL(chanObj, SWL_RC_ERROR, ME, "fail to locate new channel obj[%d] ch:%d", newIdx, channel);
     W_SWL_SETPTR(pChanObj, chanObj);
+
     return SWL_RC_OK;
 }
 
@@ -1154,70 +1153,36 @@ amxd_status_t _getSpectrumInfo(amxd_object_t* object,
 }
 
 /**
- * Search for an access point object that matches the given bssid and the given rssi, withing the current
- * ap_template object. If no matching ap currently exists, null is returned.
- *
- * An accesspoint matches if the differences in bssid strings is less or equal to two (about 1 byte difference)
- * and the rssi matches. Since we look only at a given ap_template, the channel also must match.
+ * Add or update an AP instance object.
  */
-static amxd_object_t* s_findScanApGroup(amxd_object_t* ap_template, swl_macChar_t* pBssidChar, int16_t rssi) {
-    amxd_object_t* testAp;
-    int16_t testRssi;
-    char* testBssid;
-    bool match = false;
-    size_t macDevOffset = 9;
-    swl_macChar_t macVendorOuiMask = {.cMac = {"FD:FF:FF:00:00:00"}};
-    swl_macChar_t testBssidChar = SWL_MAC_CHAR_NEW();
-    amxd_object_for_each(instance, it, ap_template) {
-        testAp = amxc_llist_it_get_data(it, amxd_object_t, it);
-        testRssi = amxd_object_get_int16_t(testAp, "RSSI", NULL);
-        testBssid = amxd_object_get_cstring_t(testAp, "BSSID", NULL);
-        match = (/* same rssi */
-            (testRssi == rssi) &&
-            /* valid test mac */
-            (swl_typeMacChar_fromChar(&testBssidChar, testBssid)) &&
-            /* same MAC Vendor OUI part as the reference mac, after clearing the LocallyAdminAddress bit */
-            (swl_mac_charMatchesMask(&testBssidChar, pBssidChar, &macVendorOuiMask)) &&
-            /* at most 2 different hex digits in the MAC Device part */
-            (swl_str_nrStrDiff(&testBssidChar.cMac[macDevOffset], &pBssidChar->cMac[macDevOffset], SWL_MAC_CHAR_LEN - macDevOffset) <= 2));
-
-        free(testBssid);
-        if(match) {
-            return testAp;
-        }
-    }
-    return NULL;
-}
-
-/**
- * Add a given SSID result to the given channel.
- */
-static void s_updateOrAddSsidObj(amxd_object_t* chanObj, wld_scanResultSSID_t* ssid) {
-    ASSERT_NOT_NULL(ssid, , ME, "NULL");
-    amxd_object_t* apTempl = amxd_object_get(chanObj, "Accesspoint");
-    ASSERT_NOT_NULL(apTempl, , ME, "Null ap template");
-
+static swl_rc_ne s_AddOrUpdateAPInstance(amxd_object_t* object, wld_scanResultSSID_t* ssid) {
     swl_macChar_t bssidStr = SWL_MAC_CHAR_NEW();
     swl_mac_binToChar(&bssidStr, &ssid->bssid);
 
-    amxd_object_t* apObj = s_findScanApGroup(apTempl, &bssidStr, ssid->rssi);
+    // Add an instance to the template object, or update the existing instance.
+    bool add = (amxd_object_get_type(object) == amxd_object_template);
 
     amxd_trans_t trans;
-    amxd_status_t status;
-    if(apObj == NULL) {
-        status = swl_object_prepareTransaction(&trans, apTempl);
-        ASSERT_EQUALS(status, amxd_status_ok, , ME, "Fail to prepare scan AP+SSID trans: %s", amxd_status_string(status));
-        amxd_object_t* lastInst = amxc_container_of(amxc_llist_get_last(&apTempl->instances), amxd_object_t, it);
+    ASSERT_TRANSACTION_INIT(object, &trans, SWL_RC_ERROR, ME, "trans init failure");
+
+    if(add) {
+        amxd_object_t* lastInst = amxc_container_of(amxc_llist_get_last(&object->instances), amxd_object_t, it);
         uint32_t newIdx = amxd_object_get_index(lastInst) + 1;
         amxd_trans_add_inst(&trans, newIdx, NULL);
-        amxd_trans_set_value(int16_t, &trans, "RSSI", ssid->rssi);
-        amxd_trans_set_value(cstring_t, &trans, "BSSID", bssidStr.cMac);
-    } else {
-        status = swl_object_prepareTransaction(&trans, apObj);
-        ASSERT_EQUALS(status, amxd_status_ok, , ME, "Fail to prepare scan SSID trans: %s", amxd_status_string(status));
     }
-    amxd_trans_select_pathf(&trans, ".SSID");
-    amxd_trans_add_inst(&trans, 0, NULL);
+
+    amxd_trans_set_value(int16_t, &trans, "RSSI", ssid->rssi);
+    amxd_trans_set_value(cstring_t, &trans, "BSSID", bssidStr.cMac);
+
+    if(add) {
+        amxd_trans_select_pathf(&trans, ".SSID");
+        amxd_trans_add_inst(&trans, 0, NULL);
+    } else {
+        // There is only one SSID instance, with index 1
+        amxd_object_t* ssidInst = amxd_object_get_instance(amxd_object_get(object, "SSID"), NULL, 1);
+        amxd_trans_select_object(&trans, ssidInst);
+    }
+
     char* ssidStr = wld_ssid_to_string(ssid->ssid, ssid->ssidLen);
     amxd_trans_set_value(cstring_t, &trans, "SSID", ssidStr);
     amxd_trans_set_value(cstring_t, &trans, "BSSID", bssidStr.cMac);
@@ -1225,28 +1190,95 @@ static void s_updateOrAddSsidObj(amxd_object_t* chanObj, wld_scanResultSSID_t* s
     amxd_trans_set_value(uint8_t, &trans, "ChannelUtilization", ssid->channelUtilization);
     amxd_trans_set_value(uint16_t, &trans, "StationCount", ssid->stationCount);
     free(ssidStr);
-    status = swl_object_finalizeTransaction(&trans, swl_lib_getLocalDm());
-    ASSERT_EQUALS(status, amxd_status_ok, , ME, "Fail to apply scan SSID trans: %s", amxd_status_string(status));
+
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, SWL_RC_ERROR, ME, "trans apply failure");
+    return SWL_RC_OK;
+}
+
+static void s_removeAPObject(amxd_object_t* apObj) {
+    amxd_trans_t trans;
+    ASSERT_TRANSACTION_INIT(amxd_object_get_parent(apObj), &trans, , ME, "trans init failure");
+    uint32_t index = amxd_object_get_index(apObj);
+    amxd_trans_del_inst(&trans, index, NULL);
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "trans apply failure");
+}
+
+static int s_apCallback(amxd_object_t* object _UNUSED, amxd_object_t* mobject, void* priv) {
+    uint16_t channel = amxd_object_get_uint16_t(amxd_object_get_parent(mobject), "Channel", NULL);
+
+    amxd_object_for_each(instance, it, mobject) {
+        amxd_object_t* apInst = amxc_llist_it_get_data(it, amxd_object_t, it);
+        char* bssidChar = amxd_object_get_cstring_t(apInst, "BSSID", NULL);
+        swl_macChar_t bssidStd;
+        if(!swl_mac_charToStandard(&bssidStd, bssidChar)) {
+            SAH_TRACEZ_ERROR(ME, "invalid BSSID : %s", bssidChar);
+            free(bssidChar);
+            continue;
+        }
+        swl_macBin_t bssidBin;
+        swl_mac_charToBin(&bssidBin, &bssidStd);
+
+        bool found = false;
+        amxc_llist_t* ssids = priv;
+        amxc_llist_for_each(it, ssids) {
+            wld_scanResultSSID_t* ssid = amxc_container_of(it, wld_scanResultSSID_t, it);
+            if(swl_typeMacBin_equals(bssidBin, ssid->bssid)) {
+                found = true;
+                if(channel == ssid->channel) {
+                    if(!ssid->dmUpdated) {
+                        // Update AP instance object
+                        if(s_AddOrUpdateAPInstance(apInst, ssid) == SWL_RC_OK) {
+                            ssid->dmUpdated = true;
+                        }
+                    } else {
+                        // Duplicate AP object, should be removed from DM
+                        s_removeAPObject(apInst);
+                    }
+                } else {
+                    // AP has moved to another channel
+                    s_removeAPObject(apInst);
+                }
+            }
+        }
+
+        if(!found) {
+            // AP is not present in the scan result list
+            s_removeAPObject(apInst);
+        }
+
+        free(bssidChar);
+    }
+    return 0;
 }
 
 /**
- * Clear the scan results. Should be called before we start adding new
- * results for the latest scan.
+ * Iterate over DataModel and compare each AP instance object with an entry in the result list.
+ * Depending on the result list, an AP instance might be added, removed, or updated.
  */
-static void s_clearChannelObjs(amxd_object_t* objScan) {
-    amxd_object_t* chanTemplate = amxd_object_get(objScan, "SurroundingChannels");
-    ASSERT_NOT_NULL(chanTemplate, , ME, "Fail to find Channel Template");
-    amxd_trans_t trans;
-    amxd_status_t status = swl_object_prepareTransaction(&trans, chanTemplate);
-    ASSERT_EQUALS(status, amxd_status_ok, , ME, "Fail to prepare clear scan chan trans: %s",
-                  amxd_status_string(status));
-    amxd_object_for_each(instance, it, chanTemplate) {
-        amxd_object_t* chanObj = amxc_llist_it_get_data(it, amxd_object_t, it);
-        amxd_trans_del_inst(&trans, amxd_object_get_index(chanObj), NULL);
+static void s_iterateDM(amxd_object_t* objScan, amxc_llist_t* ssids) {
+    amxd_object_for_all(objScan, "SurroundingChannels.*.Accesspoint.", s_apCallback, ssids);
+}
+
+/**
+ * Iterate over result list and add any AP instance that is still left unprocessed.
+ */
+static void s_iterateResultList(amxd_object_t* objScan _UNUSED, amxc_llist_t* ssids) {
+    amxc_llist_for_each(it, ssids) {
+        wld_scanResultSSID_t* ssid = amxc_container_of(it, wld_scanResultSSID_t, it);
+        if(ssid->dmUpdated) {
+            continue;
+        }
+        swl_macChar_t macChar;
+        swl_mac_binToChar(&macChar, &ssid->bssid);
+        amxd_object_t* chanObj = NULL;
+        if(s_getOrAddChannelObj(objScan, ssid->channel, &chanObj) != SWL_RC_OK) {
+            continue;
+        }
+        amxd_object_t* apTempl = amxd_object_get(chanObj, "Accesspoint");
+        if(s_AddOrUpdateAPInstance(apTempl, ssid) == SWL_RC_OK) {
+            ssid->dmUpdated = true;
+        }
     }
-    status = swl_object_finalizeTransaction(&trans, swl_lib_getLocalDm());
-    ASSERT_EQUALS(status, amxd_status_ok, , ME, "Fail to apply clear scan Chans trans: %s",
-                  amxd_status_string(status));
 }
 
 /**
@@ -1319,19 +1351,12 @@ static void s_updateScanResultObjs(T_Radio* pR) {
     amxd_object_t* objScan = amxd_object_get(pR->pBus, "ScanResults");
     ASSERT_NOT_NULL(objScan, , ME, "No ScanResults obj template");
 
-    s_clearChannelObjs(objScan);
-    amxc_llist_for_each(it, &res.ssids) {
-        wld_scanResultSSID_t* ssid = amxc_container_of(it, wld_scanResultSSID_t, it);
-        amxd_object_t* chanObj = NULL;
-        if(s_getOrAddChannelObj(objScan, ssid->channel, &chanObj) < SWL_RC_OK) {
-            continue;
-        }
-        s_updateOrAddSsidObj(chanObj, ssid);
-        wld_scan_cleanupScanResultSSID(ssid);
-    }
+    s_iterateDM(objScan, &res.ssids);
+    s_iterateResultList(objScan, &res.ssids);
+
     s_updateCountCochannel(pR, objScan);
 
-    wld_radio_scanresults_cleanup(&res);
+    wld_scan_cleanupScanResults(&res);
 }
 
 /**

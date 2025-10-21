@@ -1,0 +1,319 @@
+{
+    "SurroundingChannels": [
+        {
+            "Accesspoint": [
+                {
+                    "RSSI": -41,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_0",
+                            "BSSID": "00:00:00:00:00:10"
+                        }
+                    ],
+                    "BSSID": "00:00:00:00:00:10"
+                },
+                {
+                    "RSSI": -41,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_5",
+                            "BSSID": "00:00:00:05:05:15"
+                        }
+                    ],
+                    "BSSID": "00:00:00:05:05:15"
+                },
+                {
+                    "RSSI": -47,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_6",
+                            "BSSID": "00:00:00:00:00:16"
+                        }
+                    ],
+                    "BSSID": "00:00:00:00:00:16"
+                },
+                {
+                    "RSSI": -47,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_11",
+                            "BSSID": "00:00:00:05:05:1B"
+                        }
+                    ],
+                    "BSSID": "00:00:00:05:05:1B"
+                },
+                {
+                    "RSSI": -53,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_12",
+                            "BSSID": "00:00:00:00:00:1C"
+                        }
+                    ],
+                    "BSSID": "00:00:00:00:00:1C"
+                },
+                {
+                    "RSSI": -53,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_17",
+                            "BSSID": "00:00:00:05:05:11"
+                        }
+                    ],
+                    "BSSID": "00:00:00:05:05:11"
+                }
+            ],
+            "Channel": 36
+        },
+        {
+            "Accesspoint": [
+                {
+                    "RSSI": -41,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_1",
+                            "BSSID": "00:00:00:01:01:11"
+                        }
+                    ],
+                    "BSSID": "00:00:00:01:01:11"
+                },
+                {
+                    "RSSI": -47,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_7",
+                            "BSSID": "00:00:00:01:01:17"
+                        }
+                    ],
+                    "BSSID": "00:00:00:01:01:17"
+                },
+                {
+                    "RSSI": -53,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_13",
+                            "BSSID": "00:00:00:01:01:1D"
+                        }
+                    ],
+                    "BSSID": "00:00:00:01:01:1D"
+                }
+            ],
+            "Channel": 48
+        },
+        {
+            "Accesspoint": [
+                {
+                    "RSSI": -45,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_2",
+                            "BSSID": "00:00:00:02:02:12"
+                        }
+                    ],
+                    "BSSID": "00:00:00:02:02:12"
+                },
+                {
+                    "RSSI": -51,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_8",
+                            "BSSID": "00:00:00:02:02:18"
+                        }
+                    ],
+                    "BSSID": "00:00:00:02:02:18"
+                },
+                {
+                    "RSSI": -57,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_14",
+                            "BSSID": "00:00:00:02:02:1E"
+                        }
+                    ],
+                    "BSSID": "00:00:00:02:02:1E"
+                }
+            ],
+            "Channel": 60
+        },
+        {
+            "Accesspoint": [
+                {
+                    "RSSI": -41,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_3",
+                            "BSSID": "00:00:00:03:03:13"
+                        }
+                    ],
+                    "BSSID": "00:00:00:03:03:13"
+                },
+                {
+                    "RSSI": -47,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_9",
+                            "BSSID": "00:00:00:03:03:19"
+                        }
+                    ],
+                    "BSSID": "00:00:00:03:03:19"
+                },
+                {
+                    "RSSI": -53,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_15",
+                            "BSSID": "00:00:00:03:03:1F"
+                        }
+                    ],
+                    "BSSID": "00:00:00:03:03:1F"
+                }
+            ],
+            "Channel": 100
+        },
+        {
+            "Accesspoint": [
+                {
+                    "RSSI": -49,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_4",
+                            "BSSID": "00:00:00:04:04:14"
+                        }
+                    ],
+                    "BSSID": "00:00:00:04:04:14"
+                },
+                {
+                    "RSSI": -55,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_10",
+                            "BSSID": "00:00:00:04:04:1A"
+                        }
+                    ],
+                    "BSSID": "00:00:00:04:04:1A"
+                },
+                {
+                    "RSSI": -61,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "ssid_16",
+                            "BSSID": "00:00:00:04:04:10"
+                        }
+                    ],
+                    "BSSID": "00:00:00:04:04:10"
+                }
+            ],
+            "Channel": 108
+        },
+        {
+            "Accesspoint": [
+                {
+                    "RSSI": -20,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "new-ssid_0",
+                            "BSSID": "00:00:00:A0:A0:10"
+                        }
+                    ],
+                    "BSSID": "00:00:00:A0:A0:10"
+                }
+            ],
+            "Channel": 120
+        },
+        {
+            "Accesspoint": [
+                {
+                    "RSSI": -19,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "new-ssid_1",
+                            "BSSID": "00:00:00:A1:A1:11"
+                        }
+                    ],
+                    "BSSID": "00:00:00:A1:A1:11"
+                }
+            ],
+            "Channel": 124
+        },
+        {
+            "Accesspoint": [
+                {
+                    "RSSI": -22,
+                    "SSID": [
+                        {
+                            "StationCount": 0,
+                            "ChannelUtilization": 0,
+                            "Bandwidth": 20,
+                            "SSID": "new-ssid_2",
+                            "BSSID": "00:00:00:A2:A2:12"
+                        }
+                    ],
+                    "BSSID": "00:00:00:A2:A2:12"
+                }
+            ],
+            "Channel": 128
+        }
+    ],
+    "NrCoChannelAP": 6,
+    "ScanInProgress": false
+}
