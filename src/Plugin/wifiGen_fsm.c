@@ -335,12 +335,15 @@ static bool s_doEnableAp(T_AccessPoint* pAP, T_Radio* pRad) {
     ASSERTI_TRUE(pRad->enable, true, ME, "%s: radio disabled", pRad->Name);
     ASSERTI_TRUE(wifiGen_hapd_isAlive(pRad), true, ME, "%s: hostapd stopped", pRad->Name);
     T_AccessPoint* pMainAPCur = wld_rad_hostapd_getRunMainVap(pRad);
-    ASSERT_NOT_NULL(pMainAPCur, true, ME, "%s: no main vap iface for rad %s", pAP->alias, pRad->Name);
+    if(pMainAPCur == NULL) {
+        SAH_TRACEZ_WARNING(ME, "%s: no main vap iface for rad %s", pAP->alias, pRad->Name);
+    }
+
     bool enable = pAP->enable;
     SAH_TRACEZ_INFO(ME, "%s: enable vap %d", pAP->alias, enable);
     wld_secDmn_action_rc_ne rc;
     T_AccessPoint* pMainAPCfg = wld_rad_hostapd_getCfgMainVap(pRad);
-    bool mainIfaceChanged = ((pMainAPCur != pMainAPCfg) && ((pAP == pMainAPCur) || (pAP == pMainAPCfg)));
+    bool mainIfaceChanged = ((pMainAPCur != pMainAPCfg) && ((pMainAPCur == NULL) || (pAP == pMainAPCur) || (pAP == pMainAPCfg)));
     bool wpaCtrlEnaChanged = (wld_wpaCtrlInterface_checkConnectionPath(pAP->wpaCtrlInterface) != wld_hostapd_ap_needWpaCtrlIface(pAP));
     if(mainIfaceChanged || wpaCtrlEnaChanged) {
         if(wld_rad_hasMloSupport(pRad)) {
