@@ -188,7 +188,7 @@ swl_rc_ne wld_nl80211_parseMgmtFrameTxStatus(struct nlattr* tb[], wld_nl80211_mg
     return SWL_RC_OK;
 }
 
-static swl_rc_ne s_parseMloLink(struct nlattr* tb[], wld_nl80211_mloLinkInfo_t* pMloLink) {
+static swl_rc_ne s_parseMloLink(struct nlattr* tb[], struct nlattr* pAggSinfo[], wld_nl80211_mloLinkInfo_t* pMloLink) {
     ASSERTS_NOT_NULL(pMloLink, SWL_RC_INVALID_PARAM, ME, "NULL");
     memset(pMloLink, 0, sizeof(*pMloLink));
     pMloLink->linkId = -1;
@@ -197,16 +197,43 @@ static swl_rc_ne s_parseMloLink(struct nlattr* tb[], wld_nl80211_mloLinkInfo_t* 
     pMloLink->linkId = nla_get_u8(tb[NL80211_ATTR_MLO_LINK_ID]);
     NLA_GET_DATA(pMloLink->linkMac.bMac, tb[NL80211_ATTR_MAC], SWL_MAC_BIN_LEN);
     NLA_GET_DATA(pMloLink->mldMac.bMac, tb[NL80211_ATTR_MLD_ADDR], SWL_MAC_BIN_LEN);
-    NLA_GET_VAL(pMloLink->stats.txBytes, nla_get_u64, tb[NL80211_STA_INFO_TX_BYTES64]);
-    NLA_GET_VAL(pMloLink->stats.rxBytes, nla_get_u64, tb[NL80211_STA_INFO_RX_BYTES64]);
-    NLA_GET_VAL(pMloLink->stats.txPackets, nla_get_u32, tb[NL80211_STA_INFO_TX_PACKETS]);
-    NLA_GET_VAL(pMloLink->stats.rxPackets, nla_get_u32, tb[NL80211_STA_INFO_RX_PACKETS]);
-    NLA_GET_VAL(pMloLink->stats.txRetries, nla_get_u32, tb[NL80211_STA_INFO_TX_RETRIES]);
-    NLA_GET_VAL(pMloLink->stats.rxRetries, nla_get_u32, tb[NL80211_STA_INFO_RX_RETRIES]);
-    NLA_GET_VAL(pMloLink->stats.txErrors, nla_get_u32, tb[NL80211_STA_INFO_TX_FAILED]);
-    NLA_GET_VAL(pMloLink->stats.rxErrors, nla_get_u64, tb[NL80211_STA_INFO_RX_DROP_MISC]);
-    NLA_GET_VAL(pMloLink->stats.rssiDbm, nla_get_u8, tb[NL80211_STA_INFO_SIGNAL]);
-    NLA_GET_VAL(pMloLink->stats.rssiAvgDbm, nla_get_u8, tb[NL80211_STA_INFO_SIGNAL_AVG]);
+
+    /* In Linux < 6.4 version, MLO (Multi-Link Operation) is not officially
+     * supported in mainline cfg80211 or mac80211, so there is no native support to retrieve
+     * per-link station signal (e.g., RSSI per link) using NL80211_MLO_LINK_ATTR_STA_INFO or NL80211_ATTR_MLO_LINKS.
+     * station info will shows aggregated station info, not per-link until supporting that.
+     */
+    ASSERTS_NOT_NULL(pAggSinfo, SWL_RC_OK, ME, "NULL");
+    if(pAggSinfo[NL80211_STA_INFO_TX_BYTES64]) {
+        pMloLink->stats.txBytes = nla_get_u64(pAggSinfo[NL80211_STA_INFO_TX_BYTES64]);
+    } else if(pAggSinfo[NL80211_STA_INFO_TX_BYTES]) {
+        pMloLink->stats.txBytes = nla_get_u32(pAggSinfo[NL80211_STA_INFO_TX_BYTES]);
+    }
+    if(pAggSinfo[NL80211_STA_INFO_TX_PACKETS]) {
+        pMloLink->stats.txPackets = nla_get_u32(pAggSinfo[NL80211_STA_INFO_TX_PACKETS]);
+    }
+    if(pAggSinfo[NL80211_STA_INFO_RX_PACKETS]) {
+        pMloLink->stats.rxPackets = nla_get_u32(pAggSinfo[NL80211_STA_INFO_RX_PACKETS]);
+    }
+    if(pAggSinfo[NL80211_STA_INFO_TX_RETRIES]) {
+        pMloLink->stats.txRetries = nla_get_u32(pAggSinfo[NL80211_STA_INFO_TX_RETRIES]);
+    }
+    if(pAggSinfo[NL80211_STA_INFO_RX_RETRIES]) {
+        pMloLink->stats.txRetries = nla_get_u32(pAggSinfo[NL80211_STA_INFO_RX_RETRIES]);
+    }
+    if(pAggSinfo[NL80211_STA_INFO_TX_FAILED]) {
+        pMloLink->stats.txErrors = nla_get_u32(pAggSinfo[NL80211_STA_INFO_TX_FAILED]);
+    }
+    if(pAggSinfo[NL80211_STA_INFO_RX_DROP_MISC]) {
+        pMloLink->stats.rxErrors = nla_get_u64(pAggSinfo[NL80211_STA_INFO_RX_DROP_MISC]);
+    }
+    if(pAggSinfo[NL80211_STA_INFO_SIGNAL]) {
+        pMloLink->stats.rssiDbm = nla_get_u8(pAggSinfo[NL80211_STA_INFO_SIGNAL]);
+    }
+    if(pAggSinfo[NL80211_STA_INFO_SIGNAL_AVG]) {
+        pMloLink->stats.rssiAvgDbm = nla_get_u8(pAggSinfo[NL80211_STA_INFO_SIGNAL_AVG]);
+    }
+
     return SWL_RC_OK;
 }
 
@@ -223,7 +250,7 @@ static uint32_t s_parseMloLinks(struct nlattr* tb[], wld_nl80211_ifaceMloLinkInf
     nla_for_each_nested(list, tb[NL80211_ATTR_MLO_LINKS], rem) {
         nla_parse_nested(link, NL80211_ATTR_MAX, list, NULL);
         wld_nl80211_mloLinkInfo_t linkInfo;
-        if((s_parseMloLink(link, &linkInfo) < SWL_RC_OK) || (linkInfo.linkId < 0) || (swl_mac_binIsNull(&linkInfo.linkMac))) {
+        if((s_parseMloLink(link, NULL, &linkInfo) < SWL_RC_OK) || (linkInfo.linkId < 0) || (swl_mac_binIsNull(&linkInfo.linkMac))) {
             SAH_TRACEZ_WARNING(ME, "skip link %d: missing info", linkInfo.linkId);
             continue;
         }
@@ -1281,7 +1308,7 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
                 break;
             }
             nla_parse_nested(link, NL80211_ATTR_MAX, list, NULL);
-            if((s_parseMloLink(link, &pStation->linksInfo[i]) < SWL_RC_OK) ||
+            if((s_parseMloLink(link, pSinfo, &pStation->linksInfo[i]) < SWL_RC_OK) ||
                (pStation->linksInfo[i].linkId < 0) ||
                (swl_mac_binIsNull(&pStation->linksInfo[i].linkMac))) {
                 SAH_TRACEZ_WARNING(ME, "skip link %d: missing info", pStation->linksInfo[i].linkId);
