@@ -1183,8 +1183,22 @@ static swl_80211_mgmtFrameHandlers_cb s_mgmtFrameTxStatusHandlers = {
 static void s_mgmtFrameTxStatusCb(void* pRef, void* pData _UNUSED, size_t frameLen, swl_80211_mgmtFrame_t* mgmtFrame, bool isAck _UNUSED) {
     T_AccessPoint* pAP = (T_AccessPoint*) pRef;
     ASSERT_NOT_NULL(pAP, , ME, "NULL");
+    ASSERT_NOT_NULL(pAP->pSSID, , ME, "NULL");
     ASSERT_NOT_NULL(mgmtFrame, , ME, "NULL");
-    swl_80211_handleMgmtFrame(pRef, (swl_bit8_t*) mgmtFrame, frameLen, &s_mgmtFrameTxStatusHandlers);
+
+    T_AccessPoint* transmitterAP = pAP;
+    if(!SWL_MAC_BIN_MATCHES(pAP->pSSID->BSSID, &mgmtFrame->bssid)) {
+        // If the event is received on the primary link, try to identify the link over which the frame was actually transmitted
+        SAH_TRACEZ_INFO(ME, "%s: ap mac ("MAC_PRINT_FMT ") does not match frame BSSID ("MAC_PRINT_FMT ")",
+                        pAP->alias,
+                        MAC_PRINT_ARG(pAP->pSSID->BSSID),
+                        MAC_PRINT_ARG(mgmtFrame->bssid.bMac));
+        T_SSID* pSSID = wld_mld_getLinkSsid(wld_mld_getNeighLinkByMacAddress(pAP->pSSID->pMldLink, &mgmtFrame->bssid));
+        transmitterAP = pSSID ? pSSID->AP_HOOK : NULL;
+    }
+
+    ASSERT_NOT_NULL(transmitterAP, , ME, "NULL");
+    swl_80211_handleMgmtFrame(transmitterAP, (swl_bit8_t*) mgmtFrame, frameLen, &s_mgmtFrameTxStatusHandlers);
 }
 
 swl_rc_ne wifiGen_setVapEvtHandlers(T_AccessPoint* pAP) {

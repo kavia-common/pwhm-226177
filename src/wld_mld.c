@@ -385,6 +385,19 @@ wld_mldLink_t* wld_mld_getNeighLinkByRad(wld_mldLink_t* pLink, T_Radio* pRad) {
     return NULL;
 }
 
+wld_mldLink_t* wld_mld_getNeighLinkByMacAddress(wld_mldLink_t* pLink, swl_macBin_t* macBin) {
+    ASSERTS_NOT_NULL(pLink, NULL, ME, "NULL");
+    ASSERTS_NOT_NULL(macBin, NULL, ME, "NULL");
+    ASSERTS_TRUE(amxc_llist_it_is_in_list(&pLink->it), NULL, ME, "Not a list item");
+    amxc_llist_for_each(it, pLink->it.llist) {
+        wld_mldLink_t* pLink = amxc_container_of(it, wld_mldLink_t, it);
+        if((pLink->pSSID != NULL) && SWL_MAC_BIN_MATCHES(pLink->pSSID->BSSID, macBin)) {
+            return pLink;
+        }
+    }
+    return NULL;
+}
+
 swl_rc_ne wld_mld_setPrimaryLink(wld_mldLink_t* pLink) {
     ASSERTS_NOT_NULL(pLink, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_TRUE(wld_mld_isLinkEnabled(pLink), SWL_RC_ERROR, ME, "disabled link %s can not be set as primary", s_getLinkName(pLink));

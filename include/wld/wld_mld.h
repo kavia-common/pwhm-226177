@@ -116,6 +116,7 @@ uint32_t wld_mld_countNeighActiveLinks(wld_mldLink_t* pLink);
 uint32_t wld_mld_countNeighEnabledLinks(wld_mldLink_t* pLink);
 uint32_t wld_mld_countNeighUsableLinks(wld_mldLink_t* pLink);
 wld_mldLink_t* wld_mld_getNeighLinkByRad(wld_mldLink_t* pLink, T_Radio* pRad);
+wld_mldLink_t* wld_mld_getNeighLinkByMacAddress(wld_mldLink_t* pLink, swl_macBin_t* macBin);
 
 wld_mldLink_t* wld_mld_firstNeighLink(wld_mldLink_t* pLink);
 wld_mldLink_t* wld_mld_nextNeighLink(wld_mldLink_t* pLink);
