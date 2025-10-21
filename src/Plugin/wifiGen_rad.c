@@ -66,6 +66,7 @@
 #include "wld/wld_radio.h"
 #include "wld/wld_channel.h"
 #include "wld/wld_chanmgt.h"
+#include "wld/wld_chaninfo.h"
 #include "wld/wld_util.h"
 #include "wld/wld_linuxIfUtils.h"
 #include "wld/wld_linuxIfStats.h"
@@ -442,6 +443,16 @@ static void s_updateBandAndStandard(T_Radio* pRad, wld_nl80211_bandDef_t bands[]
     pRad->supportedDataTransmitRates = pOperBand->supportedDataTransmitRates;
 }
 
+/*
+ * ETSI EN 301 893 Table D.1: DFS requirement values
+ * the duration of Off-Channel CAC performed in an ETSI regulatory domain must be longer than the
+ * on-channel CAC performed.
+ * These are defaults increasing Off-channel CAC duration:
+ * - On regular DFS channels, the CAC duration is increased from 1 minute to minimum 6 minutes.
+ * - On DFS weather radar channels, the CAC duration is increased from 10 minutes to minimum 60 minutes.
+ */
+#define BG_CAC_DUR_MULTIPLIER 7 // 6 + 1 margin
+
 void s_readChanInfo(T_Radio* pRad, wld_nl80211_bandDef_t* pOperBand) {
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
     wld_channel_clear_flags(pRad);
@@ -454,9 +465,29 @@ void s_readChanInfo(T_Radio* pRad, wld_nl80211_bandDef_t* pOperBand) {
         }
         wld_channel_mark_available_channel(chanSpec);
         if(pChan->isDfs) {
-            SAH_TRACEZ_INFO(ME, "%s: mark radar req, channel [%d] clear_time [%d]", pRad->Name, chanSpec.channel, pChan->dfsCacTime);
             wld_channel_mark_radar_req_channel(chanSpec);
             wld_channel_set_channel_clear_time(chanSpec.channel, pChan->dfsCacTime);
+            uint32_t dfsCacTime = wld_channel_get_channel_clear_time(chanSpec.channel);
+
+            /* fix low values of ETSI dfs cac time for weather channels */
+            if(swl_channel_isWeather(chanSpec.channel) &&
+               (getCountryZone(pRad->regulatoryDomainIdx) == SWL_OP_CLASS_COUNTRY_EU) &&
+               (dfsCacTime < WLD_CHAN_DFS_EXTENDED_CLEAR_TIME_MS)) {
+                dfsCacTime = WLD_CHAN_DFS_EXTENDED_CLEAR_TIME_MS;
+                wld_channel_set_channel_clear_time(chanSpec.channel, WLD_CHAN_DFS_EXTENDED_CLEAR_TIME_MS);
+            }
+
+            /*
+             * calculate bg dfs cac time: assuming off-channel clearing by jumps.
+             * This bgcac time hw dependent,
+             * as the vendor may use a dedicated chain to do onchannel cac for the bgdfs.
+             * Therefore, the whm vendor module may adjust channel's bgdfs cac time
+             */
+            uint32_t bgdfsCacTime = dfsCacTime * BG_CAC_DUR_MULTIPLIER;
+
+            SAH_TRACEZ_INFO(ME, "%s: mark radar req, channel [%d] clear_time [%d] (hwVal:%d) bg_clear_time [%d]",
+                            pRad->Name, chanSpec.channel, dfsCacTime, pChan->dfsCacTime, bgdfsCacTime);
+            wld_channel_set_channel_bg_clear_time(chanSpec.channel, bgdfsCacTime);
         }
         switch(pChan->status) {
         case WLD_NL80211_CHAN_AVAILABLE: wld_channel_clear_passive_channel(chanSpec); break;
@@ -887,7 +918,7 @@ static swl_rc_ne s_checkAndStartZwDfs(T_Radio* pRad, bool direct) {
        !swl_channel_isDfs(pRad->targetChanspec.chanspec.channel) ||
        !wld_rad_isUpExt(pRad) ||
        (wld_chanmgt_getCurBw(pRad) > pRad->maxChannelBandwidth) ||
-       (pRad->bgdfs_config.status == BGDFS_STATUS_OFF)) {
+       (pRad->bgdfs_config.status != BGDFS_STATUS_IDLE)) {
         return SWL_RC_DONE;
     }
     if(wld_channel_is_band_passive(pRad->targetChanspec.chanspec)) {
@@ -1154,14 +1185,48 @@ swl_rc_ne wifiGen_rad_getSpectrumInfo(T_Radio* rad, bool update, amxc_llist_t* l
     return rc;
 }
 
+
+/*
+ * check whether full or half chanspec has to be cleared
+ * as nl80211 rejects bgdfs of already cleared channels
+ */
+static swl_rc_ne s_getChspecToBeCleared(swl_chanspec_t inCs, swl_chanspec_t* pOutCs) {
+    if(!swl_chanspec_isDfs(inCs) || !wld_channel_is_band_passive(inCs)) {
+        return SWL_RC_INVALID_PARAM;
+    }
+    swl_chanspec_t outCs = inCs;
+    if(inCs.bandwidth > SWL_BW_20MHZ) {
+        swl_chanspec_t h1 = SWL_CHANSPEC_NEW(inCs.channel, inCs.bandwidth - 1, inCs.band);
+        swl_chanspec_t h2 = SWL_CHANSPEC_NEW(swl_channel_getComplementaryBaseChannel(&inCs), inCs.bandwidth - 1, inCs.band);
+        bool isH1Passive = wld_channel_is_band_passive(h1);
+        bool isH2Passive = wld_channel_is_band_passive(h2);
+        if(isH1Passive && !isH2Passive) {
+            outCs = h1;
+        } else if(!isH1Passive && isH2Passive) {
+            outCs = h2;
+        }
+    }
+    W_SWL_SETPTR(pOutCs, outCs);
+    return SWL_RC_OK;
+}
+
 swl_rc_ne wifiGen_rad_bgDfsStartExt(T_Radio* pRad, wld_startBgdfsArgs_t* args) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(args, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_TRUE(pRad->pFA->mfn_misc_has_support(pRad, NULL, "RADAR_BACKGROUND", 0), SWL_RC_ERROR, ME,
                 "%s: radar background not supported", pRad->Name);
     ASSERT_TRUE((wld_rad_isUpExt(pRad) && !wld_bgdfs_isRunning(pRad)), SWL_RC_ERROR, ME, "%s: not ready", pRad->Name);
+    swl_chanspec_t inCs = SWL_CHANSPEC_NEW(args->channel, args->bandwidth ? : wld_chanmgt_getDefaultSupportedBandwidth(pRad), pRad->operatingFrequencyBand);
+    swl_rc_ne rc = s_getChspecToBeCleared(inCs, &inCs);
+    ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: %s can not be cleared", pRad->Name, swl_typeChanspecExt_toBuf32Ref(&inCs).buf);
+    wld_startBgdfsArgs_t tmpArgs = *args;
+    tmpArgs.channel = inCs.channel;
+    tmpArgs.bandwidth = inCs.bandwidth;
+    SAH_TRACEZ_INFO(ME, "%s: starting bgDfs of %s (args:c:%d,b:%d) ",
+                    pRad->Name, swl_typeChanspecExt_toBuf32Ref(&inCs).buf,
+                    args->channel, args->bandwidth);
 
-    swl_rc_ne rc = wld_rad_nl80211_bgDfsStart(pRad, args);
+    rc = wld_rad_nl80211_bgDfsStart(pRad, &tmpArgs);
     ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to start bgDfs", pRad->Name);
     // let bgdfs start event update the datamodel
     return rc;
@@ -1172,7 +1237,12 @@ swl_rc_ne wifiGen_rad_bgDfsStop(T_Radio* pRad) {
     ASSERTI_TRUE(wld_bgdfs_isRunning(pRad), SWL_RC_OK, ME, "%s: bgDfs not running", pRad->Name);
 
     swl_rc_ne rc = wld_rad_nl80211_bgDfsStop(pRad);
-    ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to stop bgDfs", pRad->Name);
+    if(!swl_rc_isOk(rc)) {
+        SAH_TRACEZ_ERROR(ME, "%s: fail to stop bgDfs", pRad->Name);
+        if(wld_rad_isUpExt(pRad)) {
+            return rc;
+        }
+    }
     wld_bgdfs_notifyClearEnded(pRad, DFS_RESULT_OTHER);
     wld_rad_updateState(pRad, false);
     return rc;

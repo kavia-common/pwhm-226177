@@ -1072,6 +1072,7 @@ swl_rc_ne wld_nl80211_bgDfsStart(wld_nl80211_state_t* state, uint32_t ifIndex, i
 swl_rc_ne wld_nl80211_bgDfsStop(wld_nl80211_state_t* state, uint32_t ifIndex, int8_t ifMloLinkId) {
     swl_rc_ne rc = SWL_RC_INVALID_PARAM;
     ASSERT_NOT_NULL(state, rc, ME, "NULL");
+    ASSERTI_TRUE(NL80211_CMD_IS_SPECIFIED(NL80211_CMD_STOP_BGRADAR_DETECT), SWL_RC_ERROR, ME, "cmd STOP_BGRADAR_DETECT not supported");
 
     SAH_TRACEZ_INFO(ME, "Stopping BG_DFS ifIndex(%d)", ifIndex);
 

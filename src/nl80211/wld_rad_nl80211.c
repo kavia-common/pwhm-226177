@@ -700,7 +700,10 @@ swl_rc_ne wld_rad_nl80211_bgDfsStart(T_Radio* pRadio, wld_startBgdfsArgs_t* args
     int32_t index = 0;
     wld_rad_nl80211_getFirstEnabledVapLinkInfo(pRadio, &index, &ifMloLinkId);
 
-    return wld_nl80211_bgDfsStart(wld_nl80211_getSharedState(), index, ifMloLinkId, bgDfsChanspec);
+    swl_rc_ne rc = wld_nl80211_bgDfsStart(wld_nl80211_getSharedState(), index, ifMloLinkId, bgDfsChanspec);
+    ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to start bgDfs (index:%d, ifMloLinkId:%d, chSpec:%s)",
+                pRadio->Name, index, ifMloLinkId, swl_typeChanspecExt_toBuf32Ref(&bgDfsChanspec).buf);
+    return rc;
 }
 
 swl_rc_ne wld_rad_nl80211_bgDfsStop(T_Radio* pRadio) {

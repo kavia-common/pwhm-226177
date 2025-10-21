@@ -97,6 +97,9 @@ int wld_channel_get_channel_to_clear(T_Radio* pRad, swl_bandwidth_e operatingCha
 void wld_channel_set_channel_clear_time(int channel, uint32_t time);
 int wld_channel_get_channel_clear_time(int channel);
 int wld_channel_get_band_clear_time(swl_chanspec_t chanspec);
+void wld_channel_set_channel_bg_clear_time(int channel, uint32_t time);
+int wld_channel_get_channel_bg_clear_time(int channel);
+int wld_channel_get_band_bg_clear_time(swl_chanspec_t chanspec);
 
 bool wld_channel_is_long_wait(swl_chanspec_t chanspec); //Deprecated
 bool wld_channel_is_long_wait_band(swl_chanspec_t chanspec);

@@ -643,6 +643,12 @@ swl_rc_ne wld_chanmgt_setTargetChanspec(T_Radio* pR, swl_chanspec_t chanspec, bo
     pR->targetChanspec.reason = reason;
     pR->targetChanspec.changeTime = swl_time_getMonoSec();
     pR->targetChanspec.isApplied = SWL_TRL_UNKNOWN;
+    /* set timeout for the call
+     * if the band is cleared use default timeout
+     * if not, wait clear time in addition */
+    pR->targetChanspec.estimatedChangeDuration = WLD_CHANMGT_REQ_CHANGE_CS_TIMEOUT;
+    pR->targetChanspec.estimatedChangeDuration += wld_channel_is_band_passive(chanspec) ? wld_channel_get_band_clear_time(chanspec) : 0;
+
     pR->channelChangeReason = reason;
     if(reasonExt != NULL) {
         swl_str_copy(pR->targetChanspec.reasonExt, sizeof(pR->targetChanspec.reasonExt), reasonExt);
@@ -758,13 +764,8 @@ amxd_status_t _Radio_setChanspec(amxd_object_t* obj,
     /* register callId & cancel callback */
     swl_function_deferCb(&pR->callIdReqChanspec, func, ret, s_setChanspecCanceled, pR);
 
-    /* set timeout for the call
-     * if the band is cleared use default timeout
-     * if not, wait clear time in addition */
-    uint32_t timeout = WLD_CHANMGT_REQ_CHANGE_CS_TIMEOUT;
-    timeout += wld_channel_is_band_passive(chanspec) ? wld_channel_get_band_clear_time(chanspec) : 0;
     amxp_timer_new(&pR->timerReqChanspec, s_setChanspecTimeout, pR);
-    amxp_timer_start(pR->timerReqChanspec, timeout);
+    amxp_timer_start(pR->timerReqChanspec, pR->targetChanspec.estimatedChangeDuration);
 
     if(!direct) {
         /* schedule action */

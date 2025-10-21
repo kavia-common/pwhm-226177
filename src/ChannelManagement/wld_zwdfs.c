@@ -90,8 +90,9 @@ static wld_zwdfs_fsmState_e s_handleFsmStartEvent(const wld_zwdfs_fsmCtx_t* pCtx
         return ZWDFS_FSM_STATE_FG_CLEARING;
     }
     if(!wld_rad_is_5ghz(pRad) ||
+       !swl_chanspec_isDfs(pRad->targetChanspec.chanspec) ||
        !wld_channel_is_band_passive(pRad->targetChanspec.chanspec) ||
-       !isBgDfsEnabled) {
+       (pRad->bgdfs_config.status != BGDFS_STATUS_IDLE)) {
         SAH_TRACEZ_INFO(ME, "%s: ZW_DFS direct switch to %u", pRad->Name, pRad->targetChanspec.chanspec.channel);
         SWL_CALL(pRad->pFA->mfn_wrad_setChanspec, pRad, pCtx->direct);
         /* next state */
@@ -217,6 +218,27 @@ static void s_radioStatusChange(wld_radio_status_change_event_t* event) {
     case CM_RAD_FG_CAC:
     case CM_RAD_BG_CAC:
     case CM_RAD_BG_CAC_EXT:
+        if(isSameTgtChspec) {
+            if((pRad->detailedState) == CM_RAD_FG_CAC) {
+                fsm->fsmCtx.estimatedCacTime = wld_channel_get_band_clear_time(fsm->fsmCtx.tgtChSpec);
+            } else {
+                fsm->fsmCtx.estimatedCacTime = wld_channel_get_band_bg_clear_time(fsm->fsmCtx.tgtChSpec);
+            }
+            uint32_t zwdfsTmOut = WLD_ZWDFS_REQ_CHANGE_CS_TIMEOUT + fsm->fsmCtx.estimatedCacTime;
+            if(amxp_timer_remaining_time(fsm->fsmCtx.timer) > 0) {
+                amxp_timer_start(fsm->fsmCtx.timer, zwdfsTmOut);
+            }
+            uint32_t setChsTmOut = amxp_timer_remaining_time(pRad->timerReqChanspec);
+            if(zwdfsTmOut > setChsTmOut) {
+                SAH_TRACEZ_INFO(ME, "%s: update estimated setChanspec duration %d => %d",
+                                pRad->Name, setChsTmOut, zwdfsTmOut);
+                pRad->targetChanspec.estimatedChangeDuration = zwdfsTmOut;
+                if(setChsTmOut > 0) {
+                    amxp_timer_start(pRad->timerReqChanspec, zwdfsTmOut);
+                }
+            }
+        }
+        break;
     case CM_RAD_BG_CAC_NS:
     case CM_RAD_BG_CAC_EXT_NS:
         break;
@@ -267,11 +289,12 @@ swl_rc_ne wld_zwdfs_start(T_Radio* pRad, bool direct) {
     int ret = amxp_timer_new(&fsm->fsmCtx.timer, s_zwdfsTimeout, pRad);
     ASSERT_FALSE(ret != 0, SWL_RC_ERROR, ME, "%s: error timer", pRad->Name);
     int timeout = WLD_ZWDFS_REQ_CHANGE_CS_TIMEOUT;
-    timeout += wld_channel_get_band_clear_time(pRad->targetChanspec.chanspec);
+    swl_rc_ne rc = s_execFsm(fsm, ZWDFS_FSM_EVENT_START, &fsm->fsmCtx);
+    timeout += fsm->fsmCtx.estimatedCacTime;
     amxp_timer_start(fsm->fsmCtx.timer, timeout);
     SAH_TRACEZ_INFO(ME, "%s: start ZWDFS on %s timeout=%d", pRad->Name,
                     swl_typeChanspec_toBuf32(pRad->targetChanspec.chanspec).buf, timeout);
-    return s_execFsm(fsm, ZWDFS_FSM_EVENT_START, &fsm->fsmCtx);
+    return rc;
 }
 
 swl_rc_ne wld_zwdfs_stop(T_Radio* pRad) {

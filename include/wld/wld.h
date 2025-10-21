@@ -1429,7 +1429,8 @@ typedef struct {
     wld_channelChangeReason_e reason;
     char reasonExt[128];
     swl_timeMono_t changeTime;
-    swl_trl_e isApplied; //True:applied, False:failed, Unknown:ongoing
+    swl_trl_e isApplied;              //True:applied, False:failed, Unknown:ongoing
+    uint32_t estimatedChangeDuration; //estimated change duration in ms, including clear time when needed
 } wld_rad_detailedChanState_t;
 
 typedef enum {

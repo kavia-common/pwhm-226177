@@ -94,6 +94,7 @@ typedef struct {
     bool direct;
     amxp_timer_t* timer;
     swl_chanspec_t tgtChSpec;
+    uint32_t estimatedCacTime;
 } wld_zwdfs_fsmCtx_t;
 
 typedef struct {

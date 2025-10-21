@@ -144,24 +144,57 @@ int wld_channel_get_center_channel(swl_chanspec_t chanspec) {
 }
 
 /**
+ * Run action for every channel of chanspec.
+ */
+typedef void (* chanActionCb_f)(swl_chanspec_t chanspec, swl_channel_t chan, void* data);
+
+static void s_runPerBandChan(swl_chanspec_t chanspec, chanActionCb_f fct, void* data) {
+    swl_channel_t temp_channel = swl_chanspec_getBaseChannel(&chanspec);
+    for(uint8_t i = 0; i < swl_chanspec_getNrChannelsInBand(&chanspec); i++) {
+        SWL_CALL(fct, chanspec, temp_channel, data);
+        temp_channel += CHANNEL_INCREMENT;
+    }
+}
+
+/**
  * Returns the time in milliseconds that it takes to clear this band.
  */
+static void s_getChanCacTime(swl_chanspec_t chanspec _UNUSED, swl_channel_t chan, void* data) {
+    ASSERTS_NOT_NULL(data, , ME, "NULL");
+    int* pTime = (int*) data;
+    int temp_time = wld_channel_get_channel_clear_time(chan);
+    if(temp_time > *pTime) {
+        *pTime = temp_time;
+    }
+}
+
 int wld_channel_get_band_clear_time(swl_chanspec_t chanspec) {
     if(chanspec.band != SWL_FREQ_BAND_EXT_5GHZ) {
         return 0;
     }
-    int nrChannels = swl_chanspec_getNrChannelsInBand(&chanspec);
     int time = 0;
-    int temp_time = 0;
-    int i = 0;
-    int temp_channel = swl_chanspec_getBaseChannel(&chanspec);
-    for(i = 0; i < nrChannels; i++) {
-        temp_time = wld_channel_get_channel_clear_time(temp_channel);
-        if(temp_time > time) {
-            time = temp_time;
-        }
-        temp_channel += CHANNEL_INCREMENT;
+    s_runPerBandChan(chanspec, s_getChanCacTime, &time);
+    return time;
+}
+
+/**
+ * Returns the time in milliseconds that it takes to clear this band, in background.
+ */
+static void s_getChanBgCacTime(swl_chanspec_t chanspec _UNUSED, swl_channel_t chan, void* data) {
+    ASSERTS_NOT_NULL(data, , ME, "NULL");
+    int* pTime = (int*) data;
+    int temp_time = wld_channel_get_channel_bg_clear_time(chan);
+    if(temp_time > *pTime) {
+        *pTime = temp_time;
     }
+}
+
+int wld_channel_get_band_bg_clear_time(swl_chanspec_t chanspec) {
+    if(chanspec.band != SWL_FREQ_BAND_EXT_5GHZ) {
+        return 0;
+    }
+    int time = 0;
+    s_runPerBandChan(chanspec, s_getChanBgCacTime, &time);
     return time;
 }
 
