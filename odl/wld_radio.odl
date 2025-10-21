@@ -575,7 +575,7 @@ define probelist_t{
 		 * that it will be kicked from all other vaps on the same radio. </p>
 		 */
 		%persistent bool KickRoamingStation {
-			default true;
+			default false;
 		}
 
 		/**

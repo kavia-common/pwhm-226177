@@ -97,7 +97,7 @@
     "Enable": true,
     "CurrentOperatingChannelBandwidth": "20MHz",
     "OfdmaEnable": true,
-    "KickRoamingStation": true,
+    "KickRoamingStation": false,
     "SupportedHtMcsSet": "AAAAAAAAAAAAAAAAAAAAAA==",
     "AP_Mode": true,
     "DFSChannelChangeEventCounter": 0,
