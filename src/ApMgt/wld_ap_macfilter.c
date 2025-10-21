@@ -812,7 +812,7 @@ void wld_apMacFilter_getBanList(T_AccessPoint* vap, wld_banlist_t* banlist, bool
             for(int i = 0; i < vap->MF_TempEntryCount; i++) {
                 s_addMfEntry(banlist, vap->MF_Temp_Entry[i]);
 
-                T_AssociatedDevice* assocDev = wld_vap_get_existing_station(vap, (swl_macBin_t*) vap->MF_Entry[i]);
+                T_AssociatedDevice* assocDev = wld_vap_get_existing_station(vap, (swl_macBin_t*) vap->MF_Temp_Entry[i]);
                 if(( assocDev != NULL) && assocDev->Active) {
                     s_addKickEntry(banlist, assocDev->MACAddress);
                 }
