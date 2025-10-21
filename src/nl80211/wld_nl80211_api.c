@@ -749,6 +749,24 @@ swl_rc_ne wld_nl80211_getSurveyInfoExt(wld_nl80211_state_t* state, uint32_t ifIn
             SAH_TRACEZ_ERROR(ME, "Fail to allocate memory for station info results");
             rc = SWL_RC_ERROR;
         } else {
+            bool inUseFound = false;
+            for(uint32_t i = 0; i < requestData.nrChanSurveyInfo; i++) {
+                if(requestData.pChanSurveyInfo[i].inUse) {
+                    inUseFound = true;
+                    break;
+                }
+            }
+            if(!inUseFound && (pConfig != NULL) && (pConfig->radioChannel != 0)) {
+                for(uint32_t i = 0; i < requestData.nrChanSurveyInfo; i++) {
+                    swl_chanspec_t channel;
+                    swl_rc_ne ret = swl_chanspec_channelFromMHz(&channel, requestData.pChanSurveyInfo[i].frequencyMHz);
+                    if((ret == SWL_RC_OK) && (channel.channel == pConfig->radioChannel)) {
+                        SAH_TRACEZ_INFO(ME, "Overwrite channel in use %d", channel.channel);
+                        requestData.pChanSurveyInfo[i].inUse = true;
+                        break;
+                    }
+                }
+            }
             *pnChanSurveyInfo = requestData.nrChanSurveyInfo;
             memcpy(*ppChanSurveyInfo, requestData.pChanSurveyInfo, requestData.nrChanSurveyInfo * sizeof(wld_nl80211_channelSurveyInfo_t));
         }

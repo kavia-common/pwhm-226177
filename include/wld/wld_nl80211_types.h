@@ -378,6 +378,7 @@ struct wld_nl80211_channelSurveyInfo {
  */
 struct wld_nl80211_channelSurveyParam {
     swl_freqBandExt_e selectFreqBand; // selected frequency band in results
+    swl_channel_t radioChannel;       // current radio channel
 };
 
 typedef enum {

@@ -311,6 +311,7 @@ swl_rc_ne wld_rad_nl80211_getSurveyInfo(T_Radio* pRadio, wld_nl80211_channelSurv
     uint32_t ifIndex = wld_rad_getFirstEnabledIfaceIndex(pRadio);
     wld_nl80211_channelSurveyParam_t config = {
         .selectFreqBand = pRadio->operatingFrequencyBand,
+        .radioChannel = pRadio->channel,
     };
     return wld_nl80211_getSurveyInfoExt(wld_nl80211_getSharedState(), ifIndex, &config, ppChanSurveyInfo, pnrChanSurveyInfo);
 }
