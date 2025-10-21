@@ -1367,18 +1367,18 @@ swl_rc_ne wld_ap_hostapd_requestRRMReport_ext(T_AccessPoint* pAP, const swl_macC
     if(req->addNeighbor) {
         T_Radio* pRad = pAP->pRadio;
         if(req->channel != pRad->channel) {
-            swl_freqBandExt_e freqBand = swl_chanspec_operClassToFreq(pRad->operatingClass);
-            swl_operatingClass_t operClass = swl_chanspec_getOperClassDirect(pRad->channel, freqBand, SWL_BW_20MHZ);
-            ok = swl_str_catFormat(cmd, sizeof(cmd), "3302%.2x%.2x", operClass, pRad->channel);
+            swl_operatingClass_t operClass = swl_chanspec_getOperClassDirect(pRad->channel, pRad->operatingFrequencyBand, SWL_BW_20MHZ);
+            ok = swl_str_catFormat(cmd, sizeof(cmd), "3302%.2x%.2x", operClass ? : pRad->operatingClass, pRad->channel);
             ASSERT_TRUE(ok, SWL_RC_ERROR, ME, "adding AP Channel Report subelement failed");
         }
 
         amxc_llist_for_each(it, &pAP->neighbours) {
             T_ApNeighbour* neigh = amxc_llist_it_get_data(it, T_ApNeighbour, it);
             if(req->channel != neigh->channel) {
-                swl_freqBandExt_e freqBand = swl_chanspec_operClassToFreq(neigh->operatingClass);
-                swl_operatingClass_t operClass = swl_chanspec_getOperClassDirect(neigh->channel, freqBand, SWL_BW_20MHZ);
-                ok = swl_str_catFormat(cmd, sizeof(cmd), "3302%.2x%.2x", operClass, neigh->channel);
+                swl_chanspec_t chSpec = SWL_CHANSPEC_EMPTY;
+                swl_chanspec_findAllOperClassMatches(&chSpec, 1, neigh->operatingClass, SWL_OP_CLASS_COUNTRY_UNKNOWN, neigh->channel);
+                swl_operatingClass_t operClass = swl_chanspec_getOperClassDirect(neigh->channel, chSpec.band, SWL_BW_20MHZ);
+                ok = swl_str_catFormat(cmd, sizeof(cmd), "3302%.2x%.2x", operClass ? : neigh->operatingClass, neigh->channel);
                 ASSERT_TRUE(ok, SWL_RC_ERROR, ME, "adding AP Channel Report subelement failed");
             }
         }
