@@ -200,6 +200,15 @@ static void s_restoreMainAp(T_AccessPoint* pMainAP) {
     }
 }
 
+static void s_delAllRadioApIf(T_Radio* pRad) {
+    T_AccessPoint* pAP = NULL;
+    wld_rad_forEachAp(pAP, pRad) {
+        if(!wld_vap_isDummyVap(pAP)) {
+            pRad->pFA->mfn_wrad_delvapif(pRad, pAP->alias);
+        }
+    }
+}
+
 void wifiGen_hapd_restoreMainIface(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
     ASSERT_NOT_NULL(pRad->hostapd, , ME, "NULL");
@@ -270,7 +279,8 @@ static void s_onStopHapdCb(wld_secDmn_t* pSecDmn, void* userdata) {
     //finalize hapd cleanup
     wifiGen_hapd_stopDaemon(pRad);
     wld_rad_updateState(pRad, true);
-    //restore main iface if removed by hostapd
+    /* restore only main iface (hostapd will create others) */
+    s_delAllRadioApIf(pRad);
     wifiGen_hapd_restoreMainIface(pRad);
 }
 
