@@ -4274,7 +4274,7 @@ T_Radio* wld_rad_fromIt(amxc_llist_it_t* it) {
  * Radio is enabled, and likely available for commands.
  */
 bool wld_rad_isActive(T_Radio* pRad) {
-    return pRad->status == RST_UP || pRad->status == RST_DORMANT;
+    return (wld_rad_isUpExt(pRad) && (wld_rad_hasEnabledVap(pRad) || wld_rad_hasRunningEndpoint(pRad)));
 }
 
 /**
