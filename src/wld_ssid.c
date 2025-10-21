@@ -899,8 +899,15 @@ static void s_setMacAddress_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_
                     pSSID->MACAddress[3], pSSID->MACAddress[4], pSSID->MACAddress[5]);
 
     swl_macBin_t mac = SWL_MAC_BIN_NEW();
-    if((SWL_MAC_CHAR_TO_BIN(&mac, pMacStr)) &&
-       (!SWL_MAC_BIN_MATCHES(pSSID->MACAddress, &mac))) {
+    if(!SWL_MAC_CHAR_TO_BIN(&mac, pMacStr)) {
+        SAH_TRACEZ_ERROR(ME, "MAC conversion failed %s", pMacStr);
+        return;
+    }
+    if(swl_mac_binIsNull(&mac)) {
+        SAH_TRACEZ_WARNING(ME, "[%s] SSID Mac Address is NULL: %s, skipping update", pSSID->Name, pMacStr);
+        return;
+    }
+    if(!SWL_MAC_BIN_MATCHES(pSSID->MACAddress, &mac)) {
         memcpy(pSSID->MACAddress, mac.bMac, ETHER_ADDR_LEN);
         T_EndPoint* pEP = (T_EndPoint*) pSSID->ENDP_HOOK;
         T_AccessPoint* pAP = (T_AccessPoint*) pSSID->AP_HOOK;
@@ -1042,9 +1049,13 @@ void syncData_SSID2OBJ(amxd_object_t* object, T_SSID* pS, int set) {
                       amxd_object_get_param_def(object, "SSID"),
                       amxd_object_get_param_value(object, "SSID"));
 
-        s_setMacAddress_pwf(NULL, object,
-                            amxd_object_get_param_def(object, "MACAddress"),
-                            amxd_object_get_param_value(object, "MACAddress"));
+        const amxc_var_t* savedMacVar = amxd_object_get_param_value(object, "MACAddress");
+        const char* savedMacStr = amxc_var_constcast(cstring_t, savedMacVar);
+        if(swl_mac_charIsValidStaMac((const swl_macChar_t*) savedMacStr)) {
+            s_setMacAddress_pwf(NULL, object,
+                                amxd_object_get_param_def(object, "MACAddress"),
+                                savedMacVar);
+        }
 
         if((amxp_timer_get_state(pS->enableSyncTimer) != amxp_timer_started) &&
            (amxp_timer_get_state(pS->enableSyncTimer) != amxp_timer_running)) {
