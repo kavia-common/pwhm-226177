@@ -491,7 +491,7 @@ void wld_apRssiMon_updateStaHistoryAll(T_AccessPoint* pAP) {
     pAP->historyCnt = (pAP->historyCnt + 1) % (pAP->rssiEventing.historyLen * pAP->rssiEventing.historyIntervalCoeff);
 
     if((pAP->historyCnt % pAP->rssiEventing.historyIntervalCoeff) == 0) {
-        if(pAP->pFA->mfn_wvap_get_station_stats(pAP) != SWL_RC_OK) {
+        if(pAP->pFA->mfn_wvap_get_station_stats(pAP) < SWL_RC_OK) {
             SAH_TRACEZ_ERROR(ME, "%s: get station stats failed", pAP->alias);
         }
     }

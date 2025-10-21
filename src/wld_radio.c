@@ -272,8 +272,6 @@ static void s_setEnable_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_para
         pR->changeInfo.lastDisableTime = swl_time_getMonoSec();
     }
 
-    wld_rad_setAllMldLinksUnconfigured(pR);
-
     SAH_TRACEZ_OUT(ME);
 }
 
@@ -2196,6 +2194,7 @@ void syncData_Radio2OBJ(amxd_object_t* object, T_Radio* pR, int set) {
         if(pR->enable != tmp_int32) {
             pR->enable = tmp_int32;
             pR->pFA->mfn_wrad_enable(pR, pR->enable, SET);
+            wld_rad_setAllMldLinksUnconfigured(pR);
             commit = true;
         }
 
