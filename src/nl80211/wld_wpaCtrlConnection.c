@@ -129,6 +129,10 @@ swl_rc_ne wld_wpaCtrlConnection_close(wpaCtrlConnection_t* pConn) {
                     s_getConnCliPath(pConn),
                     s_getConnSrvPath(pConn));
     amxo_connection_remove(get_wld_plugin_parser(), pConn->wpaPeer);
+    /* clear pending replies before closing the non-blocking socket */
+    char dropBuf[128];
+    while(recv(pConn->wpaPeer, dropBuf, sizeof(dropBuf), 0) > 0) {
+    }
     close(pConn->wpaPeer);
     pConn->wpaPeer = 0;
     unlink(pConn->clientAddr.sun_path);
@@ -277,6 +281,10 @@ swl_rc_ne wld_wpaCtrlConnection_sendCmdSyncedExt(wpaCtrlConnection_t* pConn, con
 
     swl_rc_ne rc = wld_wpaCtrlConnection_sendCmd(pConn, cmd);
     ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to send sync cmd(%s)", sockName, cmd);
+    if(!tmOutMSec) {
+        SAH_TRACEZ_INFO(ME, "%s: cmd(%s) sent, not waiting for reply", sockName, cmd);
+        return SWL_RC_CONTINUE;
+    }
 
     do {
         tvMs = SWL_MAX(tvMs, (uint32_t) DFLT_SYNC_CMD_TMOUT_MS);
@@ -325,10 +333,12 @@ swl_rc_ne wld_wpaCtrlConnection_sendCmdCheckResponseExt(wpaCtrlConnection_t* pCo
     swl_rc_ne rc = wld_wpaCtrlConnection_sendCmdSyncedExt(pConn, cmd, reply, sizeof(reply) - 1, tmOutMSec);
     // send the command
     ASSERTS_TRUE(swl_rc_isOk(rc), rc, ME, "sending cmd %s failed", cmd);
-    // check the response
-    ASSERT_TRUE(swl_str_matches(reply, expectedResponse), SWL_RC_ERROR, ME, "cmd(%s) reply(%s): unmatch expect(%s)", cmd, reply, expectedResponse);
+    if(rc != SWL_RC_CONTINUE) {
+        // check the response
+        ASSERT_TRUE(swl_str_matches(reply, expectedResponse), SWL_RC_ERROR, ME, "cmd(%s) reply(%s): unmatch expect(%s)", cmd, reply, expectedResponse);
+    }
 
-    return SWL_RC_OK;
+    return rc;
 }
 
 swl_rc_ne wld_wpaCtrlConnection_sendCmdCheckResponse(wpaCtrlConnection_t* pConn, char* cmd, char* expectedResponse) {
@@ -340,7 +350,7 @@ bool wld_wpaCtrl_checkSockPath(const char* sockPath) {
     return (access(sockPath, F_OK) == 0);
 }
 
-swl_rc_ne wld_wpaCtrl_queryToSock(const char* serverPath, const char* sockName, const char* cmd, char* reply, size_t replyLen) {
+swl_rc_ne wld_wpaCtrl_queryToSockExt(const char* serverPath, const char* sockName, const char* cmd, char* reply, size_t replyLen, uint32_t tmOutMSec) {
     swl_str_copy(reply, replyLen, NULL);
     char sockPath[swl_str_len(serverPath) + swl_str_len(sockName) + 2];
     swl_str_copy(sockPath, sizeof(sockPath), serverPath);
@@ -351,9 +361,13 @@ swl_rc_ne wld_wpaCtrl_queryToSock(const char* serverPath, const char* sockName, 
     swl_rc_ne rc;
     if(((rc = wld_wpaCtrlConnection_init(&pConn, -1, serverPath, sockName)) >= SWL_RC_OK) &&
        ((rc = wld_wpaCtrlConnection_open(pConn)) >= SWL_RC_OK)) {
-        rc = wld_wpaCtrlConnection_sendCmdSynced(pConn, cmd, reply, replyLen);
+        rc = wld_wpaCtrlConnection_sendCmdSyncedExt(pConn, cmd, reply, replyLen, tmOutMSec);
     }
     wld_wpaCtrlConnection_cleanup(&pConn);
     return rc;
+}
+
+swl_rc_ne wld_wpaCtrl_queryToSock(const char* serverPath, const char* sockName, const char* cmd, char* reply, size_t replyLen) {
+    return wld_wpaCtrl_queryToSockExt(serverPath, sockName, cmd, reply, replyLen, DFLT_SYNC_CMD_TMOUT_MS);
 }
 

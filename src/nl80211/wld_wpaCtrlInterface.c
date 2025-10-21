@@ -244,7 +244,7 @@ void wld_wpaCtrlInterface_close(wld_wpaCtrlInterface_t* pIface) {
         const char* srvPath = wld_wpaCtrlConnection_getConnSrvPath(pIface->eventConn);
         if(!wld_wpaCtrlInterface_checkConnectionPath(pIface)) {
             SAH_TRACEZ_NOTICE(ME, "sock srv (%s) not found", srvPath);
-        } else if(!swl_rc_isOk(wld_wpaCtrlConnection_sendCmdCheckResponse(pIface->eventConn, "DETACH", "OK"))) {
+        } else if(!swl_rc_isOk(wld_wpaCtrlConnection_sendCmdCheckResponseExt(pIface->eventConn, "DETACH", "OK", 0))) {
             SAH_TRACEZ_ERROR(ME, "detach failed from (%s)", srvPath);
         }
     }

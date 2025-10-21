@@ -76,6 +76,7 @@ swl_rc_ne wld_wpaCtrl_getSyncCmdParamValInt32Def(wld_wpaCtrlInterface_t* pIface,
 void wld_wpaCtrl_processMsg(wld_wpaCtrlInterface_t* pInterface, char* msgData, size_t len);
 bool wld_wpaCtrl_checkSockPath(const char* sockPath);
 swl_rc_ne wld_wpaCtrl_queryToSock(const char* serverPath, const char* sockName, const char* cmd, char* reply, size_t replyLen);
+swl_rc_ne wld_wpaCtrl_queryToSockExt(const char* serverPath, const char* sockName, const char* cmd, char* reply, size_t replyLen, uint32_t tmOutMSec);
 size_t wld_wpaCtrl_getMaxMsgLen();
 swl_rc_ne wld_wpaCtrl_setMaxMsgLen(size_t msgLen);
 

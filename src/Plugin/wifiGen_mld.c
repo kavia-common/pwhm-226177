@@ -218,8 +218,7 @@ T_SSID* wifiGen_mld_selectPrimLinkSSID(T_SSID* pSSID) {
 }
 
 static wld_mldLink_t* s_getHapdCfgPrimAPMldLink(T_AccessPoint* pAP) {
-    char primIface[128] = {0};
-    wld_ap_hostapd_getCfgInterface(pAP, primIface, sizeof(primIface));
+    const char* primIface = wld_hostapd_ap_selectApLinkIface(pAP);
     T_SSID* pPrimSSID = wld_ssid_getSsidByIfName(primIface);
     return (pPrimSSID ? pPrimSSID->pMldLink : NULL);
 }

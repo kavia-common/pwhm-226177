@@ -200,26 +200,40 @@ static void s_restoreMainAp(T_AccessPoint* pMainAP) {
     }
 }
 
-static void s_delAllRadioApIf(T_Radio* pRad) {
+static void s_restoreMainIfaceAndCleanBSSs(T_Radio* pRad, bool clean) {
+    ASSERT_NOT_NULL(pRad, , ME, "NULL");
+    ASSERT_NOT_NULL(pRad->hostapd, , ME, "NULL");
+    SWL_CALL(pRad->hostapd->handlers.writeCfgCb, pRad->hostapd, pRad);
+    T_AccessPoint* pMainVap = wld_rad_hostapd_getCfgMainVap(pRad);
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRad) {
-        if(!wld_vap_isDummyVap(pAP)) {
+        bool doClean = clean;
+        T_AccessPoint* pAPLink = wld_vap_get_vap(wld_hostapd_ap_selectApLinkIface(pAP));
+        // pre-create Radio main interface if matching the main link iface
+        // (case NoMLO, or radio disabled)
+        if(pAP == pMainVap) {
+            if(pAP == pAPLink) {
+                s_restoreMainAp(pAP);
+                continue;
+            }
+        }
+        // pre-create APMLD main link iface if used by more that one link
+        // otherwise hostapd will create it (case SLO)
+        if(pAP->pSSID && wld_mld_isLinkUsable(pAP->pSSID->pMldLink) && (wld_mld_countNeighUsableLinks(pAP->pSSID->pMldLink) > 1)) {
+            s_restoreMainAp(pAPLink);
+            if(pAP == pAPLink) {
+                continue;
+            }
+        }
+        if(doClean && !wld_vap_isDummyVap(pAP) && (pAP->index > 0)) {
+            SAH_TRACEZ_WARNING(ME, "%s: delete unused vap iface %s", pRad->Name, pAP->alias);
             pRad->pFA->mfn_wrad_delvapif(pRad, pAP->alias);
         }
     }
 }
 
 void wifiGen_hapd_restoreMainIface(T_Radio* pRad) {
-    ASSERT_NOT_NULL(pRad, , ME, "NULL");
-    ASSERT_NOT_NULL(pRad->hostapd, , ME, "NULL");
-    SWL_CALL(pRad->hostapd->handlers.writeCfgCb, pRad->hostapd, pRad);
-    s_restoreMainAp(wld_rad_hostapd_getCfgMainVap(pRad));
-    T_AccessPoint* pAP = NULL;
-    wld_rad_forEachAp(pAP, pRad) {
-        if(pAP->pSSID && wld_mld_isLinkUsable(pAP->pSSID->pMldLink)) {
-            s_restoreMainAp(wld_vap_get_vap(wld_hostapd_ap_selectApLinkIface(pAP)));
-        }
-    }
+    return s_restoreMainIfaceAndCleanBSSs(pRad, false);
 }
 
 void wifiGen_hapd_deauthKnownStations(T_Radio* pRad, bool noAck) {
@@ -279,9 +293,6 @@ static void s_onStopHapdCb(wld_secDmn_t* pSecDmn, void* userdata) {
     //finalize hapd cleanup
     wifiGen_hapd_stopDaemon(pRad);
     wld_rad_updateState(pRad, true);
-    /* restore only main iface (hostapd will create others) */
-    s_delAllRadioApIf(pRad);
-    wifiGen_hapd_restoreMainIface(pRad);
 }
 
 static void s_onStartHapdCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata) {
@@ -328,8 +339,8 @@ static bool s_stopHapdCb(wld_secDmn_t* pSecDmn, void* userdata _UNUSED) {
     if(!swl_str_isEmpty(sockName)) {
         SAH_TRACEZ_WARNING(ME, "terminating hostapd over %s", wld_wpaCtrlInterface_getName(pIface));
         char reply[128] = {0};
-        swl_rc_ne rc = wld_wpaCtrl_queryToSock(HOSTAPD_CTRL_IFACE_DIR, sockName, "TERMINATE", reply, sizeof(reply));
-        ret = (swl_rc_isOk(rc) && swl_str_matches(reply, "OK"));
+        swl_rc_ne rc = wld_wpaCtrl_queryToSockExt(HOSTAPD_CTRL_IFACE_DIR, sockName, "TERMINATE", reply, sizeof(reply), 0);
+        ret = (swl_rc_isOk(rc) && ((rc == SWL_RC_CONTINUE) || swl_str_matches(reply, "OK")));
     }
     return ret;
 }
@@ -399,7 +410,7 @@ swl_rc_ne wifiGen_hapd_startDaemon(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     SAH_TRACEZ_WARNING(ME, "%s: Start hostapd", pRad->Name);
     //restore main iface if removed by hostapd
-    wifiGen_hapd_restoreMainIface(pRad);
+    s_restoreMainIfaceAndCleanBSSs(pRad, true);
     s_enableWpaCtrlIfaces(pRad);
     return wld_secDmn_start(pRad->hostapd);
 }
