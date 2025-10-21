@@ -705,13 +705,10 @@ swl_rc_ne wifiGen_vap_postUpActions(T_AccessPoint* pAP) {
 
     wld_ap_hostapd_updateMaxNbrSta(pAP);
 
-    // RELOAD_BSS will disconnect all associated stations. It has been observed that hostapd
-    // sends an unprotected broadcast deauth frame, which is discarded by wpa_supplicant on the
-    // station in WPA3. We work around this by sending unicast deauth frames to known stations.
-    wld_ap_hostapd_deauthKnownStations(pAP);
-    wld_vap_remove_all(pAP);
-
-    wld_ap_hostapd_sendCommand(pAP, "RELOAD_BSS", "refreshConfig");
+    /* create/update stations connected before socket get established */
+    if(pAP->pFA->mfn_wvap_get_station_stats(pAP) < SWL_RC_OK) {
+        SAH_TRACEZ_ERROR(ME, "%s: get station stats failed", pAP->alias);
+    }
 
     return SWL_RC_OK;
 }

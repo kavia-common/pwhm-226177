@@ -339,7 +339,7 @@ static bool s_saveHapdRadDetState(T_Radio* pRad, chanmgt_rad_state radDetState) 
     return (pRad->detailedState == radDetState);
 }
 static void s_mngrReadyCb(void* userData, char* ifName, bool isReady) {
-    SAH_TRACEZ_WARNING(ME, "%s: wpactrl mngr is %s ready", ifName, (isReady ? "" : "not"));
+    SAH_TRACEZ_WARNING(ME, "%s: wpactrl mngr is %sready", ifName, (isReady ? "" : "not "));
     T_Radio* pRad = (T_Radio*) userData;
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
     T_AccessPoint* pAP = wld_rad_vap_from_name(pRad, ifName);

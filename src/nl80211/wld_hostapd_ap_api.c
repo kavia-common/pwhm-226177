@@ -1516,7 +1516,7 @@ swl_rc_ne wld_ap_hostapd_deauthKnownStations(T_AccessPoint* pAP) {
         swl_mac_binToChar(&sta_mac_str, sta_mac_bin);
         if(pAD && pAD->Active) {
             SAH_TRACEZ_INFO(ME, "%s:deauth known station %s", pAP->alias, sta_mac_str.cMac);
-            wld_ap_hostapd_kickStation(pAP, (swl_macBin_t*) pAD->MACAddress, SWL_IEEE80211_DEAUTH_REASON_AUTH_NO_LONGER_VALID);
+            wld_ap_hostapd_kickStation(pAP, (swl_macBin_t*) pAD->MACAddress, SWL_IEEE80211_DEAUTH_REASON_STA_LEFT_IBSS);
         }
 
     }
