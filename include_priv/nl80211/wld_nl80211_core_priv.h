@@ -82,18 +82,6 @@ typedef int (* wld_nl80211_nlSend_f)(struct nl_sock* sk, struct nl_msg* msg);
 typedef ssize_t (* wld_nl80211_recv_f)(int socket, void* buffer, size_t length, int flags);
 
 /*
- * @brief struct including nl80211 driver IDs
- * (learned at runtime from kernel)
- */
-typedef struct {
-    int32_t family_id;       //nl80211 family id
-    int32_t scan_mcgrp_id;   //nl80211 SCAN multicast group id
-    int32_t config_mcgrp_id; //nl80211 CONFIG multicast group id
-    int32_t mlme_mcgrp_id;   //nl80211 MLME multicast group id
-    int32_t vendor_grp_id;   //nl80211 vendor evt group id
-} wld_nl80211_driverIds_t;
-
-/*
  * @brief common nl80211 driver IDs
  *        Ids must be >=0 (-1 means not available)
  */

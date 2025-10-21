@@ -100,6 +100,10 @@ swl_rc_ne s_learnDriverIDs(struct nl_sock* pNlSock) {
     return SWL_RC_OK;
 }
 
+const wld_nl80211_driverIds_t* wld_nl80211_getDriverIds() {
+    return &g_nl80211DriverIDs;
+}
+
 /*
  * @brief nl80211 request context
  */

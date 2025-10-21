@@ -356,14 +356,14 @@ swl_rc_ne wld_nl80211_getAllWiphyInfo(wld_nl80211_state_t* state, const uint32_t
  * (Synchronous api)
  *
  * @param state nl80211 socket manager context
- * @param ifIndex wiphy main iface index
+ * @param wiphyId wiphy id of the phy radio device
  * @param vendorHandler callback invoked when a reply is available
  * @param vendorData private data to pass in to the handler
  *
  * @return SWL_RC_OK in case of success
  *         <= SWL_RC_ERROR otherwise
  */
-swl_rc_ne wld_nl80211_getVendorWiphyInfo(wld_nl80211_state_t* state, uint32_t ifIndex, wld_nl80211_handler_f vendorHandler, void* vendorData);
+swl_rc_ne wld_nl80211_getVendorWiphyInfo(wld_nl80211_state_t* state, uint32_t wiphyId, wld_nl80211_handler_f vendorHandler, void* vendorData);
 
 /*
  * @brief get station info: rx/tx bytes, rx/tx packets, rssi, ...

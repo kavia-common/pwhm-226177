@@ -100,6 +100,18 @@ typedef struct {
 } wld_nl80211_stateCounters_t;
 
 /*
+ * @brief struct including nl80211 driver IDs
+ * (learned at runtime from kernel)
+ */
+typedef struct {
+    int32_t family_id;       //nl80211 family id
+    int32_t scan_mcgrp_id;   //nl80211 SCAN multicast group id
+    int32_t config_mcgrp_id; //nl80211 CONFIG multicast group id
+    int32_t mlme_mcgrp_id;   //nl80211 MLME multicast group id
+    int32_t vendor_grp_id;   //nl80211 vendor evt group id
+} wld_nl80211_driverIds_t;
+
+/*
  * @brief create nl80211 socket context
  * and add the socket fd to the event loop
  *
@@ -155,5 +167,13 @@ swl_rc_ne wld_nl80211_getStateCounters(wld_nl80211_state_t* state, wld_nl80211_s
  *         SWL_RC_ERROR otherwise
  */
 swl_rc_ne wld_nl80211_getAllCounters(wld_nl80211_stateCounters_t* pCounters);
+
+/*
+ * @brief provides the nl80211 driver IDs
+ * learned at runtime from kernel
+ *
+ * @return const pointer to static struct including IDs
+ */
+const wld_nl80211_driverIds_t* wld_nl80211_getDriverIds();
 
 #endif /* __WLD_NL80211_CORE_H__ */

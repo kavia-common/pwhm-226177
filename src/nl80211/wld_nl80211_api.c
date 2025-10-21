@@ -558,11 +558,14 @@ swl_rc_ne wld_nl80211_getAllWiphyInfo(wld_nl80211_state_t* state, const uint32_t
     return rc;
 }
 
-swl_rc_ne wld_nl80211_getVendorWiphyInfo(wld_nl80211_state_t* state, uint32_t ifIndex, wld_nl80211_handler_f vendorHandler, void* vendorData) {
-    NL_ATTRS(attribs,
-             ARR(NL_ATTR(NL80211_ATTR_SPLIT_WIPHY_DUMP)));
+swl_rc_ne wld_nl80211_getVendorWiphyInfo(wld_nl80211_state_t* state, uint32_t wiphyId, wld_nl80211_handler_f vendorHandler, void* vendorData) {
+    NL_ATTRS_EMPTY(attribs);
+    if((wiphyId != WLD_NL80211_ID_UNDEF) && (wiphyId != WLD_NL80211_ID_ANY)) {
+        NL_ATTRS_ADD(&attribs, NL_ATTR_VAL(NL80211_ATTR_WIPHY, wiphyId));
+    }
+    NL_ATTRS_ADD(&attribs, NL_ATTR(NL80211_ATTR_SPLIT_WIPHY_DUMP));
     swl_rc_ne rc = wld_nl80211_sendCmdSync(state, NL80211_CMD_GET_WIPHY, NLM_F_DUMP,
-                                           ifIndex, &attribs, vendorHandler, vendorData);
+                                           0, &attribs, vendorHandler, vendorData);
     NL_ATTRS_CLEAR(&attribs);
     return rc;
 }
