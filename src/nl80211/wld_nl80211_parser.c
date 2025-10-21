@@ -1291,9 +1291,7 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
     }
     NLA_GET_DATA(pStation->macAddr.bMac, tb[NL80211_ATTR_MAC], SWL_MAC_BIN_LEN);
     pStation->linkId = -1;
-    if(tb[NL80211_ATTR_MLO_LINK_ID] != NULL) {
-        pStation->linkId = nla_get_u8(tb[NL80211_ATTR_MLO_LINK_ID]);
-    }
+
     if(tb[NL80211_ATTR_MLD_ADDR] != NULL) {
         NLA_GET_DATA(pStation->macMld.bMac, tb[NL80211_ATTR_MLD_ADDR], SWL_MAC_BIN_LEN);
     }
@@ -1316,6 +1314,14 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
             }
             pStation->nrLinks = ++i;
         }
+    }
+    /* In kernel older than 6.3, NL80211_STA_INFO_PRIMARY_LINK_ID is missing
+     * In this case: to retrieve the Primary Link ID of a station,
+     * we can try inferring the primary link from NL80211_ATTR_MLO_LINKS
+     * (e.g., the one with lowest link ID or the only one present).
+     */
+    if(pStation->nrLinks) {
+        pStation->linkId = pStation->linksInfo[0].linkId;
     }
     if(pSinfo[NL80211_STA_INFO_INACTIVE_TIME]) {
         pStation->inactiveTime = nla_get_u32(pSinfo[NL80211_STA_INFO_INACTIVE_TIME]);
