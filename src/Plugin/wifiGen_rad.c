@@ -73,6 +73,7 @@
 #include "wld/wld_rad_nl80211.h"
 #include "wld/wld_rad_hostapd_api.h"
 #include "wld/wld_eventing.h"
+#include "wld/wld_secDmn.h"
 #include "wifiGen_rad.h"
 #include "wifiGen_hapd.h"
 #include "wifiGen_events.h"
@@ -931,6 +932,7 @@ static swl_rc_ne s_checkAndStartZwDfs(T_Radio* pRad, bool direct) {
     if(!wld_rad_is_5ghz(pRad) ||
        !swl_channel_isDfs(pRad->targetChanspec.chanspec.channel) ||
        !wld_rad_isUpExt(pRad) ||
+       wld_secDmn_isGrpRestarting(pRad->hostapd) ||
        (wld_chanmgt_getCurBw(pRad) > pRad->maxChannelBandwidth) ||
        (pRad->bgdfs_config.status != BGDFS_STATUS_IDLE)) {
         return SWL_RC_DONE;
@@ -960,7 +962,10 @@ swl_rc_ne wifiGen_rad_setChanspec(T_Radio* pRad, bool direct) {
     }
     bool needCommit = (pRad->fsmRad.FSM_State != FSM_RUN);
     unsigned long* actionArray = (needCommit ? pRad->fsmRad.FSM_BitActionArray : pRad->fsmRad.FSM_AC_BitActionArray);
-    if(wifiGen_hapd_isAlive(pRad)) {
+    if(wld_secDmn_isGrpRestarting(pRad->hostapd)) {
+        SAH_TRACEZ_WARNING(ME, "%s: hostapd is restarting: skip immediate chspec %s applying",
+                           pRad->Name, swl_typeChanspecExt_toBuf32(pRad->targetChanspec.chanspec).buf);
+    } else if(wifiGen_hapd_isAlive(pRad)) {
         chanmgt_rad_state detState = pRad->detailedState;
         wifiGen_hapd_getRadState(pRad, &detState);
         bool isTgtChspecRunning = false;

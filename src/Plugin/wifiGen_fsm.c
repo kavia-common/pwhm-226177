@@ -439,6 +439,10 @@ static bool s_doStopHostapd(T_Radio* pRad) {
         return true;
     }
     ASSERTI_TRUE(wifiGen_hapd_isStarted(pRad), true, ME, "%s: hostapd instance not started", pRad->Name);
+    if(wld_secDmn_isRestarting(pRad->hostapd)) {
+        SAH_TRACEZ_WARNING(ME, "%s: hostapd instance is restarting: let's stop afterwards", pRad->Name);
+        return true;
+    }
     SAH_TRACEZ_INFO(ME, "%s: stop hostapd", pRad->Name);
     rc = wifiGen_hapd_stopDaemon(pRad);
     SAH_TRACEZ_INFO(ME, "%s: stop hostapd returns rc : %d", pRad->Name, rc);
@@ -469,6 +473,10 @@ static bool s_doConfHostapd(T_Radio* pRad) {
 static bool s_doUpdateHostapd(T_Radio* pRad) {
     ASSERTI_TRUE(wifiGen_hapd_isRunning(pRad), true, ME, "%s: hostapd stopped", pRad->Name);
     ASSERTI_TRUE(wifiGen_hapd_isStarted(pRad), true, ME, "%s: hostapd instance not started", pRad->Name);
+    if(wld_secDmn_isGrpRestarting(pRad->hostapd)) {
+        SAH_TRACEZ_WARNING(ME, "%s: hostapd group is restarting: skip immediate update", pRad->Name);
+        return true;
+    }
 
     wifiGen_hapd_restoreMainIface(pRad);
     SAH_TRACEZ_INFO(ME, "%s: reload hostapd", pRad->Name);
@@ -613,13 +621,15 @@ static bool s_doDisableHostapd(T_Radio* pRad) {
         SAH_TRACEZ_INFO(ME, "%s: hapd iface already disabled", pRad->Name);
         return true;
     }
-    if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_DISABLE_RAD)) {
-        /*
-         * as we are stopping radio, no need to wait for deauth notif
-         * so we can cleanup ap's AD list
-         */
-        wifiGen_hapd_deauthKnownStations(pRad, true);
+    if(wld_secDmn_isGrpRestarting(pRad->hostapd)) {
+        SAH_TRACEZ_WARNING(ME, "%s: hostapd group is restarting: skip immediate disabling", pRad->Name);
+        return true;
     }
+    /*
+     * as we are stopping/toggling radio, no need to wait for deauth notif
+     * so we can cleanup ap's AD list
+     */
+    wifiGen_hapd_deauthKnownStations(pRad, true);
     wld_rad_hostapd_disable(pRad);
     pRad->fsmRad.timeout_msec = 500;
     return true;
@@ -627,8 +637,8 @@ static bool s_doDisableHostapd(T_Radio* pRad) {
 
 static bool s_doEnableHostapd(T_Radio* pRad) {
     ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), true, ME, "%s: hostapd stopped", pRad->Name);
-    if(wld_secDmn_isRestarting(pRad->hostapd)) {
-        SAH_TRACEZ_INFO(ME, "%s: hostapd already is restarting: no need to force immediate enabling", pRad->Name);
+    if(wld_secDmn_isGrpRestarting(pRad->hostapd)) {
+        SAH_TRACEZ_WARNING(ME, "%s: hostapd group is restarting: skip immediate enabling", pRad->Name);
         return true;
     }
     wld_rad_hostapd_enable(pRad);

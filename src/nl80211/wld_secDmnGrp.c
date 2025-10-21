@@ -585,10 +585,24 @@ swl_rc_ne wld_secDmnGrp_restartMember(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmn_t*
     return s_tryGrpMemberRtmAction(pSecDmnGrp, member, WLD_SECDMN_RTM_ACTION_RESTART);
 }
 
-bool wld_secDmnGrp_isMemberRestarting(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmn_t* pSecDmn) {
-    wld_secDmnGrp_member_t* member = s_getGrpMember(pSecDmnGrp, pSecDmn);
-    ASSERTS_NOT_NULL(member, SWL_RC_INVALID_PARAM, ME, "NULL");
+static bool s_isMemberRestarting(wld_secDmnGrp_member_t* member) {
+    ASSERTS_NOT_NULL(member, false, ME, "NULL");
     return SWL_BIT_IS_SET(member->reqRtmActions, WLD_SECDMN_RTM_ACTION_RESTART);
+}
+
+bool wld_secDmnGrp_isMemberRestarting(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmn_t* pSecDmn) {
+    return s_isMemberRestarting(s_getGrpMember(pSecDmnGrp, pSecDmn));
+}
+
+bool wld_secDmnGrp_hasMemberRestarting(wld_secDmnGrp_t* pSecDmnGrp) {
+    ASSERTS_NOT_NULL(pSecDmnGrp, false, ME, "NULL");
+    amxc_llist_for_each(it, &pSecDmnGrp->members) {
+        wld_secDmnGrp_member_t* member = amxc_container_of(it, wld_secDmnGrp_member_t, it);
+        if(s_isMemberRestarting(member)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static void s_processGrpAction(amxp_timer_t* timer _UNUSED, void* userdata) {

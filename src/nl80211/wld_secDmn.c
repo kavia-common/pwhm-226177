@@ -275,6 +275,14 @@ bool wld_secDmn_isRestarting(wld_secDmn_t* pSecDmn) {
     return wld_dmn_isRestarting(pSecDmn->dmnProcess);
 }
 
+bool wld_secDmn_isGrpRestarting(wld_secDmn_t* pSecDmn) {
+    ASSERT_NOT_NULL(pSecDmn, false, ME, "NULL");
+    ASSERT_NOT_NULL(pSecDmn->dmnProcess, false, ME, "NULL");
+    return (wld_dmn_isRestarting(pSecDmn->dmnProcess) ||
+            (wld_secDmn_isGrpMember(pSecDmn) &&
+             wld_secDmnGrp_hasMemberRestarting(pSecDmn->secDmnGroup)));
+}
+
 swl_rc_ne wld_secDmn_setArgs(wld_secDmn_t* pSecDmn, char* startArgs) {
     ASSERT_NOT_NULL(pSecDmn, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pSecDmn->dmnProcess, SWL_RC_ERROR, ME, "NULL");
