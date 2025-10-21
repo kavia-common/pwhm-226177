@@ -580,10 +580,11 @@ static void s_readHandler(int fd, void* priv _UNUSED) {
     wld_nl80211_state_t* state = (wld_nl80211_state_t*) con->priv;
     ASSERT_TRUE(s_isValidState(state), , ME, "Invalid state");
 
-    char buf[s_getSockRcvBufSize(fd)];
-    memset(buf, 0, sizeof(buf));
+    size_t bufSize = s_getSockRcvBufSize(fd);
+    char* buf = calloc(1, bufSize);
+    ASSERT_NOT_NULL(buf, , ME, "allocation of %zu failed", bufSize);
 
-    int len = s_recv(state, fd, buf, sizeof(buf), 0);
+    int len = s_recv(state, fd, buf, bufSize, 0);
     struct nlmsghdr* nlh = NULL;
     for(nlh = (struct nlmsghdr*) buf; len > 0 && NLMSG_OK(nlh, (uint32_t) len); nlh = NLMSG_NEXT(nlh, len)) {
         if(!nlh) {
@@ -618,6 +619,7 @@ static void s_readHandler(int fd, void* priv _UNUSED) {
         }
     }
 
+    free(buf);
     s_clearExpiredRequests(state);
 
     SAH_TRACEZ_OUT(ME);
