@@ -145,7 +145,9 @@ bool wld_apMld_getActiveApAffiliatedStaInfo(wld_apMld_afStaInfo_t* info, T_Acces
                 continue;
             }
 
-            if(tmpAp->pSSID->mldUnit != pAP->pSSID->mldUnit) {
+            if((tmpAp != pAP) &&
+               ((tmpAp->pSSID->mldUnit < 0) ||
+                (tmpAp->pSSID->mldUnit != pAP->pSSID->mldUnit))) {
                 continue;
             }
 
