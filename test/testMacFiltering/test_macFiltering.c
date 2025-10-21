@@ -181,7 +181,7 @@ static bool s_applyMfDelUnsetMac(amxd_object_t* mfObj) {
     return swl_typeCharPtr_commitObjectParam(mfObj, "MACAddress", "");
 }
 
-static void s_manageMf(T_AccessPoint* vap, mfDesc_t* pMf, const char* categF, mfOp_m op, bool temp) {
+static void s_execOperMf(T_AccessPoint* vap, mfDesc_t* pMf, const char* categF, mfOp_m op, bool temp, amxd_object_t** pListFObj, int** ppCount) {
     amxd_object_t* categFObj = amxd_object_get(vap->pBus, categF);
     assert_non_null(categFObj);
     const char* list;
@@ -223,6 +223,9 @@ static void s_manageMf(T_AccessPoint* vap, mfDesc_t* pMf, const char* categF, mf
     amxd_object_t* listFObj = amxd_object_get(categFObj, list);
     assert_non_null(listFObj);
 
+    W_SWL_SETPTR(ppCount, pCount);
+    W_SWL_SETPTR(pListFObj, listFObj);
+
     bool success;
     if(op & M_RPC) {
         //add/del with rpc
@@ -248,14 +251,16 @@ static void s_manageMf(T_AccessPoint* vap, mfDesc_t* pMf, const char* categF, mf
     if(!expecSuccess) {
         return;
     }
-    ttb_mockTimer_goToFutureMs(100);
+}
+
+static void s_checkEntryMf(mfDesc_t* pMf, amxd_object_t* listFObj, mfOp_m op, char* outMfAddrLst, size_t outMfAddrLstSize, int32_t* pCount) {
 
     /*
      * checking phase: go through the required MF/PF Entry/TempEntry instance list
      * and check the entries count, and the MAC values matching for each entry
      * against the relative list in the internal AP context
      */
-    mfAddrLst[0] = 0;
+    swl_str_copy(outMfAddrLst, outMfAddrLstSize, NULL);
     int32_t count = 0;
     amxd_object_t* mfObj = NULL;
     amxd_object_for_each(instance, it, listFObj) {
@@ -264,7 +269,7 @@ static void s_manageMf(T_AccessPoint* vap, mfDesc_t* pMf, const char* categF, mf
         swl_macChar_t macChar;
         if(swl_typeMacChar_fromChar(&macChar, macstr)) {
             count++;
-            if(SWL_MAC_CHAR_MATCHES(&macChar, &pMf->mac)) {
+            if(pMf && SWL_MAC_CHAR_MATCHES(&macChar, &pMf->mac)) {
                 if(op & M_ADD) {
                     //on addition: only one instance per mac
                     assert_null(mfObj);
@@ -274,15 +279,27 @@ static void s_manageMf(T_AccessPoint* vap, mfDesc_t* pMf, const char* categF, mf
                 }
                 mfObj = mfentry;
             }
-            swl_strlst_cat(mfAddrLst, sizeof(mfAddrLst), ",", macstr);
+            swl_strlst_cat(outMfAddrLst, outMfAddrLstSize, ",", macstr);
         }
         free(macstr);
     }
+    W_SWL_SETPTR(pCount, count);
+}
+
+static void s_manageMf(T_AccessPoint* vap, mfDesc_t* pMf, const char* categF, mfOp_m op, bool temp) {
+    amxd_object_t* listFObj = NULL;
+    int* pCount = NULL;
+    s_execOperMf(vap, pMf, categF, op, temp, &listFObj, &pCount);
+    assert_non_null(pCount);
+    ttb_mockTimer_goToFutureMs(100);
+    mfAddrLst[0] = 0;
+    int32_t count = 0;
+    s_checkEntryMf(pMf, listFObj, op, mfAddrLst, sizeof(mfAddrLst), &count);
     assert_int_equal(*pCount, count);
     assert_true(s_checkMfAddrList(vap, mfAddrLst));
 }
 
-static void test_addDelMfPf(void** state _UNUSED) {
+void test_addDelMfPf(void** state _UNUSED) {
 
     T_AccessPoint* vap = dm.bandList[SWL_FREQ_BAND_2_4GHZ].vapPriv;
 
@@ -350,6 +367,44 @@ static void test_addDelMfPf(void** state _UNUSED) {
     }
 }
 
+static void test_addMultiMf(void** state _UNUSED) {
+
+    T_AccessPoint* vap = dm.bandList[SWL_FREQ_BAND_2_4GHZ].vapPriv;
+
+    mfDesc_t input[] = {
+        {.mac.cMac = "00:11:22:AA:CC:01", .expecAdd = true, .expecDel = true, },
+        {.mac.cMac = "00:11:22:AA:CC:02", .expecAdd = true, .expecDel = true, },
+        {.mac.cMac = "00:11:22:AA:CC:03", .expecAdd = true, .expecDel = true, },
+        {.mac.cMac = "00:11:22:AA:CC:04", .expecAdd = true, .expecDel = true, },
+        {.mac.cMac = "00:11:22:AA:CC:05", .expecAdd = true, .expecDel = true, },
+        {.mac.cMac = "00:11:22:AA:CC:06", .expecAdd = true, .expecDel = true, },
+        {.mac.cMac = "00:11:22:AA:CC:07", .expecAdd = true, .expecDel = true, },
+        {.mac.cMac = "00:11:22:AA:CC:08", .expecAdd = true, .expecDel = true, },
+    };
+
+    amxd_object_t* listFObj = NULL;
+    int* pCtxCount = NULL;
+
+    mfOp_m op = M_ADD | M_TRANS;
+
+    /* Test adding MF entries */
+    for(uint32_t i = 0; i < SWL_ARRAY_SIZE(input); i++) {
+        //MF.addEntry in sequence
+        s_execOperMf(vap, &input[i], "MACFiltering", op, false, &listFObj, &pCtxCount);
+        ttb_mockTimer_goToFutureMs(i % 3 ? 150 : 50);
+    }
+
+    ttb_mockTimer_goToFutureMs(1000);
+
+    mfAddrLst[0] = 0;
+    int32_t dmCount = 0;
+
+    s_checkEntryMf(NULL, listFObj, op, mfAddrLst, sizeof(mfAddrLst), &dmCount);
+
+    assert_int_equal(*pCtxCount, dmCount);
+    assert_true(s_checkMfAddrList(vap, mfAddrLst));
+}
+
 static void test_setMfAddrList(void** state _UNUSED) {
     T_AccessPoint* vap = dm.bandList[SWL_FREQ_BAND_2_4GHZ].vapPriv;
     char mfAddrListStr[128] = "00:11:22:AA:BB:a0,00:11:22:AA:BB:a1";
@@ -398,9 +453,10 @@ static void test_changeMfAddrList(void** state _UNUSED) {
 
 int main(int argc _UNUSED, char* argv[] _UNUSED) {
     sahTraceSetLevel(TRACE_LEVEL_INFO);
-    sahTraceAddZone(400, "apMf");
+    sahTraceAddZone(sahTraceLevel(), "apMf");
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_addDelMfPf),
+        cmocka_unit_test(test_addMultiMf),
         cmocka_unit_test(test_setMfAddrList),
         cmocka_unit_test(test_changeMfAddrList),
     };

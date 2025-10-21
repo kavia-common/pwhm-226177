@@ -1920,6 +1920,8 @@ struct S_ACCESSPOINT {
     int MF_EntryCount;
     char* MF_AddressList;
     bool MF_AddressListBlockSync;                /* Block MF_AddressLIst update when multiple objects are added/deleted */
+    amxp_timer_t* MF_SyncTimer;                  /* Unified Timer for deferred synchronization of MF Entries */
+    bool syncMfAddrListToObjs;                   /* Flag indicating whether sync MF Entries from AddrList to Objects, or the other way */
     unsigned char MF_Entry[MAXNROF_MFENTRY][ETHER_ADDR_LEN];
     bool MF_TempBlacklistEnable;
     int MF_TempEntryCount;

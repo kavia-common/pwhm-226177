@@ -284,6 +284,9 @@ static void s_deinitAP(T_AccessPoint* pAP) {
 
     swl_circTable_destroy(&(pAP->lastAssocReq));
 
+    amxp_timer_delete(&pAP->MF_SyncTimer);
+    W_SWL_FREE(pAP->MF_AddressList);
+
     free(pAP->dbgOutput);
     pAP->dbgOutput = NULL;
 

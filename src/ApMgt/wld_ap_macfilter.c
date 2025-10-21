@@ -78,6 +78,55 @@
 
 #define ME "apMf"
 
+/* Delay for deferred MF Entries synchronization (in ms) */
+#define MF_SYNC_DELAY_MS 100
+
+static void s_syncAddressList(T_AccessPoint* pAP);
+static void s_updateMACFilterAddressList(T_AccessPoint* pAP);
+
+/* Unified timer callback for MF Entries synchronization */
+static void s_mfSyncTimer_cb(amxp_timer_t* timer _UNUSED, void* userdata) {
+    T_AccessPoint* pAP = (T_AccessPoint*) userdata;
+    ASSERTS_NOT_NULL(pAP, , ME, "NULL");
+
+    SAH_TRACEZ_INFO(ME, "%s: MF sync timer expired, executing delayed sync (syncMfAddrListToObjs:%d)",
+                    pAP->alias, pAP->syncMfAddrListToObjs);
+
+    if(pAP->syncMfAddrListToObjs) {
+        s_syncAddressList(pAP);
+    } else {
+        s_updateMACFilterAddressList(pAP);
+    }
+}
+
+/* Function to start or restart the unified MF synchronization timer */
+static void s_startMfSyncTimer(T_AccessPoint* pAP, bool syncMfAddrListToObjs) {
+    ASSERTS_NOT_NULL(pAP, , ME, "NULL");
+    int ret;
+    if(pAP->MF_SyncTimer == NULL) {
+        ret = amxp_timer_new(&pAP->MF_SyncTimer, s_mfSyncTimer_cb, pAP);
+        ASSERT_EQUALS(ret, 0, , ME, "%s: Failed to create MF sync timer", pAP->alias);
+        SAH_TRACEZ_INFO(ME, "%s: Created MF sync timer", pAP->alias);
+    }
+    /* Restart the timer with the configured delay 100ms */
+    ret = amxp_timer_start(pAP->MF_SyncTimer, MF_SYNC_DELAY_MS);
+    ASSERT_EQUALS(ret, 0, , ME, "%s: Failed to start MF sync timer", pAP->alias);
+    SAH_TRACEZ_INFO(ME, "%s: MF sync timer started with %d ms delay, syncMfAddrListToObjs(%d=>%d)",
+                    pAP->alias, amxp_timer_remaining_time(pAP->MF_SyncTimer),
+                    pAP->syncMfAddrListToObjs, syncMfAddrListToObjs);
+    pAP->syncMfAddrListToObjs = syncMfAddrListToObjs;
+}
+
+/* Function to stop and clean up the MF timer */
+static void s_stopMfSyncTimer(T_AccessPoint* pAP) {
+    ASSERTS_NOT_NULL(pAP, , ME, "NULL");
+    amxp_timer_state_t timerState = amxp_timer_get_state(pAP->MF_SyncTimer);
+    if((timerState == amxp_timer_started ) || (timerState == amxp_timer_running)) {
+        SAH_TRACEZ_INFO(ME, "%s: MF sync timer stopped and deleted", pAP->alias);
+    }
+    amxp_timer_delete(&pAP->MF_SyncTimer);
+}
+
 static void delay_WPS_disable(void* userdata) {
     T_AccessPoint* pAP = (T_AccessPoint*) userdata;
     ASSERTS_NOT_NULL(pAP, , ME, "NULL");
@@ -129,7 +178,7 @@ static bool sync_changes(amxd_object_t* mf, const char* objectName, unsigned cha
 
 static void s_updateMACFilterAddressList(T_AccessPoint* pAP) {
     ASSERTS_NOT_NULL(pAP, , ME, "NULL");
-    ASSERTS_FALSE(pAP->MF_AddressListBlockSync, , ME, "Sync blocked");
+    ASSERTI_FALSE(pAP->MF_AddressListBlockSync, , ME, "%s: MF Sync blocked (bulk operation in progress)", pAP->alias);
     if(pAP->MF_AddressList != NULL) {
         free(pAP->MF_AddressList);
         pAP->MF_AddressList = NULL;
@@ -197,7 +246,7 @@ static void s_syncMACFiltering(amxd_object_t* object) {
         }
 
         if(sync_changes(mf, "Entry", pAP->MF_Entry, &pAP->MF_EntryCount, MAXNROF_MFENTRY)) {
-            swla_delayExec_addTimeout((swla_delayExecFun_cbf) s_updateMACFilterAddressList, pAP, 100);
+            s_startMfSyncTimer(pAP, false);
             needSyncToHw = true;
         }
         if(sync_changes(mf, "TempEntry", pAP->MF_Temp_Entry, &pAP->MF_TempEntryCount, MAXNROF_MFENTRY)) {
@@ -430,9 +479,9 @@ static void s_syncAddressList(T_AccessPoint* pAP) {
 }
 
 static void s_cleanupMACFilterAddressList(T_AccessPoint* pAP) {
-    ASSERTS_NOT_NULL(pAP->MF_AddressList, , ME, "NULL");
-    free(pAP->MF_AddressList);
-    pAP->MF_AddressList = NULL;
+    ASSERTS_NOT_NULL(pAP, , ME, "NULL");
+    s_stopMfSyncTimer(pAP);
+    W_SWL_FREE(pAP->MF_AddressList);
     s_deleteAllEntries(pAP, "Entry");
 }
 
@@ -533,8 +582,9 @@ void wld_apMacFilter_setAddressList_pwf(void* priv _UNUSED, amxd_object_t* objec
         /* delay syncing mf addressList string with mf obj entries list
          * to give time for nemo to push its entries to plugin side.
          * This avoid duplicating MF entries.
+         * Start the unified timer
          */
-        swla_delayExec_add((swla_delayExecFun_cbf) s_syncAddressList, pAP);
+        s_startMfSyncTimer(pAP, true);
     }
     free(newMACFilterAddressList);
 
