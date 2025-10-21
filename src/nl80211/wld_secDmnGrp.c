@@ -413,6 +413,26 @@ static void s_refreshStartableMembers(wld_secDmnGrp_t* pSecDmnGrp) {
     }
 }
 
+static uint32_t s_countGrpMembersReqRtmAction(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmn_runTimeAction_e action) {
+    ASSERT_NOT_NULL(pSecDmnGrp, 0, ME, "NULL");
+    uint32_t count = 0;
+    amxc_llist_for_each(it, &pSecDmnGrp->members) {
+        wld_secDmnGrp_member_t* member = amxc_container_of(it, wld_secDmnGrp_member_t, it);
+        ASSERT_TRUE(action < SWL_BIT_SIZE(member->reqRtmActions), 0, ME, "out of bound");
+        count += SWL_BIT_IS_SET(member->reqRtmActions, action);
+    }
+    return count;
+}
+
+static uint32_t s_countGrpMembersReqAnyRtmAction(wld_secDmnGrp_t* pSecDmnGrp) {
+    ASSERT_NOT_NULL(pSecDmnGrp, 0, ME, "NULL");
+    uint32_t count = 0;
+    for(uint32_t i = 0; i < WLD_SECDMN_RTM_ACTION_MAX; i++) {
+        count += s_countGrpMembersReqRtmAction(pSecDmnGrp, i);
+    }
+    return count;
+}
+
 static swl_rc_ne s_startGrp(wld_secDmnGrp_t* pSecDmnGrp) {
     ASSERT_NOT_NULL(pSecDmnGrp, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pSecDmnGrp->dmnProcess, SWL_RC_INVALID_PARAM, ME, "NULL");
@@ -439,6 +459,10 @@ static swl_rc_ne s_startGrp(wld_secDmnGrp_t* pSecDmnGrp) {
         SAH_TRACEZ_INFO(ME, "all %d startable members of group %s are started, go ahead", nbMStarted, pSecDmnGrp->name);
         bool ret = wld_dmn_startDeamon(pSecDmnGrp->dmnProcess);
         ASSERT_TRUE(ret, SWL_RC_ERROR, ME, "fail to start group %s process", pSecDmnGrp->name);
+        if(s_countGrpMembersReqAnyRtmAction(pSecDmnGrp) == 0) {
+            SAH_TRACEZ_INFO(ME, "no pending group %s actions", pSecDmnGrp->name);
+            amxp_timer_stop(pSecDmnGrp->actionTimer);
+        }
         return SWL_RC_OK;
     }
 
@@ -475,17 +499,6 @@ static uint32_t s_countGrpMembersCurRtmAction(wld_secDmnGrp_t* pSecDmnGrp, wld_s
         }
     }
     SAH_TRACEZ_INFO(ME, "%d members of %s have rtm action %d", count, pSecDmnGrp->name, action);
-    return count;
-}
-
-static uint32_t s_countGrpMembersReqRtmAction(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmn_runTimeAction_e action) {
-    ASSERT_NOT_NULL(pSecDmnGrp, 0, ME, "NULL");
-    uint32_t count = 0;
-    amxc_llist_for_each(it, &pSecDmnGrp->members) {
-        wld_secDmnGrp_member_t* member = amxc_container_of(it, wld_secDmnGrp_member_t, it);
-        ASSERT_TRUE(action < SWL_BIT_SIZE(member->reqRtmActions), 0, ME, "out of bound");
-        count += SWL_BIT_IS_SET(member->reqRtmActions, action);
-    }
     return count;
 }
 
@@ -568,8 +581,14 @@ static void s_processGrpAction(amxp_timer_t* timer _UNUSED, void* userdata) {
     wld_secDmnGrp_t* pSecDmnGrp = (wld_secDmnGrp_t*) userdata;
     ASSERT_NOT_NULL(pSecDmnGrp, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "process group %s actions", pSecDmnGrp->name);
-    if(s_startGrp(pSecDmnGrp) == SWL_RC_DONE) {
+    swl_rc_ne rc = s_startGrp(pSecDmnGrp);
+    if(rc == SWL_RC_DONE) {
         s_tryGrpRtmAction(pSecDmnGrp, WLD_SECDMN_RTM_ACTION_RESTART);
+    }
+    if(((rc == SWL_RC_OK) || (rc == SWL_RC_DONE)) &&
+       (s_countGrpMembersReqAnyRtmAction(pSecDmnGrp) == 0)) {
+        SAH_TRACEZ_INFO(ME, "all group %s actions are applied", pSecDmnGrp->name);
+        amxp_timer_stop(pSecDmnGrp->actionTimer);
     }
 }
 
