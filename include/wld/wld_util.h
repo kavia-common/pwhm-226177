@@ -266,7 +266,6 @@ void convStrToHex(uint8_t* pbDest, int destSize, const char* pbSrc, int srcSize)
 int get_pattern_string(const char* arg, uint8_t* pattern);
 
 /* libc5 combatability just declare them */
-char* if_indextoname(unsigned int __ifindex, char* __ifname);
 unsigned int if_nametoindex(const char* __ifname);
 
 
