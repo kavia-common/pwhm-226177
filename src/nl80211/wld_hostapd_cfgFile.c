@@ -773,6 +773,10 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
     }
     swl_macChar_t bssidStr;
     SWL_MAC_BIN_TO_CHAR(&bssidStr, pSSID->BSSID);
+    if(!swl_mac_charIsValidStaMac(&bssidStr)) {
+        SAH_TRACEZ_WARNING(ME, "%s: skip due to invalid bssid", pAP->alias);
+        return false;
+    }
     swl_mapChar_add(vapConfigMap, "bssid", bssidStr.cMac);
     swl_mapChar_add(vapConfigMap, "use_driver_iface_addr", "1");
     if(strlen(pAP->bridgeName) > 0) {
