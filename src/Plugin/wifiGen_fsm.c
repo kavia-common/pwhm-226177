@@ -552,12 +552,12 @@ static void s_registerHadpRadEvtHandlers(wld_secDmn_t* hostapd) {
 
 static bool s_doStartHostapd(T_Radio* pRad) {
     wld_secDmn_setRestartNeeded(pRad->hostapd, false);
-    ASSERTS_TRUE(wifiGen_hapd_isStartable(pRad), true, ME, "%s: missing enabling conds", pRad->Name);
+    ASSERTI_TRUE(wifiGen_hapd_isStartable(pRad), true, ME, "%s: missing enabling conds", pRad->Name);
     if(wld_secDmn_isRestarting(pRad->hostapd)) {
         SAH_TRACEZ_INFO(ME, "%s: hostapd already is restarting: no need to force immediate start", pRad->Name);
         return true;
     }
-    ASSERTS_FALSE(wifiGen_hapd_isStarted(pRad), true, ME, "%s: hostapd already started", pRad->Name);
+    ASSERTI_FALSE(wifiGen_hapd_isStarted(pRad), true, ME, "%s: hostapd already started", pRad->Name);
     SAH_TRACEZ_INFO(ME, "%s: start hostapd", pRad->Name);
     swl_rc_ne rc = wifiGen_hapd_startDaemon(pRad);
     SAH_TRACEZ_INFO(ME, "%s: start hostapd returns rc : %d", pRad->Name, rc);

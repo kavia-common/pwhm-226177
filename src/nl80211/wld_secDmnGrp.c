@@ -278,6 +278,13 @@ swl_rc_ne wld_secDmnGrp_setMemberEvtHdlrs(wld_secDmnGrp_t* pSecDmnGrp, wld_secDm
     return SWL_RC_OK;
 }
 
+static void s_resetGrpMembersState(wld_secDmnGrp_t* pSecDmnGrp) {
+    amxc_llist_for_each(it, &pSecDmnGrp->members) {
+        wld_secDmnGrp_member_t* member = amxc_container_of(it, wld_secDmnGrp_member_t, it);
+        member->state = WLD_SECDMN_STATE_IDLE;
+    }
+}
+
 static uint32_t s_countGrpMembersInState(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmn_state_e state) {
     uint32_t count = 0;
     amxc_llist_for_each(it, &pSecDmnGrp->members) {
@@ -453,7 +460,14 @@ static swl_rc_ne s_startGrp(wld_secDmnGrp_t* pSecDmnGrp) {
         }
         return SWL_RC_DONE;
     }
-    ASSERTW_TRUE(nbMStartable > 0, SWL_RC_INVALID_STATE, ME, "group %s has no startable members", pSecDmnGrp->name);
+    if(!nbMStartable) {
+        SAH_TRACEZ_WARNING(ME, "group %s has no startable members", pSecDmnGrp->name);
+        if(nbMStarted > 0) {
+            SAH_TRACEZ_WARNING(ME, "reset %d started members of group %s", nbMStarted, pSecDmnGrp->name);
+            s_resetGrpMembersState(pSecDmnGrp);
+        }
+        return SWL_RC_INVALID_STATE;
+    }
     ASSERTI_TRUE(nbMStarted > 0, SWL_RC_ERROR, ME, "group %s has no started members", pSecDmnGrp->name);
     if(nbMStarted >= nbMStartable) {
         SAH_TRACEZ_INFO(ME, "all %d startable members of group %s are started, go ahead", nbMStarted, pSecDmnGrp->name);
