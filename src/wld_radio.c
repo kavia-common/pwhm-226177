@@ -4297,6 +4297,17 @@ swl_freqBand_e wld_rad_getFreqBand(T_Radio* pRad) {
     return swl_chanspec_freqBandExtToFreqBand(pRad->operatingFrequencyBand, SWL_FREQ_BAND_2_4GHZ, NULL);
 }
 
+static void s_updateRadStatusTransaction(T_Radio* pRad) {
+    ASSERTS_NOT_NULL(pRad, , ME, "NULL Radio");
+    ASSERTS_NOT_NULL(pRad->pBus, , ME, "no object related yet");
+    ASSERTS_TRUE(pRad->hasDmReady, , ME, "Radio DM not redy yet");
+    amxd_trans_t trans;
+    ASSERT_TRANSACTION_INIT(pRad->pBus, &trans, , ME, "%s : trans init failure", pRad->Name);
+    amxd_trans_set_value(cstring_t, &trans, "Status", Rad_SupStatus[pRad->status]);
+    swl_typeTimeMono_toTransParam(&trans, "LastStatusChangeTimeStamp", pRad->changeInfo.lastStatusChange);
+    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "%s : trans apply failure", pRad->Name);
+}
+
 void wld_rad_updateState(T_Radio* pRad, bool forceVapUpdate) {
     ASSERTI_NOT_NULL(pRad, , ME, "Radio null");
     if(pRad->detailedState >= CM_RAD_MAX) {
@@ -4327,15 +4338,23 @@ void wld_rad_updateState(T_Radio* pRad, bool forceVapUpdate) {
     event.oldStatus = oldStatus;
     event.oldDetailedState = pRad->detailedStatePrev;
 
-    //Update object
-    if(pRad->detailedState != pRad->detailedStatePrev) {
-        pRad->detailedStatePrev = pRad->detailedState;
-        amxd_object_t* chanObject = amxd_object_get_child(pRad->pBus, "ChannelMgt");
-        if((chanObject != NULL) && (pRad->hasDmReady)) {
-            ASSERT_TRUE(swl_typeCharPtr_commitObjectParam(chanObject, "RadioStatus", (char*) cstr_chanmgt_rad_state[pRad->detailedState]), ,
-                        ME, "%s: fail to commit channelMgt radioStatus", pRad->Name);
-        }
+    amxd_object_t* chanObject = amxd_object_get_child(pRad->pBus, "ChannelMgt");
+    chanmgt_rad_state detailedStateDm = pRad->detailedStatePrev;
+    if(chanObject != NULL) {
+        char* prevDetailedStatusStr = amxd_object_get_cstring_t(chanObject, "RadioStatus", NULL);
+        detailedStateDm = swl_conv_charToEnum(prevDetailedStatusStr, cstr_chanmgt_rad_state, CM_RAD_MAX, pRad->detailedStatePrev);
+        free(prevDetailedStatusStr);
+    }
 
+    //Update object
+    if((pRad->detailedState != pRad->detailedStatePrev) || (pRad->detailedState != detailedStateDm)) {
+        pRad->detailedStatePrev = pRad->detailedState;
+        if((chanObject != NULL) && (pRad->hasDmReady)) {
+            bool ok = swl_typeCharPtr_commitObjectParam(chanObject, "RadioStatus", (char*) cstr_chanmgt_rad_state[pRad->detailedState]);
+            if(!ok) {
+                SAH_TRACEZ_WARNING(ME, "%s: fail to commit channelMgt radioStatus", pRad->Name);
+            }
+        }
     }
 
     if((event.oldDetailedState != pRad->detailedState) || (event.oldStatus != pRad->status)) {
@@ -4352,21 +4371,13 @@ void wld_rad_updateState(T_Radio* pRad, bool forceVapUpdate) {
                            pRad->Name,
                            wld_status_str[oldStatus], oldStatus,
                            wld_status_str[pRad->status], pRad->status);
-
         pRad->changeInfo.lastStatusChange = swl_time_getMonoSec();
         pRad->changeInfo.nrStatusChanges++;
-
-        if((pRad->pBus != NULL) && (pRad->hasDmReady)) {
-            amxd_trans_t trans;
-            ASSERT_TRANSACTION_INIT(pRad->pBus, &trans, , ME, "%s : trans init failure", pRad->Name);
-            amxd_trans_set_value(cstring_t, &trans, "Status", Rad_SupStatus[pRad->status]);
-            swl_typeTimeMono_toTransParam(&trans, "LastStatusChangeTimeStamp", pRad->changeInfo.lastStatusChange);
-            ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "%s : trans apply failure", pRad->Name);
-        }
     } else {
         SAH_TRACEZ_INFO(ME, "%s: check state same update %s(%u) ", pRad->Name, wld_status_str[pRad->status], pRad->status);
-
     }
+
+    s_updateRadStatusTransaction(pRad);
 
     if((oldStatus == pRad->status) && !forceVapUpdate) {
         SAH_TRACEZ_INFO(ME, "%s : Same state %u / %u", pRad->Name, pRad->status, pRad->detailedState);
@@ -4379,9 +4390,7 @@ void wld_rad_updateState(T_Radio* pRad, bool forceVapUpdate) {
     }
 
     //Update VAPs
-
     T_AccessPoint* pAP = NULL;
-
     wld_rad_forEachAp(pAP, pRad) {
         wld_vap_updateState(pAP);
     }
