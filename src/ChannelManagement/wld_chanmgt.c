@@ -320,6 +320,10 @@ static void s_setChanspecDone(T_Radio* pR, amxd_status_t status) {
     if(pR->targetChanspec.isApplied == SWL_TRL_UNKNOWN) {
         pR->targetChanspec.isApplied = (status == amxd_status_ok) ? SWL_TRL_TRUE : SWL_TRL_FALSE;
     }
+
+    amxp_timer_delete(&pR->timerReqChanspec);
+    pR->timerReqChanspec = NULL;
+
     if((pR->callIdReqChanspec.status != SWL_FUNCTION_DEFERRED_STATUS_STARTED) &&
        (pR->callIdReqChanspec.status != SWL_FUNCTION_DEFERRED_STATUS_CANCELLED)) {
         return;
@@ -338,8 +342,6 @@ static void s_setChanspecDone(T_Radio* pR, amxd_status_t status) {
     amxd_object_trigger_signal(pR->pBus, "ChannelSwitchComplete", &ret);
 
     amxc_var_clean(&ret);
-    amxp_timer_delete(&pR->timerReqChanspec);
-    pR->timerReqChanspec = NULL;
 }
 
 static swl_rc_ne s_refreshCurrentChanspec(T_Radio* pR, swl_chanspec_t chanspec, wld_channelChangeReason_e reason) {
