@@ -509,7 +509,9 @@ static swl_rc_ne s_setWpaCtrlRadEvtHandlers(wld_wpaCtrlMngr_t* wpaCtrlMngr, T_Ra
     ASSERT_NOT_NULL(wpaCtrlMngr, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_wpaCtrl_radioEvtHandlers_cb wpaCtrlRadEvthandlers;
     memset(&wpaCtrlRadEvthandlers, 0, sizeof(wpaCtrlRadEvthandlers));
-    wld_wpaCtrlMngr_getEvtHandlers(wpaCtrlMngr, NULL, &wpaCtrlRadEvthandlers);
+    if(!wld_wpaCtrlMngr_getEvtHandlers(wpaCtrlMngr, NULL, &wpaCtrlRadEvthandlers)) {
+        SAH_TRACEZ_WARNING(ME, "fail to get prev wpactrl rad evt handlers");
+    }
     //Set here the wpa_ctrl RAD event handlers
     SET_HDLR(wpaCtrlRadEvthandlers.fProcStdEvtMsg, s_wpaCtrlRadioStdEvt);
     SET_HDLR(wpaCtrlRadEvthandlers.fChanSwitchStartedCb, s_chanSwitchCb);
@@ -969,11 +971,11 @@ static void s_handleAssocMsgAffiliatedSta(T_AccessPoint* pAP, T_AssociatedDevice
     ASSERT_NOT_NULL(afSta, , ME, "%s: create affiliatedSta (linkId:%u,mac:%s) failed for sta(%s)!", pAP->alias,
                     wld_mld_getLinkId(pAP->pSSID->pMldLink), swl_typeMacBin_toBuf32Ref(mac).buf,
                     pAD->Name);
-    afSta->active = true;
     afSta->mac = *mac;
     afSta->linkId = wld_mld_getLinkId(pAP->pSSID->pMldLink);
     afSta->lastDataDownlinkRate = pWirelessDevIE->maxDownlinkRateSupported;
     afSta->lastDataUplinkRate = pWirelessDevIE->maxUplinkRateSupported;
+    wld_ad_activateAfSta(pAD, afSta);
 
     /* add detected STA Profile in the Multi-Link */
     for(uint8_t i = 0; i < SWL_ARRAY_SIZE(pWirelessDevIE->ehtLinksMacAddress); i++) {
@@ -988,8 +990,8 @@ static void s_handleAssocMsgAffiliatedSta(T_AccessPoint* pAP, T_AssociatedDevice
                             i, swl_typeMacBin_toBuf32Ref(&pWirelessDevIE->ehtLinksMacAddress[i]).buf,
                             pAD->Name);
             afSta->mac = pWirelessDevIE->ehtLinksMacAddress[i];
-            afSta->active = true;
             afSta->linkId = i;
+            wld_ad_activateAfSta(pAD, afSta);
         }
     }
 }

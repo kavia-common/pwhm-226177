@@ -181,6 +181,7 @@ bool wifiGen_init() {
     fta.mfn_wvap_deleted_neighbour = wifiGen_vap_deleted_neighbor;
     fta.mfn_wvap_set_discovery_method = wifiGen_vap_setDiscoveryMethod;
     fta.mfn_wvap_setMldUnit = wifiGen_vap_setMldUnit;
+    fta.mfn_wvap_getMloStats = wifiGen_vap_getMloStats;
 
     //endpoint functions
     fta.mfn_wendpoint_create_hook = wifiGen_ep_createHook;

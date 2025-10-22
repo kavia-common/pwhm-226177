@@ -206,14 +206,22 @@ static void s_fillMldAssocDevInfo(T_AccessPoint* pAP, T_AssociatedDevice* pAD, w
     ASSERT_NOT_NULL(pStationInfo, , ME, "no station info entry!");
     ASSERT_NOT_NULL(pAD, , ME, "no associated device entry!");
     ASSERTS_NOT_NULL(pAP->pSSID, , ME, "%s: no SSID", pAP->name);
-    ASSERTS_NOT_NULL(pAP->pSSID->pMldLink, , ME, "%s: Accesspoint is not APMLD link", pAP->name);
-    ASSERTS_TRUE(pAD->mloMode > SWL_MLO_MODE_NA, , ME, "%s: AssociatedDevice does not have active MLO", pAD->Name);
+    int16_t assocLinkId = wld_ssid_getMLDLinkID(pAP->pSSID);
+    ASSERTI_TRUE(assocLinkId >= 0, , ME, "%s: Accesspoint is not APMLD link", pAP->name);
+    ASSERTI_TRUE(pAD->operatingStandard >= SWL_RADSTD_BE, , ME, "%s: AssociatedDevice %s is not 11be capable", pAP->name, pAD->Name);
     wld_affiliatedSta_t* afSta = NULL;
-    wld_ad_deactivateAllAfSta(pAD);
+    T_AccessPoint* curActiveApLinks[pStationInfo->nrLinks + 1];
+    memset(curActiveApLinks, 0, sizeof(curActiveApLinks));
+    size_t nCurActiveApLinks = 0;
     for(int i = 0; i < pStationInfo->nrLinks; i++) {
         wld_nl80211_mloLinkInfo_t* pLinkInfo = &pStationInfo->linksInfo[i];
         T_SSID* pSSID = NULL;
-        if((pSSID = wld_mld_getLinkSsidByLinkId(pAP->pSSID->pMldLink, pLinkInfo->linkId)) != NULL) {
+        if((pStationInfo->nrLinks == 1) && (assocLinkId == pLinkInfo->linkId)) {
+            pSSID = pAP->pSSID;
+        } else {
+            pSSID = wld_mld_getLinkSsidByLinkId(pAP->pSSID->pMldLink, pLinkInfo->linkId);
+        }
+        if(pSSID != NULL) {
             afSta = wld_ad_provideAffiliatedStaWithMac(pAD, pSSID->AP_HOOK, &pLinkInfo->linkMac);
             ASSERT_NOT_NULL(afSta, , ME, "%s: fetch affiliatedSta (linkId:%u,mac:%s) failed for sta(%s)!",
                             pSSID->AP_HOOK->alias,
@@ -228,6 +236,20 @@ static void s_fillMldAssocDevInfo(T_AccessPoint* pAP, T_AssociatedDevice* pAD, w
             afSta->packetsReceived = pLinkInfo->stats.rxPackets;
             afSta->errorsSent = pLinkInfo->stats.txErrors;
             afSta->signalStrength = pLinkInfo->stats.rssiDbm;
+            curActiveApLinks[nCurActiveApLinks++] = afSta->pAP;
+        }
+    }
+    amxc_llist_for_each(it, &pAD->affiliatedStaList) {
+        afSta = amxc_llist_it_get_data(it, wld_affiliatedSta_t, it);
+        bool active = 0;
+        for(size_t i = 0; i < nCurActiveApLinks; i++) {
+            if(curActiveApLinks[i] == afSta->pAP) {
+                active = true;
+                break;
+            }
+        }
+        if(!active) {
+            wld_ad_deactivateAfSta(pAD, afSta);
         }
     }
 }
@@ -291,8 +313,10 @@ static uint32_t s_getNetlinkAllStaInfo(T_AccessPoint* pAP) {
         }
         pAD->seen = true;
         s_fillAssocDevInfo(pAP, pAD, pStationInfo);
-        if(pStationInfo->flags.authenticated == SWL_TRL_TRUE) {
+        if(pStationInfo->flags.authorized == SWL_TRL_TRUE) {
             wld_ad_add_connection_success(pAP, pAD);
+        } else if(pStationInfo->flags.authenticated == SWL_TRL_TRUE) {
+            wld_ad_add_connection_try(pAP, pAD);
         }
     }
     free(pAllStaInfo);
@@ -390,7 +414,16 @@ swl_rc_ne wifiGen_vap_getSingleStationStats(T_AssociatedDevice* pAD) {
 
 static bool s_updateLinkedStaInfoHdlr(void* userData _UNUSED, T_AccessPoint* pAP, T_AssociatedDevice* pAD) {
     ASSERTS_NOT_NULL(pAP, false, ME, "NULL");
-    pAP->pFA->mfn_wvap_get_single_station_stats(pAD);
+    ASSERTS_NOT_NULL(pAD, false, ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "%s: getting stats of AD %s", pAP->name, pAD->Name);
+    if(pAP->pFA->mfn_wvap_get_single_station_stats(pAD) == SWL_RC_OK) {
+        /*
+         * pwhm genPlugin is lacking LLAPI to get AffiliatedAP traffic counters
+         * Therefore, pwhm is calculating approximate counters based on
+         * affiliatedSta links counters defined by NL80211
+         */
+        wld_ad_updateLinkStats(pAP, pAD);
+    }
     return false;
 }
 
@@ -403,6 +436,28 @@ static swl_rc_ne s_updateApStaStats(T_AccessPoint* pAP, swl_trl_e onlyAfSta) {
 swl_rc_ne wifiGen_vap_updateRssiStats(T_AccessPoint* pAP) {
     ASSERTI_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
     return s_updateApStaStats(pAP, SWL_TRL_FALSE);
+}
+
+swl_rc_ne wifiGen_vap_getMloStats(T_AccessPoint* pAP, wld_mloStats_t* pStats) {
+    ASSERT_NOT_NULL(pStats, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    T_SSID* pSSID = pAP->pSSID;
+    ASSERT_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    int16_t linkId = wld_ssid_getMLDLinkID(pSSID);
+    ASSERTI_TRUE(linkId >= 0, SWL_RC_INVALID_STATE, ME, "inactive link");
+    SAH_TRACEZ_INFO(ME, "%s: getting linked AfSta Stats (to linkId %d)", pAP->name, linkId);
+    swl_rc_ne rc = s_updateApStaStats(pAP, SWL_TRL_TRUE);
+    if(swl_rc_isOk(rc)) {
+        wld_stats_t linkStats;
+        memset(&linkStats, 0, sizeof(linkStats));
+        rc = wld_ssid_getMloStats(pSSID, &linkStats);
+        ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to get link mlo stats", pAP->name);
+        pStats->txUbyte = linkStats.BytesSent;
+        pStats->rxUbyte = linkStats.BytesReceived;
+        pStats->txPackets = linkStats.PacketsSent;
+        pStats->rxPackets = linkStats.PacketsReceived;
+    }
+    return rc;
 }
 
 int wifiGen_vap_sec_sync(T_AccessPoint* pAP, int set) {
@@ -674,9 +729,17 @@ int wifiGen_vap_kick_sta(T_AccessPoint* pAP, char* buf, int bufsize, int set _UN
 
 int wifiGen_vap_updateApStats(T_AccessPoint* pAP) {
     ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    T_SSID* pSSID = pAP->pSSID;
+    ASSERT_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    swl_rc_ne rc;
+    if(wld_mld_countNeighActiveLinks(pSSID->pMldLink) > 1) {
+        if((rc = s_updateApStaStats(pAP, SWL_TRL_UNKNOWN)) < SWL_RC_OK) {
+            SAH_TRACEZ_ERROR(ME, "%s: fail to get link stats", pAP->name);
+        }
+        return rc;
+    }
     ASSERTS_TRUE(pAP->index > 0, SWL_RC_OK, ME, "%s: no stats to update as iface is not found", pAP->alias);
-    ASSERT_NOT_NULL(pAP->pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERT_TRUE(wld_linuxIfStats_getVapStats(pAP, &pAP->pSSID->stats), SWL_RC_ERROR,
+    ASSERT_TRUE(wld_linuxIfStats_getVapStats(pAP, &pSSID->stats), SWL_RC_ERROR,
                 ME, "Fail to get stats for AP %s", pAP->alias);
     return SWL_RC_OK;
 }

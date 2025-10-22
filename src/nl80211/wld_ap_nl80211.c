@@ -246,18 +246,18 @@ swl_rc_ne wld_ap_nl80211_copyStationInfoToAssocDev(T_AccessPoint* pAP, T_Associa
 
     swl_mcsStandard_e mcsStd = SWL_MAX(pStationInfo->txRate.mcsInfo.standard, pStationInfo->rxRate.mcsInfo.standard);
     swl_radStd_e operStd = swl_mcs_radStdFromMcsStd(mcsStd, pAP->pRadio->operatingFrequencyBand);
-    if(pAD->operatingStandard == SWL_RADSTD_AUTO) {
-        pAD->operatingStandard = operStd;
-    }
+    pAD->operatingStandard = SWL_MAX(pAD->operatingStandard, operStd);
 
-    if(mcsStd == SWL_MCS_STANDARD_EHT) {
+    if(pAD->operatingStandard == SWL_RADSTD_BE) {
         if(pStationInfo->nrLinks == 0) {
             pAD->mloMode = SWL_MLO_MODE_NA;
         } else if(pStationInfo->nrLinks == 1) {
             pAD->mloMode = SWL_MLO_MODE_SINGLE_LINK;
         }
     } else if(pStationInfo->nrLinks <= 1) {
-        pAD->mloMode = SWL_MLO_MODE_NA;
+        if(pAD->mloMode == SWL_MLO_MODE_UNKNOWN) {
+            pAD->mloMode = SWL_MLO_MODE_NA;
+        }
     }
     if((pStationInfo->nrLinks > 1) && (pAD->mloMode <= SWL_MLO_MODE_SINGLE_LINK)) {
         pAD->mloMode = SWL_MLO_MODE_ACTIVE_UNKNOWN;

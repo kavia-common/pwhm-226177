@@ -2886,7 +2886,21 @@ void _wld_ap_setConf_ocf(const char* const sig_name,
 }
 
 static void s_updateMloStats(amxd_object_t* const obj, wld_mloStats_t* stats) {
-    SWLA_OBJECT_SET_PARAM_UINT32(obj, "LinkID", stats->linkid);
+    T_AccessPoint* pAP = wld_ap_fromObj(amxd_object_get_parent(obj));
+    int32_t linkId = -1;
+    const char* mloRole = "None";
+    if(pAP && pAP->pSSID) {
+        wld_mldLink_t* pMldLink = pAP->pSSID->pMldLink;
+        if((linkId = wld_mld_getLinkId(pMldLink)) > -1) {
+            if(pMldLink == wld_mld_getPrimaryLink(pMldLink)) {
+                mloRole = "Primary";
+            } else {
+                mloRole = "Auxiliary";
+            }
+        }
+    }
+    SWLA_OBJECT_SET_PARAM_CSTRING(obj, "MLORole", mloRole);
+    SWLA_OBJECT_SET_PARAM_INT32(obj, "LinkID", linkId);
     SWLA_OBJECT_SET_PARAM_UINT32(obj, "PacketsSent", stats->txPackets);
     SWLA_OBJECT_SET_PARAM_UINT32(obj, "PacketsReceived", stats->rxPackets);
     SWLA_OBJECT_SET_PARAM_UINT32(obj, "UnicastBytesSent", stats->txUbyte);
@@ -2906,13 +2920,14 @@ amxd_status_t _wld_ap_getMloStats_orf(amxd_object_t* const object,
                                       amxc_var_t* const action_retval,
                                       void* priv) {
     SAH_TRACEZ_IN(ME);
-    if(reason != action_object_read) {
+    if((reason != action_object_read) && (reason != action_param_read)) {
         return amxd_status_function_not_implemented;
     }
-    T_AccessPoint* pAP = (T_AccessPoint*) amxd_object_get_parent(object)->priv;
-    ASSERT_NOT_NULL(pAP, amxd_status_object_not_found, ME, "AccessPoint object not found!");
+    T_AccessPoint* pAP = wld_ap_fromObj(amxd_object_get_parent(object));
+    ASSERTW_NOT_NULL(pAP, amxd_status_ok, ME, "AccessPoint ctx not found!");
     wld_mloStats_t mloStats;
     memset(&mloStats, 0, sizeof(wld_mloStats_t));
+    SAH_TRACEZ_INFO(ME, "%s: querying MLO stats", pAP->name);
     if(pAP->pFA->mfn_wvap_getMloStats(pAP, &mloStats) >= SWL_RC_OK) {
         s_updateMloStats(object, &mloStats);
     }

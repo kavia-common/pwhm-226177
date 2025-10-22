@@ -98,4 +98,5 @@ swl_rc_ne wifiGen_vap_setDiscoveryMethod(T_AccessPoint* pAP);
 swl_rc_ne wifiGen_vap_setMldUnit(T_AccessPoint* pAP);
 swl_rc_ne wifiGen_vap_postUpActions(T_AccessPoint* pAP);
 swl_rc_ne wifiGen_vap_postDownActions(T_AccessPoint* pAP);
+swl_rc_ne wifiGen_vap_getMloStats(T_AccessPoint* pAP, wld_mloStats_t* pStats);
 #endif /* INCLUDE_PRIV_PLUGIN_WIFIGEN_VAP_H_ */

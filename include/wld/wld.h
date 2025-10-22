@@ -768,6 +768,7 @@ typedef struct {
     uint32_t lastDataUplinkRate;
     swl_mcs_t upLinkRateSpec;              /* Up link rate info (standard, mcs index, guard interval, number of spacial streams, bandwidth) */
     swl_mcs_t downLinkRateSpec;            /* down link rate info (standard, mcs index, guard interval, number of spacial streams, bandwidth) */
+    wld_stats_t lastStats;                 /* last retrieved stats (used to calculate diff for mlo link stats) */
 } wld_affiliatedSta_t;
 
 typedef struct {
@@ -901,6 +902,7 @@ typedef struct {
     wld_wds_intf_t* wdsIntf;                /* wds interface info */
     amxp_timer_t* delayDisassocNotif;
     swl_mlo_mode_e mloMode;                 /* the Mlo mode */
+    wld_stats_t lastStats;                  /* last retrieved stats (used to calculate diff for mlo link stats) */
 } T_AssociatedDevice;
 
 
@@ -1756,6 +1758,7 @@ struct S_SSID {
     bool initDone;                            /* Whether this SSID is properly initialized, and ready for configuration */
 
     wld_mldLink_t* pMldLink;
+    wld_stats_t accuMloStats;                 /* MLO link accumulated traffic stats */
 };
 
 typedef struct {

@@ -2475,15 +2475,18 @@ define rrm_t{
 			on action read call wld_ap_getMloStats_orf;
 
 			/**
-			 * Primary / Auxilary
+			 * None / Primary / Auxiliary
 			 */
-			%read-only string MLORole;
+			%read-only string MLORole {
+				on action validate call check_enum ["None", "Primary", "Auxiliary"];
+				default "None";
+			}
 
 			/**
 			 * The Link ID assigned to this affiliated AP.
 			 * [EasyMesh] source: Agent AP MLD Configuration TLV.
 			 */
-			%read-only uint32 LinkID;
+			%read-only int32 LinkID = -1;
 
 			/**
 			 * The number of packets transmitted to the Affiliated AP.

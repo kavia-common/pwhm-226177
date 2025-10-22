@@ -152,7 +152,7 @@ static wld_mldMgr_t* s_getMgr(T_SSID* pSSID) {
 static wld_mldGroup_t* s_findGroupInMgr(wld_mldMgr_t* pMgr, wld_ssidType_e type) {
     ASSERTS_NOT_NULL(pMgr, NULL, ME, "NULL");
     ASSERT_TRUE(pMgr->init, NULL, ME, "Not initialized");
-    for(uint32_t i = 0; i < SWL_ARRAY_SIZE(pMgr->groups); i++) {
+    for(uint32_t i = 0; i < WLD_SSID_TYPE_MAX; i++) {
         if(pMgr->groups[i].type == type) {
             return &pMgr->groups[i];
         }
@@ -516,9 +516,12 @@ swl_rc_ne wld_mld_setLinkId(wld_mldLink_t* pLink, int32_t linkId) {
         wld_mld_saveLinkConfigured(pLink, true);
     }
     ASSERTS_NOT_EQUALS(pLink->linkId, linkId, SWL_RC_OK, ME, "same value");
-    if((linkId == NO_LINK_ID) && (pLink->pMld->pPrimLink == pLink)) {
-        SAH_TRACEZ_WARNING(ME, "reset primary link %s", s_getLinkName(pLink));
-        pLink->pMld->pPrimLink = NULL;
+    if(linkId == NO_LINK_ID) {
+        wld_ssid_resetMloStats(pLink->pSSID);
+        if(pLink->pMld->pPrimLink == pLink) {
+            SAH_TRACEZ_WARNING(ME, "reset primary link %s", s_getLinkName(pLink));
+            pLink->pMld->pPrimLink = NULL;
+        }
     }
     SAH_TRACEZ_INFO(ME, "set link %s id: %d => %d", s_getLinkName(pLink), pLink->linkId, linkId);
     /*

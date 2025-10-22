@@ -127,6 +127,7 @@ void wld_ad_syncdetailedMcsCapabilities(amxd_trans_t* trans, wld_assocDev_capabi
 amxd_object_t* wld_ad_getOrCreateObject(T_AccessPoint* pAP, T_AssociatedDevice* pAD);
 swl_rc_ne wld_ad_syncInfo(T_AssociatedDevice* pAD);
 void wld_ad_syncStats(T_AssociatedDevice* pAD);
+swl_rc_ne wld_ad_updateLinkStats(T_AccessPoint* pAP, T_AssociatedDevice* pAD);
 bool wld_ad_has_active_video_stations(T_AccessPoint* pAP);
 bool wld_rad_has_active_stations(T_Radio* pRad);
 bool wld_rad_has_active_video_stations(T_Radio* pRad);

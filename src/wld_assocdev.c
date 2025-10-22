@@ -712,7 +712,169 @@ void wld_ad_printDbmDoubleArray(char* buf, uint32_t bufSize, double* array, uint
     }
 }
 
-static void wld_update_station_stats(T_AccessPoint* pAP) {
+static swl_rc_ne s_resetAfStaStats(wld_affiliatedSta_t* afSta) {
+    ASSERTS_NOT_NULL(afSta, SWL_RC_INVALID_PARAM, ME, "NULL");
+    memset(&afSta->lastStats, 0, sizeof(wld_stats_t));
+    afSta->bytesSent = 0;
+    afSta->bytesReceived = 0;
+    afSta->packetsSent = 0;
+    afSta->packetsReceived = 0;
+    afSta->errorsSent = 0;
+    afSta->errorsReceived = 0;
+    return SWL_RC_OK;
+}
+
+static swl_rc_ne s_resetAssocDevStats(T_AssociatedDevice* pAD) {
+    ASSERTS_NOT_NULL(pAD, SWL_RC_INVALID_PARAM, ME, "NULL");
+    amxc_llist_for_each(it, &pAD->affiliatedStaList) {
+        wld_affiliatedSta_t* afSta = amxc_llist_it_get_data(it, wld_affiliatedSta_t, it);
+        s_resetAfStaStats(afSta);
+    }
+    memset(&pAD->lastStats, 0, sizeof(wld_stats_t));
+    pAD->TxBytes = 0;
+    pAD->RxBytes = 0;
+    pAD->TxPacketCount = 0;
+    pAD->RxPacketCount = 0;
+    pAD->TxUnicastPacketCount = 0;
+    pAD->RxUnicastPacketCount = 0;
+    pAD->TxMulticastPacketCount = 0;
+    pAD->RxMulticastPacketCount = 0;
+    pAD->TxFailures = 0;
+    pAD->RxFailures = 0;
+    pAD->TxFrameCount = 0;
+    pAD->RxFrameCount = 0;
+    pAD->Tx_Retransmissions = 0;
+    pAD->Rx_Retransmissions = 0;
+    pAD->Tx_RetransmissionsFailed = 0;
+    pAD->Rx_RetransmissionsFailed = 0;
+    pAD->Retransmissions = 0;
+    pAD->retryCount = 0;
+    pAD->multipleRetryCount = 0;
+    return SWL_RC_OK;
+}
+
+static swl_rc_ne s_diffAfStaLastStats(wld_affiliatedSta_t* afSta, wld_stats_t* pDiffStats) {
+    wld_stats_t diffStats;
+    memset(&diffStats, 0, sizeof(diffStats));
+    W_SWL_SETPTR(pDiffStats, diffStats);
+    ASSERTS_NOT_NULL(afSta, SWL_RC_INVALID_PARAM, ME, "NULL");
+    diffStats.BytesSent = DELTA64(afSta->bytesSent, afSta->lastStats.BytesSent);
+    diffStats.BytesReceived = DELTA64(afSta->bytesReceived, afSta->lastStats.BytesReceived);
+    diffStats.PacketsSent = DELTA64(afSta->packetsSent, afSta->lastStats.PacketsSent);
+    diffStats.PacketsReceived = DELTA64(afSta->packetsReceived, afSta->lastStats.PacketsReceived);
+    diffStats.ErrorsSent = DELTA32(afSta->errorsSent, afSta->lastStats.ErrorsSent);
+    diffStats.ErrorsReceived = DELTA32(afSta->errorsReceived, afSta->lastStats.ErrorsReceived);
+    W_SWL_SETPTR(pDiffStats, diffStats);
+    return SWL_RC_OK;
+}
+
+static swl_rc_ne s_saveAfStaLastStats(wld_affiliatedSta_t* afSta) {
+    ASSERTS_NOT_NULL(afSta, SWL_RC_INVALID_PARAM, ME, "NULL");
+    afSta->lastStats.BytesSent = afSta->bytesSent;
+    afSta->lastStats.BytesReceived = afSta->bytesReceived;
+    afSta->lastStats.PacketsSent = afSta->packetsSent;
+    afSta->lastStats.PacketsReceived = afSta->packetsReceived;
+    afSta->lastStats.ErrorsSent = afSta->errorsSent;
+    afSta->lastStats.ErrorsReceived = afSta->errorsReceived;
+    return SWL_RC_OK;
+}
+
+static swl_rc_ne s_diffAssocDevLastStats(T_AssociatedDevice* pAD, wld_stats_t* pDiffStats) {
+    wld_stats_t diffStats;
+    memset(&diffStats, 0, sizeof(diffStats));
+    W_SWL_SETPTR(pDiffStats, diffStats);
+    ASSERTS_NOT_NULL(pAD, SWL_RC_INVALID_PARAM, ME, "NULL");
+    diffStats.BytesSent = DELTA64(pAD->TxBytes, pAD->lastStats.BytesSent);
+    diffStats.BytesReceived = DELTA64(pAD->RxBytes, pAD->lastStats.BytesReceived);
+    diffStats.PacketsSent = DELTA64(pAD->TxPacketCount, pAD->lastStats.PacketsSent);
+    diffStats.PacketsReceived = DELTA64(pAD->RxPacketCount, pAD->lastStats.PacketsReceived);
+    diffStats.ErrorsSent = DELTA32(pAD->TxFailures, pAD->lastStats.ErrorsSent);
+    diffStats.ErrorsReceived = DELTA32(pAD->RxFailures, pAD->lastStats.ErrorsReceived);
+    diffStats.UnicastPacketsSent = DELTA32(pAD->TxUnicastPacketCount, pAD->lastStats.UnicastPacketsSent);
+    diffStats.UnicastPacketsReceived = DELTA32(pAD->RxUnicastPacketCount, pAD->lastStats.UnicastPacketsReceived);
+    diffStats.MulticastPacketsSent = DELTA32(pAD->TxMulticastPacketCount, pAD->lastStats.MulticastPacketsSent);
+    diffStats.MulticastPacketsReceived = DELTA32(pAD->RxMulticastPacketCount, pAD->lastStats.MulticastPacketsReceived);
+    diffStats.FailedRetransCount = DELTA32(pAD->Retransmissions, pAD->lastStats.FailedRetransCount);
+    diffStats.RetryCount = DELTA32(pAD->retryCount, pAD->lastStats.RetryCount);
+    diffStats.MultipleRetryCount = DELTA32(pAD->multipleRetryCount, pAD->lastStats.MultipleRetryCount);
+    W_SWL_SETPTR(pDiffStats, diffStats);
+    return SWL_RC_OK;
+}
+
+static swl_rc_ne s_saveAssocDevLastStats(T_AssociatedDevice* pAD) {
+    ASSERTS_NOT_NULL(pAD, SWL_RC_INVALID_PARAM, ME, "NULL");
+    pAD->lastStats.BytesSent = pAD->TxBytes;
+    pAD->lastStats.BytesReceived = pAD->RxBytes;
+    pAD->lastStats.PacketsSent = pAD->TxPacketCount;
+    pAD->lastStats.PacketsReceived = pAD->RxPacketCount;
+    pAD->lastStats.ErrorsSent = pAD->TxFailures;
+    pAD->lastStats.ErrorsReceived = pAD->RxFailures;
+    pAD->lastStats.UnicastPacketsSent = pAD->TxUnicastPacketCount;
+    pAD->lastStats.UnicastPacketsReceived = pAD->RxUnicastPacketCount;
+    pAD->lastStats.MulticastPacketsSent = pAD->TxMulticastPacketCount;
+    pAD->lastStats.MulticastPacketsReceived = pAD->RxMulticastPacketCount;
+    pAD->lastStats.FailedRetransCount = pAD->Retransmissions;
+    pAD->lastStats.RetryCount = pAD->retryCount;
+    pAD->lastStats.MultipleRetryCount = pAD->multipleRetryCount;
+    return SWL_RC_OK;
+}
+
+swl_rc_ne wld_ad_updateLinkStats(T_AccessPoint* pAP, T_AssociatedDevice* pAD) {
+    ASSERTS_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_NOT_NULL(pAD, SWL_RC_INVALID_PARAM, ME, "NULL");
+    wld_affiliatedSta_t* afSta = wld_ad_getAffiliatedSta(pAD, pAP);
+    if((afSta == NULL) && (pAP != wld_ad_getAssociatedAp(pAD))) {
+        SAH_TRACEZ_INFO(ME, "unmatch station %s with ap %s", pAD->Name, pAP->name);
+        return SWL_RC_INVALID_PARAM;
+    }
+    if(!pAD->Active || (afSta && !afSta->active)) {
+        SAH_TRACEZ_INFO(ME, "station %s is inactive over ap %s", pAD->Name, pAP->name);
+        return SWL_RC_INVALID_STATE;
+    }
+    wld_stats_t diffStats;
+    memset(&diffStats, 0, sizeof(diffStats));
+    bool isAffSta = (afSta && afSta->active);
+    if(isAffSta) {
+        s_diffAfStaLastStats(afSta, &diffStats);
+        s_saveAfStaLastStats(afSta);
+    } else {
+        s_diffAssocDevLastStats(pAD, &diffStats);
+        s_saveAssocDevLastStats(pAD);
+    }
+    T_SSID* pSSID = pAP->pSSID;
+    int16_t linkId = wld_ssid_getMLDLinkID(pSSID);
+    if(linkId >= 0) {
+        SAH_TRACEZ_INFO(ME, "%s: %s update sta %s link(id:%d) stats",
+                        pAP->name, (linkId >= 0 ? "" : "no"), pAD->Name, linkId);
+        if(isAffSta) {
+            wld_ssid_accuMloStats(pSSID, &diffStats);
+        }
+        wld_ssid_accuNetStats(pSSID, &diffStats);
+    }
+    return SWL_RC_OK;
+}
+
+static void s_updateOneStationsLinksStats(T_AccessPoint* pAP, T_AssociatedDevice* pAD) {
+    ASSERTS_NOT_NULL(pAD, , ME, "NULL");
+    ASSERTS_TRUE(pAD->Active, , ME, "inactive");
+    if(wld_ad_getNrActiveAffiliatedSta(pAD) > 0) {
+        amxc_llist_for_each(it, &pAD->affiliatedStaList) {
+            wld_affiliatedSta_t* afSta = amxc_llist_it_get_data(it, wld_affiliatedSta_t, it);
+            wld_ad_updateLinkStats(afSta->pAP, pAD);
+        }
+    } else {
+        wld_ad_updateLinkStats(pAP, pAD);
+    }
+}
+
+static void s_updateAllStationsLinksStats(T_AccessPoint* pAP) {
+    ASSERTS_NOT_NULL(pAP, , ME, "NULL");
+    for(int i = 0; i < pAP->AssociatedDeviceNumberOfEntries; i++) {
+        s_updateOneStationsLinksStats(pAP, pAP->AssociatedDevice[i]);
+    }
+}
+
+static void s_updateAllStationStatsHistory(T_AccessPoint* pAP) {
     for(int i = 0; i < pAP->AssociatedDeviceNumberOfEntries; i++) {
         s_updateStationStatsHistory(pAP->AssociatedDevice[i]);
     }
@@ -731,7 +893,11 @@ static void s_addStaStatsValues(T_AccessPoint* pAP, swl_rc_ne ret, amxc_var_t* r
         wld_vap_remove_all(pAP);
     }
 
-    wld_update_station_stats(pAP);
+    s_updateAllStationStatsHistory(pAP);
+
+    if(ret == SWL_RC_OK) {
+        s_updateAllStationsLinksStats(pAP);
+    }
 
     wld_vap_sync_assoclist(pAP);
 
@@ -881,9 +1047,10 @@ static swl_rc_ne s_getSingleStationStats(amxd_object_t* const object) {
     ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
 
     swl_rc_ne status = pAP->pFA->mfn_wvap_get_single_station_stats(pAD);
-    if(status >= SWL_RC_OK) {
+    if(status == SWL_RC_OK) {
         // Update here stats parameters
         // and let status parameters been updated via transaction when needed
+        s_updateOneStationsLinksStats(pAP, pAD);
         s_updateStationStatsHistory(pAD);
         wld_ad_syncStats(pAD);
     }
@@ -1223,6 +1390,7 @@ static void s_activate(T_AccessPoint* pAP, T_AssociatedDevice* pAD) {
     pAD->Inactive = 0;
     pAD->hadSecFailure = false;
     pAD->latestStateChangeTime = swl_time_getMonoSec();
+    s_resetAssocDevStats(pAD);
 
     swl_timespec_reset(&pAD->lastSampleTime);
 
@@ -1286,7 +1454,7 @@ void wld_ad_finalizeDelayedDisassocNotif(swl_macBin_t* macAddress) {
     wld_for_eachRad(pRad) {
         wld_rad_forEachAp(pAP, pRad) {
             pAD = wld_vap_get_existing_station(pAP, macAddress);
-            if((pAD != NULL) && (wld_ad_hasDelayedDisassocNotif(pAD))) {
+            if((pAD != NULL) && (wld_ad_hasDelayedDisassocNotif(pAD)) && (pAD->delayDisassocNotif != NULL)) {
                 s_delayDisassocNotifHdlr(pAD->delayDisassocNotif, pAD->delayDisassocNotif->priv);
             }
         }
@@ -1361,10 +1529,7 @@ static void s_add_dc_sta(T_AccessPoint* pAP, T_AssociatedDevice* pAD, bool failS
     pAD->Active = 0;
     pAD->Inactive = 0;
 
-    amxc_llist_for_each(it, &pAD->affiliatedStaList) {
-        wld_affiliatedSta_t* afSta = amxc_llist_it_get_data(it, wld_affiliatedSta_t, it);
-        wld_ad_deactivateAfSta(pAD, afSta);
-    }
+    wld_ad_deactivateAllAfSta(pAD);
 
     wld_ad_remove_assocdev_from_bridge(pAP, pAD);
 
@@ -1509,6 +1674,7 @@ void wld_ad_activateAfSta(T_AssociatedDevice* pAD _UNUSED, wld_affiliatedSta_t* 
                     pAD->Active);
 
     afSta->active = true;
+    s_resetAfStaStats(afSta);
 }
 
 void wld_ad_deactivateAfSta(T_AssociatedDevice* pAD _UNUSED, wld_affiliatedSta_t* afSta) {

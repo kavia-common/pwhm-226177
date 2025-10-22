@@ -730,6 +730,44 @@ static void s_setSSIDConf_ocf(void* priv _UNUSED, amxd_object_t* object, const a
     SAH_TRACEZ_OUT(ME);
 }
 
+int16_t wld_ssid_getMLDLinkID(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, -1, ME, "NULL");
+    return wld_mld_getLinkId(pSSID->pMldLink);
+}
+
+void wld_ssid_resetMloStats(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, , ME, "NULL");
+    memset(&pSSID->accuMloStats, 0, sizeof(wld_stats_t));
+}
+
+swl_rc_ne wld_ssid_accuMloStats(T_SSID* pSSID, wld_stats_t* pDiffStats) {
+    ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_NOT_NULL(pDiffStats, SWL_RC_INVALID_PARAM, ME, "NULL");
+    wld_util_accumulateStats(&pSSID->accuMloStats, pDiffStats);
+    return SWL_RC_OK;
+}
+
+swl_rc_ne wld_ssid_getMloStats(T_SSID* pSSID, wld_stats_t* pOutStats) {
+    ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    if(wld_ssid_getMLDLinkID(pSSID) < 0) {
+        return SWL_RC_NOT_AVAILABLE;
+    }
+    W_SWL_SETPTR(pOutStats, pSSID->accuMloStats);
+    return SWL_RC_OK;
+}
+
+swl_rc_ne wld_ssid_accuNetStats(T_SSID* pSSID, wld_stats_t* pDiffStats) {
+    ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_NOT_NULL(pDiffStats, SWL_RC_INVALID_PARAM, ME, "NULL");
+    wld_util_accumulateStats(&pSSID->stats, pDiffStats);
+    return SWL_RC_OK;
+}
+
+swl_rc_ne wld_ssid_getNetStats(T_SSID* pSSID, wld_stats_t* pOutStats) {
+    ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    W_SWL_SETPTR(pOutStats, pSSID->stats);
+    return SWL_RC_OK;
+}
 
 static void s_copyEpStats(T_Stats* pStats, T_EndPointStats* pEpStats) {
     ASSERTS_NOT_NULL(pStats, , ME, "NULL");
