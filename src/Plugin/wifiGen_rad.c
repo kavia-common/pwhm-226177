@@ -1078,17 +1078,27 @@ void wifiGen_rad_initBands(T_Radio* pRad) {
 }
 
 swl_rc_ne wifiGen_rad_stats(T_Radio* pRad) {
-    swl_rc_ne ret;
+    swl_rc_ne rc;
     T_Stats stats;
     memset(&stats, 0, sizeof(stats));
-    if(wld_linuxIfStats_getRadioStats(pRad, &stats)) {
-        ret = SWL_RC_OK;
+    int ret = false;
+    T_AccessPoint* pAP = NULL;
+    wld_rad_forEachAp(pAP, pRad) {
+        if(pAP->pSSID && (pAP->pFA->mfn_wvap_update_ap_stats(pAP) >= SWL_RC_OK)) {
+            wld_util_accumulateStats(&stats, &pAP->pSSID->stats);
+            ret = true;
+        }
+    }
+    ret |= wld_linuxIfStats_getAllEpStats(pRad, &stats);
+    ret |= swl_rc_isOk(wld_rad_getCurrentNoise(pRad, &stats.noise));
+    if(ret) {
+        rc = SWL_RC_OK;
         memcpy(&pRad->stats, &stats, sizeof(stats));
     } else {
         SAH_TRACEZ_WARNING(ME, "%s: get stats for radio fail", pRad->Name);
-        ret = SWL_RC_ERROR;
+        rc = SWL_RC_ERROR;
     }
-    return ret;
+    return rc;
 }
 
 int wifiGen_rad_delayedCommitUpdate(T_Radio* pRad) {
