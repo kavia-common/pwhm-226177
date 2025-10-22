@@ -423,6 +423,8 @@ static bool s_doStopHostapd(T_Radio* pRad) {
      * so we can cleanup ap's AD list
      */
     wifiGen_hapd_deauthKnownStations(pRad, true);
+    wld_scan_stop(pRad);
+
     swl_rc_ne rc;
     if(wld_secDmn_checkRestartNeeded(pRad->hostapd)) {
         SAH_TRACEZ_INFO(ME, "%s: restarting hostapd", pRad->Name);

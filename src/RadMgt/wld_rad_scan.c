@@ -1444,6 +1444,15 @@ static void s_scanStatus_cbf(const wld_scanEvent_t* scanEvent) {
     free(path);
 }
 
+static void s_radioStatusChange(wld_radio_status_change_event_t* event) {
+    ASSERT_NOT_NULL(event, , ME, "Event parameter is NULL");
+    T_Radio* pRad = event->radio;
+    ASSERT_NOT_NULL(pRad, , ME, "Radio ptr in event param is NULL");
+    if(!wld_rad_isUpExt(pRad)) {
+        wld_scan_stop(pRad);
+    }
+}
+
 static void s_radScanStatusUpdateCb(wld_scanEvent_t* event) {
     ASSERT_NOT_NULL(event, , ME, "NULL");
     T_Radio* pRadio = event->pRad;
@@ -1757,11 +1766,18 @@ swl_rc_ne wld_scan_start(T_Radio* pRad, wld_scan_type_e type, const char* reason
 
 swl_rc_ne wld_scan_stop(T_Radio* pRad) {
     ASSERTS_TRUE(wld_scan_isRunning(pRad), SWL_RC_INVALID_STATE, ME, "no internal scan running");
-    if(pRad->pFA->mfn_wrad_stop_scan(pRad) < 0) {
+    swl_rc_ne rc = pRad->pFA->mfn_wrad_stop_scan(pRad);
+    if(rc < 0) {
         SAH_TRACEZ_ERROR(ME, "%s: Unable to stop scan", pRad->Name);
         return SWL_RC_ERROR;
+    } else if(rc != SWL_RC_CONTINUE) {
+        /*
+         * if the scan stop action returns SWL_RC_CONTINUE, then the nl80211 command to abort the scan was successfully issued,
+         * and the system is now waiting for the scanAborted event.
+         * Once the scanAborted event is received, the scan done function will be triggered.
+         */
+        wld_scan_done(pRad, false);
     }
-    wld_scan_done(pRad, false);
     return SWL_RC_OK;
 }
 
@@ -1769,12 +1785,18 @@ static wld_event_callback_t s_scanStatus_cb = {
     .callback = (wld_event_callback_fun) s_scanStatus_cbf
 };
 
+static wld_event_callback_t s_onRadioStatusChange = {
+    .callback = (wld_event_callback_fun) s_radioStatusChange,
+};
+
 void wld_scan_init(T_Radio* pRad _UNUSED) {
     wld_event_add_callback(gWld_queue_rad_onScan_change, &s_scanStatus_cb);
+    wld_event_add_callback(gWld_queue_rad_onStatusChange, &s_onRadioStatusChange);
 }
 
 void wld_scan_destroy(T_Radio* pRad _UNUSED) {
     wld_event_remove_callback(gWld_queue_rad_onScan_change, &s_scanStatus_cb);
+    wld_event_remove_callback(gWld_queue_rad_onStatusChange, &s_onRadioStatusChange);
     if(swl_function_deferIsActive(&g_neighWiFiDiag.callInfo)) {
         amxd_function_deferred_remove(g_neighWiFiDiag.callInfo.callId);
     }

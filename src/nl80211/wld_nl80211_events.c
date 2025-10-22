@@ -283,6 +283,9 @@ static swl_rc_ne s_scanAbortedCb(swl_unLiList_t* pListenerList, struct nlmsghdr*
     uint32_t ifIndex = wld_nl80211_getIfIndex(tb);
     SAH_TRACEZ_INFO(ME, "scan aborted on w:%d,i:%d", wiphy, ifIndex);
     FOR_EACH_LISTENER(pListener, pListenerList, {
+        if(!wld_nl80211_hasStartedScan(pListener->pRef, wiphy, ifIndex)) {
+            continue;
+        }
         pListener->handlers.fScanAbortedCb(pListener->pRef, pListener->pData, wiphy, ifIndex);
     });
     return SWL_RC_DONE;

@@ -721,6 +721,7 @@ static void s_scanAbortedCb(void* pRef, void* pData _UNUSED, uint32_t wiphy _UNU
     if((pRad == NULL) || (pRad->wiphy != wiphy) || (!wld_rad_hasLinkIfIndex(pRad, ifIndex))) {
         return;
     }
+    wld_rad_nl80211_scheduleNextScan(pRad);
     wld_scan_done(pRad, false);
 }
 

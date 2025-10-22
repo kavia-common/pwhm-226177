@@ -394,7 +394,8 @@ swl_rc_ne wld_rad_nl80211_startScanExt(T_Radio* pRadio, wld_nl80211_scanFlags_t*
  *
  * @param pRadio pointer to radio context
  *
- * @return SWL_RC_OK in case of success (scan abort acknowledged)
+ * @return SWL_RC_CONTINUE in case the nl80211 scan abort command was successfully issued and waiting for scanAborted event
+ *         SWL_RC_OK in case of success
  *         <= SWL_RC_ERROR otherwise
  */
 swl_rc_ne wld_rad_nl80211_abortScan(T_Radio* pRadio);
@@ -410,6 +411,15 @@ swl_rc_ne wld_rad_nl80211_abortScan(T_Radio* pRadio);
  *         <= SWL_RC_ERROR otherwise
  */
 swl_rc_ne wld_rad_nl80211_getScanResults(T_Radio* pRadio, void* priv, scanResultsCb_f fScanResultsCb);
+
+/*
+ * @brief schedule the next scan
+ *
+ * @param pRad pointer to radio context
+ *
+ * @return swl_rc_ne in case of success
+ */
+swl_rc_ne wld_rad_nl80211_scheduleNextScan(T_Radio* pRad);
 
 /*
  * @brief set regulatory ISO/IEC 3166-1 alpha2 country code

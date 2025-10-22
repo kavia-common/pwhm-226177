@@ -315,6 +315,8 @@ static bool s_stopHapdCb(wld_secDmn_t* pSecDmn, void* userdata _UNUSED) {
     if(wld_wpaCtrlInterface_checkConnectionPath(pIface) && wld_secDmn_isActiveAlone(pSecDmn)) {
         swl_str_copy(sockName, sizeof(sockName), wld_wpaCtrlInterface_getConnectionSockName(pIface));
     }
+
+    wld_scan_stop(pRad);
     wifiGen_hapd_deauthKnownStations(pRad, true);
     wld_wpaCtrlMngr_disconnect(pMgr);
     T_AccessPoint* pAP = NULL;

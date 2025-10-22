@@ -136,7 +136,6 @@ static scanInfo_t* s_getNextScan(uint32_t wiphy) {
     return NULL;
 }
 
-static bool s_scheduleNextScan(T_Radio* pRad);
 static void s_runScan(scanInfo_t* pScanInfo) {
     ASSERT_NOT_NULL(s_checkScan(pScanInfo), , ME, "Unknown scanInfo ctx %p", pScanInfo);
     T_Radio* pRad = pScanInfo->pRad;
@@ -148,14 +147,14 @@ static void s_runScan(scanInfo_t* pScanInfo) {
     }
 }
 
-static bool s_scheduleNextScan(T_Radio* pRad) {
-    ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
+swl_rc_ne wld_rad_nl80211_scheduleNextScan(T_Radio* pRad) {
+    ASSERTS_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     s_delScan(pRad);
     scanInfo_t* pNextScanInfo = s_getNextScan(pRad->wiphy);
-    ASSERTI_NOT_NULL(pNextScanInfo, false, ME, "%s: No pending scan for wiphy id:%d", pRad->Name, pRad->wiphy);
+    ASSERTI_NOT_NULL(pNextScanInfo, SWL_RC_NOT_AVAILABLE, ME, "%s: No pending scan for wiphy id:%d", pRad->Name, pRad->wiphy);
     SAH_TRACEZ_INFO(ME, "%s: scheduling next scan", pNextScanInfo->pRad->Name);
     swla_delayExec_add((swla_delayExecFun_cbf) s_runScan, pNextScanInfo);
-    return true;
+    return SWL_RC_OK;
 }
 
 static void s_setScanDuration(T_Radio* pRadio, wld_nl80211_scanParams_t* params) {
@@ -274,7 +273,7 @@ scan_error:
     swl_unLiList_destroy(&params.freqs);
 scan_exit:
     if(!swl_rc_isOk(rc)) {
-        s_scheduleNextScan(pRadio);
+        wld_rad_nl80211_scheduleNextScan(pRadio);
     } else if(pScanInfo != NULL) {
         pScanInfo->isStarted = true;
     }
@@ -290,13 +289,32 @@ swl_rc_ne wld_rad_nl80211_startScan(T_Radio* pRadio) {
 swl_rc_ne wld_rad_nl80211_abortScan(T_Radio* pRadio) {
     swl_rc_ne rc = SWL_RC_INVALID_PARAM;
     ASSERT_NOT_NULL(pRadio, rc, ME, "NULL");
+    rc = SWL_RC_OK;
+    scanInfo_t* pScanInfo = s_findScan(pRadio);
+    if(wld_rad_isUpExt(pRadio) &&
+       ((amxc_llist_is_empty(&sScanPool) && (wld_scan_isRunning(pRadio))) ||
+        ((pScanInfo != NULL) && pScanInfo->isStarted))) {
+        /*
+         * abort_scan command has to be sent to enabled interface (UP)
+         * (even when secondary VAP, while primary is disabled)
+         */
+        uint32_t ifIndex = wld_rad_getFirstEnabledIfaceIndex(pRadio);
+        rc = wld_nl80211_abortScan(wld_nl80211_getSharedState(), ifIndex);
+        if(swl_rc_isOk(rc)) {
+            rc = SWL_RC_CONTINUE;
+        }
+    }
+
     /*
-     * abort_scan command has to be sent to enabled interface (UP)
-     * (even when secondary VAP, while primary is disabled)
+     * Initiating a new scan before receiving the NL80211_CMD_SCAN_ABORTED event results in the driver returning -EBUSY (errno 16).
+     * Schedule the next scan upon receiving the scan aborted event.
      */
-    int index = wld_rad_getFirstEnabledIfaceIndex(pRadio);
-    rc = wld_nl80211_abortScan(wld_nl80211_getSharedState(), index);
-    s_scheduleNextScan(pRadio);
+    if(((pScanInfo != NULL) && !pScanInfo->isStarted)) {
+        s_delScan(pRadio);
+    } else if(rc != SWL_RC_CONTINUE) {
+        wld_rad_nl80211_scheduleNextScan(pRadio);
+    }
+
     return rc;
 }
 
@@ -331,7 +349,7 @@ static void s_scanResultsCb(void* priv, swl_rc_ne rc, wld_scanResults_t* pResult
         pScanResultsData->fScanResultsCb(pScanResultsData->priv, rc, pResults);
     }
     free(pScanResultsData);
-    s_scheduleNextScan(pRad);
+    wld_rad_nl80211_scheduleNextScan(pRad);
 }
 
 swl_rc_ne wld_rad_nl80211_getScanResults(T_Radio* pRadio, void* priv, scanResultsCb_f fScanResultsCb) {
