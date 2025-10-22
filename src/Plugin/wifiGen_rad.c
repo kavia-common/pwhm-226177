@@ -152,8 +152,8 @@ void wifiGen_rad_destroyHook(T_Radio* pRad) {
     wld_event_remove_callback(gWld_queue_rad_onScan_change, &s_radScanStatusCbContainer);
     wifiGen_hapd_cleanup(pRad);
     wld_rad_nl80211_delEvtListener(pRad);
-    free(pRad->pLastSurvey);
-    free(pRad->pLastAirStats);
+    W_SWL_FREE(pRad->pLastSurvey);
+    W_SWL_FREE(pRad->pLastAirStats);
     if(pRad->wlRadio_SK > 0) {
         close(pRad->wlRadio_SK);
         pRad->wlRadio_SK = -1;
@@ -586,7 +586,9 @@ int wifiGen_rad_supports(T_Radio* pRad, char* buf _UNUSED, int bufsize _UNUSED) 
     if(!swl_rc_isOk(wifiGen_hapd_getConfiguredCountryCode(pRad, pRad->regulatoryDomain, sizeof(pRad->regulatoryDomain)))) {
         swl_str_copy(pRad->regulatoryDomain, sizeof(pRad->regulatoryDomain), s_defaultRegDomain);
     }
-    getCountryParam(pRad->regulatoryDomain, 0, &pRad->regulatoryDomainIdx);
+    if(getCountryParam(pRad->regulatoryDomain, 0, &pRad->regulatoryDomainIdx) < 0) {
+        SAH_TRACEZ_WARNING(ME, "invalid default country");
+    }
     pRad->pFA->mfn_wrad_regdomain(pRad, NULL, 0, SET | DIRECT);
 
     wld_nl80211_wiphyInfo_t wiphyInfo;
@@ -712,6 +714,15 @@ int wifiGen_rad_status(T_Radio* pRad) {
          */
         SAH_TRACEZ_INFO(ME, "%s: radio is up", pRad->Name);
         pRad->detailedState = CM_RAD_UP;
+    }
+    /*
+     * reset last airstats timestamp when radio is down
+     * to allow new fresh noise measurement when radio is up again
+     */
+    if(!wld_rad_isUpExt(pRad)) {
+        if(pRad->pLastAirStats != NULL) {
+            pRad->pLastAirStats->timestamp = 0;
+        }
     }
     // All other intermediate states are handled with eventing (nl80211/wpactrl)
     return (pRad->detailedState != CM_RAD_DOWN);

@@ -320,7 +320,16 @@ swl_rc_ne wld_rad_nl80211_getSurveyInfo(T_Radio* pRadio, wld_nl80211_channelSurv
  * lowest period since last air stats calculation in ms
  * to avoid too small diff counters
  */
-#define MIN_AIR_STATS_REFRESH_PERIOD_MS 100
+#define MIN_AIR_STATS_REFRESH_PERIOD_MS 500
+static bool s_checkAirStatsTooRecentMs(wld_airStats_t* pStats, uint32_t nowTsMsU32) {
+    return (pStats && DELTA32(nowTsMsU32, pStats->timestamp) <= MIN_AIR_STATS_REFRESH_PERIOD_MS);
+}
+static bool s_checkAirStatsTooRecent(wld_airStats_t* pStats) {
+    swl_timeSpecMono_t nowTs;
+    swl_timespec_getMono(&nowTs);
+    uint32_t nowTsMsU32 = swl_timespec_toMs(&nowTs);
+    return s_checkAirStatsTooRecentMs(pStats, nowTsMsU32);
+}
 swl_rc_ne wld_rad_nl80211_getAirStatsFromSurveyInfo(T_Radio* pRadio, wld_airStats_t* pStats, wld_nl80211_channelSurveyInfo_t* pChanSurveyInfo) {
     ASSERT_NOT_NULL(pRadio, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pStats, SWL_RC_INVALID_PARAM, ME, "NULL");
@@ -345,7 +354,7 @@ swl_rc_ne wld_rad_nl80211_getAirStatsFromSurveyInfo(T_Radio* pRadio, wld_airStat
             SAH_TRACEZ_ERROR(ME, "%s: fail to alloc air stats cache", pRadio->Name);
             return SWL_RC_ERROR;
         }
-    } else if((nowTsMsU32 - pRadio->pLastAirStats->timestamp) <= MIN_AIR_STATS_REFRESH_PERIOD_MS) {
+    } else if(s_checkAirStatsTooRecentMs(pRadio->pLastAirStats, nowTsMsU32)) {
         SAH_TRACEZ_INFO(ME, "%s: too frequent polling: return cached air stats", pRadio->Name);
         memcpy(pStats, pRadio->pLastAirStats, sizeof(*pStats));
         return SWL_RC_OK;
@@ -409,6 +418,12 @@ swl_rc_ne wld_rad_nl80211_getAirStatsFromSurveyInfo(T_Radio* pRadio, wld_airStat
 swl_rc_ne wld_rad_nl80211_getAirstats(T_Radio* pRadio, wld_airStats_t* pStats) {
     ASSERT_NOT_NULL(pRadio, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pStats, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    if(s_checkAirStatsTooRecent(pRadio->pLastAirStats)) {
+        SAH_TRACEZ_INFO(ME, "%s: too recent measurement: return cached air stats", pRadio->Name);
+        memcpy(pStats, pRadio->pLastAirStats, sizeof(*pStats));
+        return SWL_RC_OK;
+    }
 
     memset(pStats, 0, sizeof(*pStats));
     uint32_t nChanSurveyInfo = 0;

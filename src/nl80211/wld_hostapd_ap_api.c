@@ -1238,10 +1238,22 @@ swl_rc_ne wld_ap_hostapd_getStaInfo(T_AccessPoint* pAP, T_AssociatedDevice* pAD)
         pAD->assocCaps.currentSecurity = SWL_SECURITY_APMODE_UNKNOWN;
     }
     ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    wld_wpaCtrlMngr_t* pMgr = wld_wpaCtrlInterface_getMgr(pAP->wpaCtrlInterface);
+    wld_secDmn_t* pSecDmn = wld_wpaCtrlMngr_getSecDmn(pMgr);
+    ASSERTS_NOT_NULL(pSecDmn, SWL_RC_INVALID_STATE, ME, "NULL");
+    ASSERTS_NOT_EQUALS(wld_secDmn_getCmdSupp(pSecDmn, "STA"), SWL_TRL_FALSE,
+                       SWL_RC_NOT_IMPLEMENTED, ME, "not supported STA cmd");
     char buff[WLD_L_BUF] = {0};
     snprintf(buff, sizeof(buff), "STA %.17s", pAD->Name);
     bool ret = wld_wpaCtrl_sendCmdSynced(pAP->wpaCtrlInterface, buff, buff, sizeof(buff) - 1);
     ASSERT_TRUE(ret, SWL_RC_ERROR, ME, "%s: Fail sta cmd: %s : ret %u", pAP->alias, buff, ret);
+    if(swl_str_matches(buff, "UNKNOWN COMMAND")) {
+        wld_secDmn_setCmdSupp(pSecDmn, "STA", SWL_TRL_FALSE);
+        SAH_TRACEZ_WARNING(ME, "not supported STA cmd");
+        return SWL_RC_NOT_IMPLEMENTED;
+    }
+    ASSERTW_FALSE(swl_str_matches(buff, "FAIL"), SWL_RC_NOT_AVAILABLE,
+                  ME, "%s: unknown sta %s to vap %s", pAP->alias, pAD->Name, pAP->name);
     ASSERTI_TRUE(swl_str_nmatchesIgnoreCase(buff, pAD->Name, strlen(pAD->Name)), SWL_RC_ERROR,
                  ME, "%s: wrong sta %s info: received(%s)",
                  pAP->alias, pAD->Name, buff);

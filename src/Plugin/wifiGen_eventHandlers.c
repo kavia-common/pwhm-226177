@@ -701,6 +701,13 @@ static void s_scanDoneCb(void* pRef, void* pData _UNUSED, uint32_t wiphy _UNUSED
     if((pRad == NULL) || (pRad->wiphy != wiphy) || (!wld_rad_hasLinkIfIndex(pRad, ifIndex))) {
         return;
     }
+    /*
+     * reset last airstats timestamp when scan is done
+     * as it updates all the channels survey info
+     */
+    if(pRad->pLastAirStats != NULL) {
+        pRad->pLastAirStats->timestamp = 0;
+    }
     SAH_TRACEZ_INFO(ME, "%s: getting scan async results", radName);
     wld_rad_nl80211_getScanResults(pRad, pRad, s_scanResultsCb);
 }
@@ -849,6 +856,7 @@ static void s_apStationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* macA
     T_AssociatedDevice* pAD = wld_vap_findOrCreateAssociatedDevice(pAP, macAddress);
     ASSERT_NOT_NULL(pAD, , ME, "%s: Failure to create associated device "MAC_PRINT_FMT, pAP->alias, MAC_PRINT_ARG(macAddress->bMac));
 
+    ASSERTI_FALSE(pAD->AuthenticationState, , ME, "%s : already auth %s", pAP->name, pAD->Name);
     pAP->pFA->mfn_wvap_get_single_station_stats(pAD);
 
     wld_ad_add_connection_success(pAP, pAD);

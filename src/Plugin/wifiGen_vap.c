@@ -303,7 +303,7 @@ static uint32_t s_getNetlinkAllStaInfo(T_AccessPoint* pAP) {
  * lowest period since last refresh of assoc dev info in ms
  * to avoid too frequent low level requests
  */
-#define MIN_AD_INFO_REFRESH_PERIOD_MS 100
+#define MIN_AD_INFO_REFRESH_PERIOD_MS 500
 static bool s_isStationInfoOld(T_AssociatedDevice* pAD) {
     ASSERTS_NOT_NULL(pAD, false, ME, "NULL");
     swl_timeSpecMono_t now = swl_timespec_getMonoVal();
@@ -315,27 +315,27 @@ static bool s_isStationInfoOld(T_AssociatedDevice* pAD) {
     return false;
 }
 
-static bool s_isAnyStationInfoOld(T_AccessPoint* pAP) {
-    ASSERTS_NOT_NULL(pAP, false, ME, "NULL");
-    ASSERTS_NOT_NULL(pAP->AssociatedDevice, false, ME, "NULL");
-    for(int i = 0; i < pAP->AssociatedDeviceNumberOfEntries; i++) {
-        if(s_isStationInfoOld(pAP->AssociatedDevice[i])) {
-            return true;
-        }
-    }
-    return false;
+/*
+ * hostapd station info refresh is costfull:
+ * only need it when :
+ * - station not yet authenticated or temporary unseen
+ * - getting security info details (up to 1s after authentication)
+ */
+static bool s_needHostapdStationInfoUpdate(T_AssociatedDevice* pAD) {
+    ASSERT_NOT_NULL(pAD, false, ME, "NULL");
+    return !(pAD->AuthenticationState &&
+             swl_security_isApModeValid(pAD->assocCaps.currentSecurity));
 }
 
 swl_rc_ne wifiGen_vap_getStationStats(T_AccessPoint* pAP) {
     ASSERTI_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
     T_Radio* pRad = (T_Radio*) pAP->pRadio;
     ASSERTI_NOT_EQUALS(pRad->status, RST_ERROR, SWL_RC_INVALID_STATE, ME, "NULL");
-    ASSERTI_TRUE(s_isAnyStationInfoOld(pAP), SWL_RC_DONE, ME, "%s: station stats are too recent", pAP->alias);
+
+    SAH_TRACEZ_INFO(ME, "AP %s (netdev %s)", pAP->name, pAP->alias);
 
     wld_vap_mark_all_stations_unseen(pAP);
-    if(s_getNetlinkAllStaInfo(pAP) > 0) {
-        wld_ap_hostapd_getAllStaInfo(pAP);
-    }
+    s_getNetlinkAllStaInfo(pAP);
 
     for(int i = 0; i < pAP->AssociatedDeviceNumberOfEntries; i++) {
         T_AssociatedDevice* pAD = pAP->AssociatedDevice[i];
@@ -344,6 +344,13 @@ swl_rc_ne wifiGen_vap_getStationStats(T_AccessPoint* pAP) {
                              pAP->name, i, pAP->AssociatedDeviceNumberOfEntries);
             pAP->AssociatedDeviceNumberOfEntries = i;
             break;
+        }
+        if(pAD->seen && s_needHostapdStationInfoUpdate(pAD)) {
+            SAH_TRACEZ_INFO(ME, "AD Name %s MAC "SWL_MAC_FMT, pAD->Name, SWL_MAC_ARG(pAD->MACAddress));
+            if(wld_ap_hostapd_getStaInfo(pAP, pAD) == SWL_RC_NOT_AVAILABLE) {
+                SAH_TRACEZ_WARNING(ME, "sta %s no more seen in hostapd over vap %s", pAD->Name, pAP->name);
+                pAD->seen = false;
+            }
         }
         if(!pAD->seen) {
             s_resetAssocDevSignalNoise(pAD);
@@ -372,7 +379,9 @@ swl_rc_ne wifiGen_vap_getSingleStationStats(T_AssociatedDevice* pAD) {
     if(rc >= SWL_RC_OK) {
         wld_rad_getCurrentNoise(pAP->pRadio, &pAP->pRadio->stats.noise);
         s_fillAssocDevInfo(pAP, pAD, &stationInfo);
-        wld_ap_hostapd_getStaInfo(pAP, pAD);
+        if((stationInfo.flags.associated == SWL_TRL_TRUE) && s_needHostapdStationInfoUpdate(pAD)) {
+            wld_ap_hostapd_getStaInfo(pAP, pAD);
+        }
     } else {
         s_resetAssocDevSignalNoise(pAD);
     }
