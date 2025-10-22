@@ -634,13 +634,15 @@ swl_rc_ne wld_chanmgt_setTargetChanspec(T_Radio* pR, swl_chanspec_t chanspec, bo
         memset(pR->targetChanspec.reasonExt, 0, sizeof(pR->targetChanspec.reasonExt));
     }
 
-    swl_radBw_e dmRadBw = swl_conv_objectParamEnum(pR->pBus, "OperatingChannelBandwidth", swl_radBw_str, SWL_RAD_BW_MAX, SWL_RAD_BW_AUTO);
-    if((tgtChanspec.channel == amxd_object_get_uint8_t(pR->pBus, "Channel", NULL)) && (pR->operatingChannelBandwidth == dmRadBw)) {
-        /* operating channel did not change yet, exposed channel in DM is the target */
-        pR->channelShowing = CHANNEL_INTERNAL_STATUS_TARGET;
-    } else {
-        /* exposed channel in DM is not up to date and still print current value */
-        pR->channelShowing = CHANNEL_INTERNAL_STATUS_CURRENT;
+    if(pR->pBus != NULL) {
+        swl_radBw_e dmRadBw = swl_conv_objectParamEnum(pR->pBus, "OperatingChannelBandwidth", swl_radBw_str, SWL_RAD_BW_MAX, SWL_RAD_BW_AUTO);
+        if((tgtChanspec.channel == amxd_object_get_uint8_t(pR->pBus, "Channel", NULL)) && (pR->operatingChannelBandwidth == dmRadBw)) {
+            /* operating channel did not change yet, exposed channel in DM is the target */
+            pR->channelShowing = CHANNEL_INTERNAL_STATUS_TARGET;
+        } else {
+            /* exposed channel in DM is not up to date and still print current value */
+            pR->channelShowing = CHANNEL_INTERNAL_STATUS_CURRENT;
+        }
     }
 
     /* Change channel */
@@ -765,7 +767,7 @@ static void s_setChannelChangeLogSize_pwf(void* priv _UNUSED, amxd_object_t* obj
     ASSERT_NOT_NULL(pR, , ME, "NULL");
     pR->channelChangeListSize = amxc_var_dyncast(uint32_t, newValue);
     s_onUpdateChannelChangeConfig(pR);
-    SAH_TRACEZ_WARNING(ME, "%s: Update channel changes list size to %d", pR->Name, pR->channelChangeListSize);
+    SAH_TRACEZ_INFO(ME, "%s: Update channel changes list size to %d", pR->Name, pR->channelChangeListSize);
 
     SAH_TRACEZ_OUT(ME);
 }
@@ -775,7 +777,7 @@ static void s_setAcsBootChannel_pwf(void* priv _UNUSED, amxd_object_t* object, a
     T_Radio* pR = wld_rad_fromObj(amxd_object_get_parent(object));
     ASSERT_NOT_NULL(pR, , ME, "NULL");
     pR->acsBootChannel = amxc_var_dyncast(int32_t, newValue);
-    SAH_TRACEZ_WARNING(ME, "%s: Update ACS Boot channel to %d", pR->Name, pR->acsBootChannel);
+    SAH_TRACEZ_INFO(ME, "%s: Update ACS Boot channel to %d", pR->Name, pR->acsBootChannel);
     SAH_TRACEZ_OUT(ME);
 }
 

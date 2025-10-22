@@ -129,7 +129,7 @@ void wld_rad_delayMgr_setDelayApUpPeriod_pwf(void* priv _UNUSED, amxd_object_t* 
     T_Radio* pR = wld_rad_fromObj(object);
     ASSERT_NOT_NULL(pR, , ME, "NULL");
     pR->delayMgr.delay = amxc_var_dyncast(uint32_t, newValue);
-    SAH_TRACEZ_WARNING(ME, "%s: Update delay timer period to %d", pR->Name, pR->delayMgr.delay);
+    SAH_TRACEZ_INFO(ME, "%s: Update delay timer period to %d", pR->Name, pR->delayMgr.delay);
 
     SAH_TRACEZ_OUT(ME);
 }
