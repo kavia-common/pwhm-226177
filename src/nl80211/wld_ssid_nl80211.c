@@ -121,7 +121,13 @@ swl_rc_ne wld_ssid_nl80211_getInterfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo
         rc = wld_ssid_nl80211_getMldIfaceInfo(pSSID, pIfaceInfo, NULL);
     }
     if(rc == SWL_RC_NOT_AVAILABLE) {
-        rc = wld_nl80211_getInterfaceInfo(wld_nl80211_getSharedState(), wld_ssid_nl80211_getPrimaryLinkIfIndex(pSSID), pIfaceInfo);
+        wld_nl80211_ifaceInfo_t ifaceInfo;
+        memset(&ifaceInfo, 0, sizeof(ifaceInfo));
+        int32_t tgtIfIndex = wld_ssid_nl80211_getPrimaryLinkIfIndex(pSSID);
+        ASSERTS_TRUE(tgtIfIndex > 0, rc, ME, "%s: no tgt ifIndex", pSSID->Name);
+        rc = wld_nl80211_getInterfaceInfo(wld_nl80211_getSharedState(), tgtIfIndex, &ifaceInfo);
+        ASSERTS_TRUE(swl_rc_isOk(rc), rc, ME, "fail to get iface info");
+        W_SWL_SETPTR(pIfaceInfo, ifaceInfo);
     }
     return rc;
 }

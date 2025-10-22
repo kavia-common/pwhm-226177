@@ -218,8 +218,8 @@ int wld_linuxIfUtils_getIfIndex(int sock, char* intfName, int* pIfIndex) {
     memset(&ifr, 0, sizeof(ifr));
     swl_str_copy(ifr.ifr_name, sizeof(ifr.ifr_name), intfName);
     int ret = ioctl(sock, SIOCGIFINDEX, &ifr);
-    ASSERT_FALSE((ret < 0), -errno, ME, "%s: SIOCGIFINDEX (errno:%d:%s))",
-                 intfName, errno, strerror(errno));
+    ASSERTI_FALSE((ret < 0), -errno, ME, "%s: SIOCGIFINDEX (errno:%d:%s))",
+                  intfName, errno, strerror(errno));
     *pIfIndex = ifr.ifr_ifindex;
     return SWL_RC_OK;
 }
