@@ -727,6 +727,25 @@ int wifiGen_vap_kick_sta(T_AccessPoint* pAP, char* buf, int bufsize, int set _UN
     return wifiGen_vap_kick_sta_reason(pAP, buf, bufsize, SWL_IEEE80211_DEAUTH_REASON_AUTH_NO_LONGER_VALID);
 }
 
+swl_rc_ne wifiGen_vap_clean_sta(T_AccessPoint* pAP, char* buf, int bufsize _UNUSED) {
+    ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_TRUE(swl_mac_charIsValidStaMac((swl_macChar_t*) buf), SWL_RC_INVALID_PARAM, ME, "Invalid");
+
+    swl_macBin_t bMac;
+    SWL_MAC_CHAR_TO_BIN(&bMac, buf);
+
+    SAH_TRACEZ_INFO(ME, "cleanStation %s - (%s)", pAP->alias, buf);
+    swl_rc_ne rc = wld_ap_hostapd_cleanStation(pAP, &bMac);
+    if(rc == SWL_RC_OK) {
+        T_AssociatedDevice* pAD = wld_vap_find_asociatedDevice(pAP, &bMac);
+        if(pAD != NULL) {
+            SAH_TRACEZ_INFO(ME, "%s: clean sta %s, report disconnection", pAP->alias, buf);
+            wld_ad_add_disconnection(pAP, pAD);
+        }
+    }
+    return rc;
+}
+
 int wifiGen_vap_updateApStats(T_AccessPoint* pAP) {
     ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
     T_SSID* pSSID = pAP->pSSID;

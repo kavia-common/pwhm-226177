@@ -844,6 +844,33 @@ swl_rc_ne wld_ap_hostapd_kickStation(T_AccessPoint* pAP, swl_macBin_t* mac, swl_
 }
 
 /**
+ * @brief clean a station from an AccessPoint
+ * @param pAP accesspoint
+ * @param mac address
+ * @return - SWL_RC_OK when the command is sent successfully
+ *         - Otherwise SWL_RC_ERROR
+ */
+swl_rc_ne wld_ap_hostapd_cleanStation(T_AccessPoint* pAP, swl_macBin_t* mac) {
+    ASSERTS_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_NOT_NULL(mac, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    T_Radio* pR = pAP->pRadio;
+    ASSERTS_NOT_NULL(pR, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    swl_macChar_t macStr;
+    swl_mac_binToChar(&macStr, mac);
+
+    SAH_TRACEZ_INFO(ME, "%s: cleanmac %s - (%s)", pR->Name, pAP->alias, macStr.cMac);
+
+    char cmd[256] = {'\0'};
+    snprintf(cmd, sizeof(cmd), "DEAUTHENTICATE %s tx=0", macStr.cMac);
+
+    bool ret = s_sendHostapdCommand(pAP, cmd, "cleanStation");
+    ASSERT_TRUE(ret, SWL_RC_ERROR, ME, "%s: cleanStation %s - (%s) failed", pR->Name, pAP->alias, macStr.cMac);
+    return SWL_RC_OK;
+}
+
+/**
  * @brief deauthenticate all AP's stations
  * (default reason AUTH_NO_LONGER_VALID)
  *

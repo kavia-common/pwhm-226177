@@ -170,6 +170,7 @@ bool wifiGen_init() {
     fta.mfn_wvap_kick_sta = wifiGen_vap_kick_sta;
     fta.mfn_wvap_kick_sta_reason = wifiGen_vap_kick_sta_reason;
     fta.mfn_wvap_disassoc_sta_reason = wifiGen_vap_disassoc_sta_reason;
+    fta.mfn_wvap_clean_sta = wifiGen_vap_clean_sta;
     fta.mfn_wvap_multiap_update_type = wifiGen_vap_multiap_update_type;
     fta.mfn_wvap_multiap_update_profile = wifiGen_vap_multiap_update_profile;
     fta.mfn_wvap_multiap_update_vlanid = wifiGen_vap_multiap_update_vlanid;

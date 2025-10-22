@@ -2028,7 +2028,7 @@ amxd_status_t _kickStationReason(amxd_object_t* obj_AP,
 
     SAH_TRACEZ_IN(ME);
     /* Check our input data */
-    pAP = obj_AP->priv;
+    pAP = wld_ap_fromObj(obj_AP);
 
     if(pAP && debugIsVapPointer(pAP)) {
         if(macStr != NULL) {
@@ -2049,7 +2049,7 @@ amxd_status_t _cleanStation(amxd_object_t* obj_AP,
                             amxc_var_t* ret _UNUSED) {
 
     ASSERT_NOT_NULL(obj_AP, amxd_status_unknown_error, ME, "NULL");
-    T_AccessPoint* pAP = obj_AP->priv;
+    T_AccessPoint* pAP = wld_ap_fromObj(obj_AP);
     ASSERT_NOT_NULL(pAP, amxd_status_unknown_error, ME, "NULL");
     ASSERT_TRUE(debugIsVapPointer(pAP), amxd_status_unknown_error, ME, "NULL");
     const char* macStr = GET_CHAR(args, "macaddress");
