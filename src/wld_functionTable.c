@@ -350,7 +350,8 @@ static swl_rc_ne TRAP_mfn_wvap_get_station_stats(T_AccessPoint* ap) {
 }
 
 static swl_rc_ne TRAP_mfn_wvap_update_rssi_stats(T_AccessPoint* ap) {
-    return ap->pFA->mfn_wvap_get_station_stats(ap);
+    _UNUSED_(ap);
+    return SWL_RC_NOT_IMPLEMENTED;
 }
 
 static swl_rc_ne TRAP_mfn_wvap_get_single_station_stats(T_AssociatedDevice* ad) {

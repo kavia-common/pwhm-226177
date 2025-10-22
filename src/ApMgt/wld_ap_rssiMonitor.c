@@ -131,7 +131,7 @@ static void timeHandler(void* userdata) {
     SAH_TRACEZ_INFO(ME, "Time rssiMon %s", pAP->alias);
 
     swl_rc_ne result = pAP->pFA->mfn_wvap_update_rssi_stats(pAP);
-    if(result != SWL_RC_OK) {
+    if(!swl_rc_isOk(result)) {
         SAH_TRACEZ_ERROR(ME, "%s: stopping rssi monitor, rssi stats failed", pAP->name);
         wld_mon_stop(&ev->monitor);
     }

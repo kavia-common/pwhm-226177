@@ -123,6 +123,21 @@ T_AssociatedDevice* wld_vap_get_existing_station(T_AccessPoint* pAP, swl_macBin_
 bool wld_vap_cleanup_stationlist(T_AccessPoint* pAP);
 bool wld_vap_assoc_update_cuid(T_AccessPoint* pAP, swl_macBin_t* mac, char* cuid, int len);
 
+/*
+ * @brief handler for each ap linked station (active)
+ *
+ * @param userData private user data
+ * @param pAP accesspoint to which the linked station is mainly associated
+ * @param pAD linked station assocDev context
+ *
+ * @return boolean the loop will stop if the handler returns true
+ */
+typedef bool (* wld_ap_linkedStaHdlr_f)(void* userData, T_AccessPoint* pAP, T_AssociatedDevice* pAD);
+
+swl_rc_ne wld_ap_doForEachLinkedStation(T_AccessPoint* pAP, swl_trl_e onlyAfSta, wld_ap_linkedStaHdlr_f hdlr, void* userData);
+uint32_t wld_ap_countLinkedStations(T_AccessPoint* pAP, swl_trl_e onlyAfSta);
+bool wld_ap_hasLinkedStation(T_AccessPoint* pAP, swl_trl_e onlyAfSta);
+
 void wld_ap_bss_done(T_AccessPoint* ap, const swl_macChar_t* mac, int reply_code, const swl_macChar_t* targetBssid);
 void wld_ap_rrm_item(T_AccessPoint* ap, const swl_macChar_t* mac, amxc_var_t* result);
 

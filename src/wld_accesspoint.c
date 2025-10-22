@@ -2217,6 +2217,53 @@ T_AssociatedDevice* wld_vap_get_existing_station(T_AccessPoint* pAP, swl_macBin_
     return EntryWithMatchingMac;
 }
 
+swl_rc_ne wld_ap_doForEachLinkedStation(T_AccessPoint* pAP, swl_trl_e onlyAfSta, wld_ap_linkedStaHdlr_f hdlr, void* userData) {
+    ASSERTS_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    T_Radio* pRad;
+    wld_for_eachRad(pRad) {
+        T_AccessPoint* pTmpAP = NULL;
+        wld_rad_forEachAp(pTmpAP, pRad) {
+            for(int i = 0; i < pTmpAP->AssociatedDeviceNumberOfEntries; i++) {
+                wld_affiliatedSta_t* afSta = NULL;
+                T_AssociatedDevice* pAD = pTmpAP->AssociatedDevice[i];
+                if(pAD && pAD->Active &&
+                   (((onlyAfSta != SWL_TRL_FALSE) && ((afSta = wld_ad_getAffiliatedSta(pAD, pAP)) != NULL) && afSta->active) ||
+                    ((onlyAfSta != SWL_TRL_TRUE) && (pTmpAP == pAP)))) {
+                    if((hdlr != NULL) && (hdlr(userData, pAP, pAD) == true)) {
+                        return SWL_RC_DONE;
+                    }
+                }
+            }
+        }
+    }
+    return SWL_RC_OK;
+}
+
+static bool s_countLinkedStationsHdlr(void* userData, T_AccessPoint* pAP _UNUSED, T_AssociatedDevice* pAD _UNUSED) {
+    ASSERTS_NOT_NULL(userData, false, ME, "NULL");
+    uint32_t* pCount = (uint32_t*) userData;
+    *pCount += 1;
+    return false;
+}
+
+uint32_t wld_ap_countLinkedStations(T_AccessPoint* pAP, swl_trl_e onlyAfSta) {
+    uint32_t count = 0;
+    wld_ap_doForEachLinkedStation(pAP, onlyAfSta, s_countLinkedStationsHdlr, &count);
+    return count;
+}
+
+static bool s_hasLinkedStationHdlr(void* userData, T_AccessPoint* pAP _UNUSED, T_AssociatedDevice* pAD _UNUSED) {
+    ASSERTS_NOT_NULL(userData, false, ME, "NULL");
+    bool* pFlag = (bool*) userData;
+    *pFlag = true;
+    return true;
+}
+
+bool wld_ap_hasLinkedStation(T_AccessPoint* pAP, swl_trl_e onlyAfSta) {
+    bool flag = false;
+    wld_ap_doForEachLinkedStation(pAP, onlyAfSta, s_hasLinkedStationHdlr, &flag);
+    return flag;
+}
 
 /**
  * free the T_AssociatedDevice and remove it from the list

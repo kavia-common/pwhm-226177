@@ -326,7 +326,7 @@ static bool s_isAnyStationInfoOld(T_AccessPoint* pAP) {
     return false;
 }
 
-swl_rc_ne wifiGen_get_station_stats(T_AccessPoint* pAP) {
+swl_rc_ne wifiGen_vap_getStationStats(T_AccessPoint* pAP) {
     ASSERTI_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
     T_Radio* pRad = (T_Radio*) pAP->pRadio;
     ASSERTI_NOT_EQUALS(pRad->status, RST_ERROR, SWL_RC_INVALID_STATE, ME, "NULL");
@@ -354,17 +354,17 @@ swl_rc_ne wifiGen_get_station_stats(T_AccessPoint* pAP) {
     return SWL_RC_OK;
 }
 
-swl_rc_ne wifiGen_get_single_station_stats(T_AssociatedDevice* pAD) {
+swl_rc_ne wifiGen_vap_getSingleStationStats(T_AssociatedDevice* pAD) {
     T_AccessPoint* pAP = wld_ad_getAssociatedAp(pAD);
     ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_STATE, ME, "NULL");
     T_Radio* pRad = (T_Radio*) pAP->pRadio;
     ASSERTI_NOT_EQUALS(pRad->status, RST_ERROR, SWL_RC_INVALID_STATE, ME, "NULL");
-    ASSERTI_TRUE(pAD->Active, SWL_RC_OK, ME, "assocdev no more active");
-    ASSERTI_TRUE(s_isStationInfoOld(pAD), SWL_RC_DONE, ME, "station %s stats are too recent",
+    ASSERTI_TRUE(pAD->Active, SWL_RC_OK, ME, "%s: assocdev %s no more active", pAP->name, pAD->Name);
+    ASSERTS_TRUE(s_isStationInfoOld(pAD), SWL_RC_DONE, ME, "station %s stats are too recent",
                  swl_typeMacBin_toBuf32Ref((swl_macBin_t*) pAD->MACAddress).buf);
 
-    SAH_TRACEZ_INFO(ME, "pAP->alias = %s", pAP->alias);
-    SAH_TRACEZ_INFO(ME, "pAD->Name = %s", pAD->Name);
+    SAH_TRACEZ_INFO(ME, "AP %s (netdev %s)", pAP->name, pAP->alias);
+    SAH_TRACEZ_INFO(ME, "AD %s", pAD->Name);
 
     wld_nl80211_stationInfo_t stationInfo;
     memset(&stationInfo, 0, sizeof(wld_nl80211_stationInfo_t));
@@ -377,6 +377,23 @@ swl_rc_ne wifiGen_get_single_station_stats(T_AssociatedDevice* pAD) {
         s_resetAssocDevSignalNoise(pAD);
     }
     return SWL_RC_OK;
+}
+
+static bool s_updateLinkedStaInfoHdlr(void* userData _UNUSED, T_AccessPoint* pAP, T_AssociatedDevice* pAD) {
+    ASSERTS_NOT_NULL(pAP, false, ME, "NULL");
+    pAP->pFA->mfn_wvap_get_single_station_stats(pAD);
+    return false;
+}
+
+static swl_rc_ne s_updateApStaStats(T_AccessPoint* pAP, swl_trl_e onlyAfSta) {
+    ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTS_EQUALS(pAP->status, APSTI_ENABLED, SWL_RC_INVALID_STATE, ME, "invalid vap status");
+    return wld_ap_doForEachLinkedStation(pAP, onlyAfSta, s_updateLinkedStaInfoHdlr, NULL);
+}
+
+swl_rc_ne wifiGen_vap_updateRssiStats(T_AccessPoint* pAP) {
+    ASSERTI_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    return s_updateApStaStats(pAP, SWL_TRL_FALSE);
 }
 
 int wifiGen_vap_sec_sync(T_AccessPoint* pAP, int set) {
@@ -526,7 +543,7 @@ static void s_syncRelayCredentials(T_AccessPoint* pAP) {
 swl_rc_ne wifiGen_vap_wps_sync(T_AccessPoint* pAP, char* val, int bufsize, int set) {
     swl_rc_ne rc;
     if(!(set & SET)) {
-        if((set & GET) && (val != NULL) && (bufsize > 64)) {
+        if((val != NULL) && (bufsize > 64)) {
             snprintf(val, bufsize, "wps_configured=%s; wps_configmethod=%x",
                      (pAP->WPS_Configured) ? "Configured" : "Un-Configured",
                      pAP->WPS_ConfigMethodsEnabled);
