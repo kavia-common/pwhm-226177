@@ -731,6 +731,10 @@ swl_rc_ne wifiGen_vap_clean_sta(T_AccessPoint* pAP, char* buf, int bufsize _UNUS
     ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_TRUE(swl_mac_charIsValidStaMac((swl_macChar_t*) buf), SWL_RC_INVALID_PARAM, ME, "Invalid");
 
+    // Only needed when using multiple hostapd
+    wld_secDmn_t* pSecDmn = wld_wpaCtrlMngr_getSecDmn(wld_wpaCtrlInterface_getMgr(pAP->wpaCtrlInterface));
+    ASSERTI_FALSE((wld_secDmn_countGrpMembers(pSecDmn) > 1), SWL_RC_OK, ME, "Not needed for single hostapd");
+
     swl_macBin_t bMac;
     SWL_MAC_CHAR_TO_BIN(&bMac, buf);
 
