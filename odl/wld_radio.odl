@@ -1376,6 +1376,64 @@ define probelist_t{
 		 */
 		%read-only string SupportedHeMcsNssSet;
 
+		/**
+		 * Radio 802.11be EHT(Extremely High Throughput) physical capabilities, raw values, in base64 as per the Tr181 Spec.
+		 * See standard section "9.4.2.322.3 EHT PHY Capabilities Information field" for bits details.
+		*/
+		%read-only string EhtPhyCapabilities;
+
+                /**
+                 * Radio 802.11be EHT(Extremely High Throughput) physical capabilities. List of strings  with these
+		 * possible values:
+		 * * RESERVED
+                 * * 320MHZ
+                 * * 242TONE_RU_20MHZ
+                 * * NDP_4XEHT_LTF
+                 * * PARTIAL_BW_ULMUMIMO
+                 * * SU_BEAMFORMER
+                 * * SU_BEAMFORMEE
+                 * * BEAMFORMEE_SS_80MHZ
+                 * * BEAMFORMEE_SS_160MHZ
+                 * * BEAMFORMEE_SS_320MHZ
+                 * * NB_SOUNDING_80MHZ
+                 * * NB_SOUNDING_160MHZ
+                 * * NB_SOUNDING_320MHZ
+                 * * NG16_SU_FEEDBACK
+                 * * NG16_MU_FEEDBACK
+                 * * CBK_SU_FEEDBACK
+                 * * CBK_MU_FEEDBACK
+                 * * TGD_SU_BEAMFORMING_FEEDBACK
+                 * * TGD_MU_BEAMFORMING_PARTIAL_BW
+                 * * TGD_CQI_FEEDBACK
+                 * * PARTIAL_BW_DLMUMIMO
+                 * * PSR_SR_SUPPORT
+                 * * PBF_SUPPORT
+                 * * MUPPDU_4XEHT_LTF
+                 * * MAX_NC
+                 * * NTGD_CQI_FEEDBACK
+                 * * TX_1024_4096_QAM_242TONE_RU
+                 * * RX_1024_4096_QAM_242TONE_RU
+                 * * PPE_THRESHOLDS
+                 * * COMMON_NOMINAL_PACKET_PADDING
+                 * * MAX_SUPPORTED_EHT_LTFS
+                 * * EHT_MCS15_MRU
+                 * * EHTDUP_MCS14_6GHZ
+                 * * 20MHZ_STA_NDP_WIDER_BW
+                 * * NON_OFDMA_ULMIMO_80MHZ
+                 * * NON_OFDMA_ULMIMO_160MHZ
+                 * * NON_OFDMA_ULMIMO_320MHZ
+                 * * MU_BEAMFORMER_80MHZ
+                 * * MU_BEAMFORMER_160MHZ
+                 * * MU_BEAMFORMER_320MHZ
+                 * * TB_SFR_LIMIT
+                 * * RX_1024QAM_WIDER_BW
+                 * * RX_4096QAM_WIDER_BW
+                 * * 20MHZ_ONLY_LIMITED
+                 * * 20MHZ_ONLY_TGD_MU_BEAMFORMING
+                 * * 20MHZ_ONLY_MRU
+		*/
+		%read-only string EhtPhyCapabilitiesStr;
+
 		/** <p> Indicates if Reduced Interframe Space is enabled.</p>
 		 * Default = keep the current mode
 		 * Auto = let the driver to manage the RIFS

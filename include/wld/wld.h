@@ -1594,6 +1594,7 @@ struct WLD_RADIO {
     swl_80211_hecap_macCapInfo_t heMacCapabilities;                         /* HE(High Efficiency) 802.11ax mac capabilities */
     swl_80211_hecap_phyCapInfo_t hePhyCapabilities;                         /* HE(High Efficiency) 802.11ax phy capabilities */
     swl_80211_hecap_MCSCap_t heMcsCaps[SWL_80211_HECAP_MCS_CAP_ARRAY_SIZE]; /* The Supported HE-MCS and NSS Set */
+    swl_80211_ehtcap_phyCapInfo_t ehtPhyCapabilities;                       /* EHT(Extremely High Throughput) 802.11be capabilities*/
     wld_rifs_mode_e RIFSEnabled;
     bool airtimeFairnessEnabled;                                            /* Enable airtime fairness feature */
     bool intAirtimeSchedEnabled;                                            /* Enable intelligent airtime scheduling*/
