@@ -1021,7 +1021,7 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
 
     bool isIEEE80211k = pAP->IEEE80211kEnable && pRad->IEEE80211kSupported;
     // Enable neighbor report via radio measurements
-    swl_mapCharFmt_addValInt32(vapConfigMap, "rrm_neighbor_report", isIEEE80211k);
+    swl_mapCharFmt_addValInt32(vapConfigMap, "rrm_neighbor_report", isIEEE80211k && pAP->SSIDAdvertisementEnabled);
     // Enable beacon report via radio measurements
     swl_mapCharFmt_addValInt32(vapConfigMap, "rrm_beacon_report", isIEEE80211k);
     // set rnr is supported by hostapd
