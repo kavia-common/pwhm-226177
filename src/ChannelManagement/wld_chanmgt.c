@@ -294,24 +294,32 @@ static void s_onUpdateChannelChangeConfig(T_Radio* pRad) {
     s_cleanChannelListTillSize(pRad, pRad->channelChangeListSize);
 }
 
-static const char* s_isTargetChanspecValid(T_Radio* pR, swl_chanspec_t chanspec) {
+static const char* s_isTargetChanspecValid(T_Radio* pR, swl_chanspec_t chanspec, swl_rc_ne* pRc) {
     bool isValid = ((pR->operatingFrequencyBand == SWL_FREQ_BAND_EXT_2_4GHZ) && swl_channel_is2g(chanspec.channel)) ||
         ((pR->operatingFrequencyBand == SWL_FREQ_BAND_EXT_5GHZ) && swl_channel_is5g(chanspec.channel)) ||
         ((pR->operatingFrequencyBand == SWL_FREQ_BAND_EXT_6GHZ) && swl_channel_is6g(chanspec.channel));
     if(!isValid) {
+        W_SWL_SETPTR(pRc, SWL_RC_INVALID_PARAM);
         return "Illegal channel for band";
     }
 
-    if(swl_typeChanspec_equals(pR->targetChanspec.chanspec, chanspec) &&
-       ((pR->targetChanspec.isApplied == SWL_TRL_UNKNOWN) ||
-        ((pR->targetChanspec.isApplied == SWL_TRL_TRUE) && swl_typeChanspec_equals(pR->currentChanspec.chanspec, chanspec)))) {
-        return "same chanspec";
-    }
-
     if(wld_channel_is_band_radar_detected(chanspec)) {
+        W_SWL_SETPTR(pRc, SWL_RC_INVALID_STATE);
         return "Chanspec not available due to radar";
     }
 
+    if(swl_typeChanspec_equals(pR->targetChanspec.chanspec, chanspec)) {
+        if((pR->targetChanspec.isApplied == SWL_TRL_TRUE) && swl_typeChanspec_equals(pR->currentChanspec.chanspec, chanspec)) {
+            W_SWL_SETPTR(pRc, SWL_RC_DONE);
+            return "same chanspec, applied";
+        }
+        if(pR->targetChanspec.isApplied == SWL_TRL_UNKNOWN) {
+            W_SWL_SETPTR(pRc, SWL_RC_CONTINUE);
+            return "same chanspec, not yet applied";
+        }
+    }
+
+    W_SWL_SETPTR(pRc, SWL_RC_OK);
     return NULL;
 }
 
@@ -346,6 +354,12 @@ static void s_setChanspecDone(T_Radio* pR, amxd_status_t status) {
 
 static swl_rc_ne s_refreshCurrentChanspec(T_Radio* pR, swl_chanspec_t chanspec, wld_channelChangeReason_e reason) {
     ASSERT_NOT_NULL(pR, SWL_RC_ERROR, ME, "NULL");
+
+    if(swl_typeChanspec_equals(pR->targetChanspec.chanspec, chanspec)) {
+        pR->targetChanspec.isApplied = SWL_TRL_TRUE;
+    } else if(pR->targetChanspec.isApplied == SWL_TRL_UNKNOWN) {
+        pR->targetChanspec.isApplied = SWL_TRL_FALSE;
+    }
 
     if(swl_typeChanspec_equals(chanspec, pR->currentChanspec.chanspec)) {
         SAH_TRACEZ_INFO(ME, "%s: report same chanspec, %s (reason %s)", pR->Name,
@@ -390,11 +404,6 @@ static swl_rc_ne s_refreshCurrentChanspec(T_Radio* pR, swl_chanspec_t chanspec, 
         swl_str_cat(pR->currentChanspec.reasonExt, sizeof(pR->currentChanspec.reasonExt), pR->targetChanspec.reasonExt);
     } else {
         memset(pR->targetChanspec.reasonExt, 0, sizeof(pR->targetChanspec.reasonExt));
-    }
-    if(swl_typeChanspec_equals(pR->targetChanspec.chanspec, pR->currentChanspec.chanspec)) {
-        pR->targetChanspec.isApplied = SWL_TRL_TRUE;
-    } else if(pR->targetChanspec.isApplied == SWL_TRL_UNKNOWN) {
-        pR->targetChanspec.isApplied = SWL_TRL_FALSE;
     }
 
     if(s_isChanspecSync(pR)) {
@@ -598,8 +607,15 @@ swl_rc_ne wld_chanmgt_setTargetChanspec(T_Radio* pR, swl_chanspec_t chanspec, bo
         tgtChanspec.bandwidth = maxAppBw;
     }
 
-    const char* checkReason = s_isTargetChanspecValid(pR, tgtChanspec);
-    ASSERT_NULL(checkReason, SWL_RC_ERROR, ME, "%s: %s <%s>", pR->Name, checkReason, swl_type_toBuf32(&gtSwl_type_chanspecExt, &chanspec).buf);
+    const char* checkReason = s_isTargetChanspecValid(pR, tgtChanspec, &rc);
+    if(rc != SWL_RC_OK) {
+        SAH_TRACEZ_ERROR(ME, "%s: %s <%s>", pR->Name, checkReason, swl_type_toBuf32(&gtSwl_type_chanspecExt, &chanspec).buf);
+        if((rc == SWL_RC_CONTINUE) && direct) {
+            SAH_TRACEZ_WARNING(ME, "%s: Force direct apply of pending <%s>", pR->Name, swl_type_toBuf32(&gtSwl_type_chanspecExt, &chanspec).buf);
+        } else {
+            return SWL_RC_ERROR;
+        }
+    }
 
     if(!wld_rad_firstCommitFinished(pR) && (reason == CHAN_REASON_MANUAL) && (pR->totalNrTargetChanspecChanges < 2)) {
         reason = CHAN_REASON_PERSISTANCE;
@@ -648,8 +664,12 @@ swl_rc_ne wld_chanmgt_setTargetChanspec(T_Radio* pR, swl_chanspec_t chanspec, bo
     /* Change channel */
     if(reason != CHAN_REASON_INITIAL) {
         rc = pR->pFA->mfn_wrad_setChanspec(pR, direct);
-        if(swl_rc_isOk(rc) && !direct) {
-            wld_autoCommitMgr_notifyRadEdit(pR);
+        if(swl_rc_isOk(rc)) {
+            if(!direct) {
+                wld_autoCommitMgr_notifyRadEdit(pR);
+            }
+        } else if(direct) {
+            pR->targetChanspec.isApplied = SWL_TRL_FALSE;
         }
     }
     if(rc == SWL_RC_DONE) {
