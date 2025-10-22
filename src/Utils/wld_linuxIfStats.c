@@ -60,11 +60,6 @@
 **
 ****************************************************************************/
 
-
-#include "wld_linuxIfStats.h"
-#include "swl/swl_assert.h"
-#include "wld_radio.h"
-
 #include <debug/sahtrace.h>
 
 #include <string.h>
@@ -74,6 +69,15 @@
 #include <linux/types.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#include <linux/limits.h>
+#include <dirent.h>
+
+#include "swl/swl_assert.h"
+
+#include "wld_linuxIfStats.h"
+#include "wld_linuxIfUtils.h"
+#include "wld_radio.h"
+#include "wld_util.h"
 
 #define ME "linuxIfStats"
 
@@ -169,40 +173,6 @@ static bool s_getRtmNewLinkInterfaceStats(const struct nlmsghdr* pMsg, const cha
     }
 
     return false;
-}
-
-/**
- * @brief accumulate statistics for all VAP/EP of one radio
- *
- * @param[in] pInterfaceStats, statistics a one single VAR or EP
- * @param[in, out] pAllStats the accumelated statistics
- *
- */
-
-static void s_accumulateStats(T_Stats* pAllStats, T_Stats* pInterfaceStats) {
-
-    ASSERT_NOT_NULL(pAllStats, , ME, "NULL");
-    ASSERT_NOT_NULL(pInterfaceStats, , ME, "NULL");
-
-    pAllStats->BytesSent += pInterfaceStats->BytesSent;
-    pAllStats->BytesReceived += pInterfaceStats->BytesReceived;
-    pAllStats->PacketsSent += pInterfaceStats->PacketsSent;
-    pAllStats->PacketsReceived += pInterfaceStats->PacketsReceived;
-    pAllStats->ErrorsSent += pInterfaceStats->ErrorsSent;
-    pAllStats->ErrorsReceived += pInterfaceStats->ErrorsReceived;
-    pAllStats->RetransCount += pInterfaceStats->RetransCount;
-    pAllStats->DiscardPacketsSent += pInterfaceStats->DiscardPacketsSent;
-    pAllStats->DiscardPacketsReceived += pInterfaceStats->DiscardPacketsReceived;
-    pAllStats->UnicastPacketsSent += pInterfaceStats->UnicastPacketsSent;
-    pAllStats->UnicastPacketsReceived += pInterfaceStats->UnicastPacketsReceived;
-    pAllStats->MulticastPacketsSent += pInterfaceStats->MulticastPacketsSent;
-    pAllStats->MulticastPacketsReceived += pInterfaceStats->MulticastPacketsReceived;
-    pAllStats->BroadcastPacketsSent += pInterfaceStats->BroadcastPacketsSent;
-    pAllStats->BroadcastPacketsReceived += pInterfaceStats->BroadcastPacketsReceived;
-    pAllStats->UnknownProtoPacketsReceived += pInterfaceStats->UnknownProtoPacketsReceived;
-    pAllStats->FailedRetransCount += pInterfaceStats->FailedRetransCount;
-    pAllStats->RetryCount += pInterfaceStats->RetryCount;
-    pAllStats->MultipleRetryCount += pInterfaceStats->MultipleRetryCount;
 }
 
 /**
@@ -329,6 +299,49 @@ bool wld_linuxIfStats_getInterfaceStats(const char* pIfaceName, T_Stats* pInterf
     return result;
 }
 
+static const char* s_getUpperIface(const char* ifname) {
+    if(swl_str_startsWith(ifname, "upper_")) {
+        return strchr(ifname, '_') + 1;
+    }
+    return "";
+}
+
+static int s_filterUpperVlans(const struct dirent* pEntry) {
+    if(pEntry->d_type != DT_LNK) {
+        return 0;
+    }
+    return wld_linuxIfUtils_isVlanIface(s_getUpperIface(pEntry->d_name));
+}
+
+/**
+ * @brief Accumulate upper vlans statistics of given network interface
+ * by getting upper vlan nodes in sysfs /sys/class/net/[main_iface]/upper_<vlan_iface>
+ *
+ * @param[in] pIfaceName Name of the network interface.
+ * @param[in, out] pStats Accumulated statistics of all vlan interfaces.
+ *
+ * @return True on success and false otherwise.
+ */
+bool wld_linuxIfStats_acculumateUpperVlansStats(const char* ifname, T_Stats* pStats) {
+    ASSERTS_STR(ifname, false, ME, "empty");
+    char fPath[PATH_MAX] = {0};
+    swl_str_catFormat(fPath, sizeof(fPath), "/sys/class/net/%s/", ifname);
+    struct dirent** namelist = NULL;
+    int n = scandir(fPath, &namelist, s_filterUpperVlans, alphasort);
+    ASSERTI_NOT_EQUALS(n, -1, false, ME, "fail to scan dir %s", fPath);
+    for(int i = 0; i < n; i++) {
+        const char* upperIface = s_getUpperIface(namelist[i]->d_name);
+        T_Stats interfaceStats;
+        memset(&interfaceStats, 0, sizeof(interfaceStats));
+        if(wld_linuxIfStats_getInterfaceStats(upperIface, &interfaceStats)) {
+            wld_util_accumulateStats(pStats, &interfaceStats);
+        }
+        free(namelist[i]);
+    }
+    free(namelist);
+    return true;
+}
+
 /**
  * Get virtual accespoints statistics
  */
@@ -355,7 +368,9 @@ bool wld_linuxIfStats_getVapStats(T_AccessPoint* pAP, T_Stats* pVapStats) {
         wld_wds_intf_t* wdsIntf = amxc_llist_it_get_data(it, wld_wds_intf_t, entry);
         SAH_TRACEZ_INFO(ME, "statistics WDS interface = %s", wdsIntf->name);
         if(wld_linuxIfStats_getInterfaceStats(wdsIntf->name, &interfaceStats)) {
-            s_accumulateStats(pVapStats, &interfaceStats);
+            // accumulate statistics of wds iface vlans
+            wld_linuxIfStats_acculumateUpperVlansStats(wdsIntf->name, &interfaceStats);
+            wld_util_accumulateStats(pVapStats, &interfaceStats);
         }
     }
 
@@ -378,11 +393,9 @@ bool wld_linuxIfStats_getAllVapStats(T_Radio* pRadio, T_Stats* pAllVapStats) {
     memset(&interfaceStats, 0, sizeof(interfaceStats));
 
     // Get APs stats
-    for(amxc_llist_it_t* it = (amxc_llist_it_t*) amxc_llist_get_first(&pRadio->llAP); it; it = (amxc_llist_it_t*) amxc_llist_it_get_next(it)) {
-        pAP = (T_AccessPoint*) amxc_llist_it_get_data(it, T_AccessPoint, it);
-
+    wld_rad_forEachAp(pAP, pRadio) {
         result |= wld_linuxIfStats_getVapStats(pAP, &interfaceStats);
-        s_accumulateStats(pAllVapStats, &interfaceStats);
+        wld_util_accumulateStats(pAllVapStats, &interfaceStats);
     }
 
     return result;
@@ -403,8 +416,7 @@ bool wld_linuxIfStats_getAllEpStats(T_Radio* pRadio, T_Stats* pAllEpStats) {
     memset(&interfaceStats, 0, sizeof(interfaceStats));
 
     // Get EPs Stats
-    for(amxc_llist_it_t* it = (amxc_llist_it_t*) amxc_llist_get_first(&pRadio->llEndPoints); it; it = (amxc_llist_it_t*) amxc_llist_it_get_next(it)) {
-        pEP = (T_EndPoint*) amxc_llist_it_get_data(it, T_EndPoint, it);
+    wld_rad_forEachEp(pEP, pRadio) {
 
         SAH_TRACEZ_INFO(ME, "Radio EP interface = %s", pEP->Name);
 
@@ -413,13 +425,14 @@ bool wld_linuxIfStats_getAllEpStats(T_Radio* pRadio, T_Stats* pAllEpStats) {
         }
         if(!wld_linuxIfStats_getInterfaceStats(pEP->Name, &interfaceStats)) {
             SAH_TRACEZ_ERROR(ME, "Failed to get interface statistics for interface %s", pEP->Name);
-            result |= false;
             continue;
         }
+        // accumulate statistics of ep iface vlans
+        wld_linuxIfStats_acculumateUpperVlansStats(pEP->Name, &interfaceStats);
 
-        s_accumulateStats(pAllEpStats, &interfaceStats);
+        wld_util_accumulateStats(pAllEpStats, &interfaceStats);
 
-        result |= true;
+        result = true;
     }
 
     return result;

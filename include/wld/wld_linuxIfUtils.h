@@ -254,4 +254,38 @@ int wld_linuxIfUtils_updateMacExt(char* intfName, swl_macBin_t* macAddress);
  */
 const char* wld_linuxIfUtils_getChipsetVendor(char* radioName);
 
+/*
+ * @brief check whether a network interface is a vlan interface
+ * by checking node in procfs /proc/net/vlan/<vlan_iface>
+ *
+ * @param[in] pIfaceName Name of the network interface.
+ *
+ * @return True on success and false otherwise.
+ */
+bool wld_linuxIfUtils_isVlanIface(const char* ifname);
+
+/**
+ * @brief Get lower interfaces of given network iface
+ * by getting all lower nodes in sysfs /sys/class/net/[main_iface]/lower_<lower_iface>
+ *
+ * @param[in] pIfaceName Name of the network interface.
+ * @param[in, out] pppLowerIfaces target array of strings, filled with lower iface names. (to be freed by the caller)
+ * @param[in, out] pnLowerIfaces pointer to target array of strings length
+ *
+ * @return True on success and false otherwise.
+ */
+bool wld_linuxIfUtils_getLowerIfaces(const char* ifname, char*** pppLowerIfaces, size_t* pnLowerIfaces);
+
+/**
+ * @brief Get lower interface of given vlan network iface
+ * by getting the vlan lower node in sysfs /sys/class/net/[vlan_iface]/lower_<lower_iface>
+ *
+ * @param[in] pIfaceName Name of the vlan network interface.
+ * @param[in, out] lowerIfaceBuf target buffer with lower iface name.
+ * @param[in] lowerIfaceBufSize size of target buffer
+ *
+ * @return True on success and false otherwise.
+ */
+bool wld_linuxIfUtils_getVlanLowerIface(const char* ifname, char* lowerIfaceBuf, size_t lowerIfaceBufSize);
+
 #endif /* INCLUDE_WLD_WLD_LINUXIFUTILS_H_ */

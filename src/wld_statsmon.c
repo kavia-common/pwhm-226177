@@ -67,6 +67,7 @@
 #include "wld_statsmon.h"
 #include "wld_util.h"
 #include "wld_radio.h"
+#include "wld_linuxIfUtils.h"
 
 /*Skip white space and word macros */
 #define SKIP_WSP(a)  while((a) && ((*(a) == ' ') || (*(a) == '\t')))(a) ++
@@ -154,6 +155,10 @@ static int s_getLinuxLineStats(char* pCh, T_Radio* pR, T_SSID* pSSID) {
             return 1;
         }
 
+        if(wld_linuxIfUtils_isVlanIface(intfStats.intfName)) {
+            wld_linuxIfUtils_getVlanLowerIface(intfStats.intfName, intfStats.intfName, sizeof(intfStats.intfName));
+        }
+
         pAP = wld_rad_vap_from_wds_name(pR, intfStats.intfName);
         if(pAP != NULL) {
             s_addTxRxStats2Stats(&pAP->pSSID->stats, &intfStats);
@@ -169,8 +174,14 @@ static int s_getLinuxLineStats(char* pCh, T_Radio* pR, T_SSID* pSSID) {
             return 1;
         }
     } else if((pSSID != NULL) && ((pR = pSSID->RADIO_PARENT) != NULL)) {
+        if(wld_rad_vap_from_name(pR, intfStats.intfName) != NULL) {
+            s_addTxRxStats2Stats(&pSSID->stats, &intfStats);
+            return 1;
+        }
+        if(wld_linuxIfUtils_isVlanIface(intfStats.intfName)) {
+            wld_linuxIfUtils_getVlanLowerIface(intfStats.intfName, intfStats.intfName, sizeof(intfStats.intfName));
+        }
         if((wld_rad_vap_from_wds_name(pR, intfStats.intfName) != NULL) ||
-           (wld_rad_vap_from_name(pR, intfStats.intfName) != NULL) ||
            (wld_rad_ep_from_name(pR, intfStats.intfName) != NULL)) {
             s_addTxRxStats2Stats(&pSSID->stats, &intfStats);
             return 1;

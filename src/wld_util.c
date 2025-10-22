@@ -2283,6 +2283,31 @@ amxd_status_t wld_util_statsObj2Var(amxc_var_t* map, amxd_object_t* statsObj) {
     return status;
 }
 
+void wld_util_accumulateStats(T_Stats* pAccStats, T_Stats* pDiffStats) {
+    ASSERT_NOT_NULL(pAccStats, , ME, "NULL");
+    ASSERT_NOT_NULL(pDiffStats, , ME, "NULL");
+
+    pAccStats->BytesSent += pDiffStats->BytesSent;
+    pAccStats->BytesReceived += pDiffStats->BytesReceived;
+    pAccStats->PacketsSent += pDiffStats->PacketsSent;
+    pAccStats->PacketsReceived += pDiffStats->PacketsReceived;
+    pAccStats->ErrorsSent += pDiffStats->ErrorsSent;
+    pAccStats->ErrorsReceived += pDiffStats->ErrorsReceived;
+    pAccStats->RetransCount += pDiffStats->RetransCount;
+    pAccStats->DiscardPacketsSent += pDiffStats->DiscardPacketsSent;
+    pAccStats->DiscardPacketsReceived += pDiffStats->DiscardPacketsReceived;
+    pAccStats->UnicastPacketsSent += pDiffStats->UnicastPacketsSent;
+    pAccStats->UnicastPacketsReceived += pDiffStats->UnicastPacketsReceived;
+    pAccStats->MulticastPacketsSent += pDiffStats->MulticastPacketsSent;
+    pAccStats->MulticastPacketsReceived += pDiffStats->MulticastPacketsReceived;
+    pAccStats->BroadcastPacketsSent += pDiffStats->BroadcastPacketsSent;
+    pAccStats->BroadcastPacketsReceived += pDiffStats->BroadcastPacketsReceived;
+    pAccStats->UnknownProtoPacketsReceived += pDiffStats->UnknownProtoPacketsReceived;
+    pAccStats->FailedRetransCount += pDiffStats->FailedRetransCount;
+    pAccStats->RetryCount += pDiffStats->RetryCount;
+    pAccStats->MultipleRetryCount += pDiffStats->MultipleRetryCount;
+}
+
 void wld_util_updateStatusChangeInfo(wld_status_changeInfo_t* info, wld_status_e status) {
     ASSERT_NOT_NULL(info, , ME, "NULL");
     swl_timeMono_t now = swl_time_getMonoSec();

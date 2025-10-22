@@ -76,6 +76,7 @@ bool wld_linuxIfStats_getVapStats(T_AccessPoint* pAP, T_Stats* pVapStats);
 bool wld_linuxIfStats_getAllVapStats(T_Radio* pRadio, T_Stats* pAllVapStats);
 bool wld_linuxIfStats_getAllEpStats(T_Radio* pRadio, T_Stats* pAllEpStats);
 bool wld_linuxIfStats_getRadioStats(T_Radio* pRadio, T_Stats* pRadioStats);
+bool wld_linuxIfStats_acculumateUpperVlansStats(const char* ifname, T_Stats* pStats);
 
 
 #endif /* INCLUDE_WLD_LINUX_IF_STATS_H_ */

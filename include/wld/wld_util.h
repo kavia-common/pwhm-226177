@@ -354,6 +354,15 @@ amxd_status_t wld_util_stats2Obj(amxd_object_t* obj, T_Stats* stats);
  */
 amxd_status_t wld_util_statsObj2Var(amxc_var_t* map, amxd_object_t* statsObj);
 
+/**
+ * @brief add stats diff to accumulated stats
+ *
+ * @param pAccStats pointer to the accumulated stats
+ * @param pDiffStats pointer to the diff stats to be added to accu
+ * @return void
+ */
+void wld_util_accumulateStats(wld_stats_t* pAccStats, wld_stats_t* pDiffStats);
+
 void wld_util_initCustomAlias(amxd_trans_t* trans, amxd_object_t* object);
 
 /**

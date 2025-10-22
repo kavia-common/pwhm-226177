@@ -64,6 +64,8 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/if_arp.h>
+#include <linux/limits.h>
+#include <dirent.h>
 
 #include "swl/swl_common.h"
 #include "swla/swla_mac.h"
@@ -310,4 +312,73 @@ const char* wld_linuxIfUtils_getChipsetVendor(char* radioName) {
     }
     free(rp);
     return vendorName;
+}
+
+bool wld_linuxIfUtils_isVlanIface(const char* ifname) {
+    ASSERTS_STR(ifname, false, ME, "empty");
+    char fPath[PATH_MAX] = {0};
+    swl_str_catFormat(fPath, sizeof(fPath), "/proc/net/vlan/%s", ifname);
+    return (access(fPath, F_OK) == 0);
+}
+
+static const char* s_getLowerIface(const char* ifname) {
+    if(swl_str_startsWith(ifname, "lower_")) {
+        return strchr(ifname, '_') + 1;
+    }
+    return "";
+}
+
+static int s_filterLowers(const struct dirent* pEntry) {
+    if(pEntry->d_type != DT_LNK) {
+        return 0;
+    }
+    return !swl_str_isEmpty(s_getLowerIface(pEntry->d_name));
+}
+
+bool wld_linuxIfUtils_getLowerIfaces(const char* ifname, char*** pppLowerIfaces, size_t* pnLowerIfaces) {
+    ASSERTS_STR(ifname, false, ME, "empty");
+    char fPath[PATH_MAX] = {0};
+    swl_str_catFormat(fPath, sizeof(fPath), "/sys/class/net/%s/", ifname);
+    struct dirent** namelist = NULL;
+    int n = scandir(fPath, &namelist, s_filterLowers, alphasort);
+    ASSERTI_FALSE(n < 0, false, ME, "fail to scan dir %s", fPath);
+    char** ppLowerIfaces = NULL;
+    if(pppLowerIfaces) {
+        if(n > 0) {
+            //last element shall be null
+            ppLowerIfaces = calloc(n + 1, sizeof(char*));
+            ASSERTI_NOT_NULL(ppLowerIfaces, false, ME, "fail to alloc %d results of %s", n, fPath);
+        }
+        W_SWL_SETPTR(pppLowerIfaces, ppLowerIfaces);
+    }
+    W_SWL_SETPTR(pnLowerIfaces, (size_t) n);
+    for(int i = 0; i < n; i++) {
+        if(ppLowerIfaces) {
+            swl_str_copyMalloc(&ppLowerIfaces[i], s_getLowerIface(namelist[i]->d_name));
+        }
+        free(namelist[i]);
+    }
+    free(namelist);
+    return true;
+}
+
+bool wld_linuxIfUtils_getVlanLowerIface(const char* ifname, char* lowerIfaceBuf, size_t lowerIfaceBufSize) {
+    ASSERTS_TRUE(wld_linuxIfUtils_isVlanIface(ifname), false, ME, "invalid vlan name");
+    char** lowers = NULL;
+    size_t nLowers = 0;
+    bool ret = wld_linuxIfUtils_getLowerIfaces(ifname, &lowers, &nLowers);
+    if(ret && (nLowers > 0)) {
+        if(nLowers > 1) {
+            SAH_TRACEZ_WARNING(ME, "vlan iface %s has %zu lowers", ifname, nLowers);
+        }
+        //shall be only one lower for vlan interface
+        swl_str_copy(lowerIfaceBuf, lowerIfaceBufSize, lowers[0]);
+    }
+    if(lowers) {
+        for(size_t i = 0; i < nLowers; i++) {
+            W_SWL_FREE(lowers[i]);
+        }
+        free(lowers);
+    }
+    return ret;
 }

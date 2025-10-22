@@ -412,6 +412,58 @@ static void test_isValidAesKey(void** state _UNUSED) {
     assert_true(isValidAESKey("/*-+!@#$%^&*()_{}\"[]<>?", PSK_KEY_SIZE_LEN - 1));
 }
 
+static void s_checkAccuStats(T_Stats* pAccuStats, T_Stats* pUnit, uint32_t nUnit) {
+    assert_int_equal(pAccuStats->BytesSent, nUnit * pUnit->BytesSent);
+    assert_int_equal(pAccuStats->BytesReceived, nUnit * pUnit->BytesReceived);
+    assert_int_equal(pAccuStats->PacketsSent, nUnit * pUnit->PacketsSent);
+    assert_int_equal(pAccuStats->PacketsReceived, nUnit * pUnit->PacketsReceived);
+    assert_int_equal(pAccuStats->ErrorsSent, nUnit * pUnit->ErrorsSent);
+    assert_int_equal(pAccuStats->ErrorsReceived, nUnit * pUnit->ErrorsReceived);
+    assert_int_equal(pAccuStats->RetransCount, nUnit * pUnit->RetransCount);
+    assert_int_equal(pAccuStats->DiscardPacketsSent, nUnit * pUnit->DiscardPacketsSent);
+    assert_int_equal(pAccuStats->DiscardPacketsReceived, nUnit * pUnit->DiscardPacketsReceived);
+    assert_int_equal(pAccuStats->UnicastPacketsSent, nUnit * pUnit->UnicastPacketsSent);
+    assert_int_equal(pAccuStats->UnicastPacketsReceived, nUnit * pUnit->UnicastPacketsReceived);
+    assert_int_equal(pAccuStats->MulticastPacketsSent, nUnit * pUnit->MulticastPacketsSent);
+    assert_int_equal(pAccuStats->MulticastPacketsReceived, nUnit * pUnit->MulticastPacketsReceived);
+    assert_int_equal(pAccuStats->BroadcastPacketsSent, nUnit * pUnit->BroadcastPacketsSent);
+    assert_int_equal(pAccuStats->BroadcastPacketsReceived, nUnit * pUnit->BroadcastPacketsReceived);
+    assert_int_equal(pAccuStats->UnknownProtoPacketsReceived, nUnit * pUnit->UnknownProtoPacketsReceived);
+    assert_int_equal(pAccuStats->FailedRetransCount, nUnit * pUnit->FailedRetransCount);
+    assert_int_equal(pAccuStats->RetryCount, nUnit * pUnit->RetryCount);
+    assert_int_equal(pAccuStats->MultipleRetryCount, nUnit * pUnit->MultipleRetryCount);
+}
+
+static void test_accuStats(void** state _UNUSED) {
+    T_Stats accuStats;
+    memset(&accuStats, 0, sizeof(accuStats));
+    T_Stats diffStats;
+    memset(&diffStats, 0, sizeof(diffStats));
+    diffStats.BytesSent = 100;
+    diffStats.BytesReceived = 200;
+    diffStats.PacketsSent = 10;
+    diffStats.PacketsReceived = 20;
+    diffStats.ErrorsSent = 1;
+    diffStats.ErrorsReceived = 2;
+    diffStats.RetransCount = 1;
+    diffStats.DiscardPacketsSent = 2;
+    diffStats.DiscardPacketsReceived = 1;
+    diffStats.UnicastPacketsSent = 2;
+    diffStats.UnicastPacketsReceived = 1;
+    diffStats.MulticastPacketsSent = 2;
+    diffStats.MulticastPacketsReceived = 1;
+    diffStats.BroadcastPacketsSent = 2;
+    diffStats.BroadcastPacketsReceived = 1;
+    diffStats.UnknownProtoPacketsReceived = 2;
+    diffStats.FailedRetransCount = 1;
+    diffStats.RetryCount = 2;
+    diffStats.MultipleRetryCount = 1;
+    for(uint32_t i = 0; i < 3; i++) {
+        wld_util_accumulateStats(&accuStats, &diffStats);
+        s_checkAccuStats(&accuStats, &diffStats, i + 1);
+    }
+}
+
 static int s_setupSuite(void** state _UNUSED) {
     return 0;
 }
@@ -441,6 +493,7 @@ int main(int argc _UNUSED, char* argv[] _UNUSED) {
         cmocka_unit_test(test_isValidAesKey),
         cmocka_unit_test(test_convIntArrToString),
         cmocka_unit_test(test_convStrToIntArray),
+        cmocka_unit_test(test_accuStats),
     };
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);
     sahTraceClose();
