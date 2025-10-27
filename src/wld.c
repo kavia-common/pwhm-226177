@@ -559,6 +559,15 @@ void wld_deleteRadioObj(T_Radio* pRad) {
     pRad->scanState.cfg.fastScanReasons = NULL;
     wld_scan_cleanupScanResults(&pRad->scanState.lastScanResults);
     wld_cleanupSurveyReport(&pRad->scanState.lastSurveyReport);
+
+    if(swl_function_deferIsActive(&pRad->scanState.scanFunInfo)) {
+        amxd_function_deferred_remove(pRad->scanState.scanFunInfo.callId);
+    }
+
+    if(swl_function_deferIsActive(&pRad->callIdReqChanspec)) {
+        amxd_function_deferred_remove(pRad->callIdReqChanspec.callId);
+    }
+
     wld_spectrum_cleanupResults(pRad);
     wld_sensing_cleanup(pRad);
 

@@ -1775,5 +1775,8 @@ void wld_scan_init(T_Radio* pRad _UNUSED) {
 
 void wld_scan_destroy(T_Radio* pRad _UNUSED) {
     wld_event_remove_callback(gWld_queue_rad_onScan_change, &s_scanStatus_cb);
+    if(swl_function_deferIsActive(&g_neighWiFiDiag.callInfo)) {
+        amxd_function_deferred_remove(g_neighWiFiDiag.callInfo.callId);
+    }
 }
 
