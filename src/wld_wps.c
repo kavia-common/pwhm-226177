@@ -357,7 +357,7 @@ void genSelfPIN() {
 void wld_wps_updateState(T_AccessPoint* pAP) {
     ASSERT_NOT_NULL(pAP, , ME, "NULL");
     wld_wps_status_e oldApWpsStatus = pAP->WPS_Status;
-    bool wpsEnable = (pAP->WPS_Enable && (pAP->status == APSTI_ENABLED) &&
+    bool wpsEnable = (pAP->WPS_Enable && pAP->SSIDAdvertisementEnabled && (pAP->status == APSTI_ENABLED) &&
                       (pAP->secModeEnabled && !swl_security_isApModeWEP(pAP->secModeEnabled) && (pAP->secModeEnabled != SWL_SECURITY_APMODE_WPA3_P)));
 
     if(wpsEnable) {

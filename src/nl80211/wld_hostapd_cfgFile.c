@@ -1069,7 +1069,7 @@ static void s_setVapWpsConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap) {
         swl_mapChar_add(vapConfigMap, "wps_state", "0");
         return;
     }
-    bool wps_enable = (pAP->WPS_Enable &&
+    bool wps_enable = (pAP->WPS_Enable && pAP->SSIDAdvertisementEnabled &&
                        ((!pAP->secModeEnabled && pAP->WPS_CertMode) ||
                         (!swl_security_isApModeWEP(pAP->secModeEnabled)) ||
                         (!pAP->WPS_Configured)));

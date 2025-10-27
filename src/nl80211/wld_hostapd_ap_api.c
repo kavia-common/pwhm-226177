@@ -409,7 +409,7 @@ static bool s_setParam(T_AccessPoint* pAP, const char* param, const char* value,
          * If param is successfully set but has no specific applying action,
          * then reload whole save hostapd conf
          */
-        W_SWL_SETPTR(pAction, SECDMN_ACTION_OK_NEED_SIGHUP);
+        W_SWL_SETPTR(pAction, SWL_MAX(*pAction, SECDMN_ACTION_OK_NEED_SIGHUP));
     }
     return ret;
 }
