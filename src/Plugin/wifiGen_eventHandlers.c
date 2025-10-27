@@ -1036,7 +1036,9 @@ static void s_commonAssocReqCb(T_AccessPoint* pAP, swl_80211_mgmtFrame_t* frame,
         .seenOnChanspec = swl_chanspec_fromDm(pAP->pRadio->channel, pAP->pRadio->runningChannelBandwidth, pAP->pRadio->operatingFrequencyBand),
     };
     ssize_t parsedLen = swl_80211_parseInfoElementsBuffer(&wirelessDevIE, &parsingArgs, iesLen, iesData);
-    ASSERTW_FALSE(parsedLen < (ssize_t) iesLen, , ME, "Partial IEs parsing (%zi/%zu)", parsedLen, iesLen);
+    if(parsedLen < (ssize_t) iesLen) {
+        SAH_TRACEZ_WARNING(ME, "Partial IEs parsing (%zi/%zu)", parsedLen, iesLen);
+    }
     swl_macBin_t* mac = swl_mac_binIsNull(&wirelessDevIE.ehtMldMacAddress) ? &frame->transmitter : &wirelessDevIE.ehtMldMacAddress;
     SAH_TRACEZ_INFO(ME, "%s: create AssociatedDevice(%s) for Association Request from (%s)", pAP->alias,
                     swl_typeMacBin_toBuf32Ref(mac).buf,
