@@ -2157,6 +2157,9 @@ char* wldu_getLocalFile(char* buffer, size_t bufSize, char* path, char* format, 
 }
 
 swl_bandwidth_e wld_util_getMaxBwCap(wld_assocDev_capabilities_t* caps) {
+    if(caps->ehtCapabilities & M_SWL_STACAP_EHT_320MHZ_6GHZ) {
+        return SWL_BW_320MHZ;
+    }
     if(caps->vhtCapabilities & M_SWL_STACAP_VHT_SGI160) {
         return SWL_BW_160MHZ;
     }

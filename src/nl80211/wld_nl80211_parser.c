@@ -1172,6 +1172,7 @@ static swl_rc_ne s_parseRateInfo(struct nlattr* pBitrateAttributre, wld_nl80211_
     ratePolicy[NL80211_RATE_INFO_EHT_NSS].type = NLA_U8;
     ratePolicy[NL80211_RATE_INFO_EHT_GI].type = NLA_U8;
     ratePolicy[NL80211_RATE_INFO_EHT_RU_ALLOC].type = NLA_U8;
+    ratePolicy[NL80211_RATE_INFO_320_MHZ_WIDTH].type = NLA_FLAG;
 
 
     rc = nla_parse_nested(pRinfo, NL80211_RATE_INFO_MAX, pBitrateAttributre, ratePolicy);
@@ -1259,7 +1260,9 @@ static swl_rc_ne s_parseRateInfo(struct nlattr* pBitrateAttributre, wld_nl80211_
     }
 
     // Get Bandwidth value
-    if((pRinfo[NL80211_RATE_INFO_80P80_MHZ_WIDTH]) || (pRinfo[NL80211_RATE_INFO_160_MHZ_WIDTH])) {
+    if(pRinfo[NL80211_RATE_INFO_320_MHZ_WIDTH]) {
+        pRate->mcsInfo.bandwidth = SWL_BW_320MHZ;
+    } else if((pRinfo[NL80211_RATE_INFO_80P80_MHZ_WIDTH]) || (pRinfo[NL80211_RATE_INFO_160_MHZ_WIDTH])) {
         pRate->mcsInfo.bandwidth = SWL_BW_160MHZ;
     } else if(pRinfo[NL80211_RATE_INFO_80_MHZ_WIDTH]) {
         pRate->mcsInfo.bandwidth = SWL_BW_80MHZ;
