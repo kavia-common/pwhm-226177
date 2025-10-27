@@ -569,12 +569,20 @@ static bool s_doStartHostapd(T_Radio* pRad) {
      * Therefore, hapd rad iface need to be enabled to force starting main rad iface and vaps
      */
     if((rc == SWL_RC_DONE) && (wifiGen_hapd_countGrpMembers(pRad) > 1)) {
-        SAH_TRACEZ_INFO(ME, "%s: need to enable hostapd", pRad->Name);
-        wld_rad_hostapd_enable(pRad);
-        //update hostapd conf to consider changed configs while it was disabled
-        //+reconnect wpactrlMgr to update wpactrl connections (of added/removed BSSs)
-        wld_wpaCtrlMngr_disconnect(wld_secDmn_getWpaCtrlMgr(pRad->hostapd));
-        setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_UPDATE_HOSTAPD);
+        wld_wpaCtrlMngr_t* pMgr = wld_secDmn_getWpaCtrlMgr(pRad->hostapd);
+        if(!wld_wpaCtrlMngr_isConnected(pMgr)) {
+            wld_wpaCtrlMngr_checkAllIfaces(pMgr);
+        }
+        chanmgt_rad_state detState = CM_RAD_UNKNOWN;
+        wifiGen_hapd_getRadState(pRad, &detState);
+        if(detState == CM_RAD_DOWN) {
+            SAH_TRACEZ_INFO(ME, "%s: need to enable hostapd", pRad->Name);
+            wld_rad_hostapd_enable(pRad);
+            //update hostapd conf to consider changed configs while it was disabled
+            //+reconnect wpactrlMgr to update wpactrl connections (of added/removed BSSs)
+            wld_wpaCtrlMngr_disconnect(pMgr);
+            setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_UPDATE_HOSTAPD);
+        }
     }
 
     s_registerHadpRadEvtHandlers(pRad->hostapd);

@@ -440,7 +440,7 @@ void wifiGen_hapd_writeConfig(T_Radio* pRad) {
 static wld_wpaCtrlInterface_t* s_mainInterface(T_Radio* pRad) {
     ASSERTS_NOT_NULL(pRad, NULL, ME, "NULL");
     ASSERTS_NOT_NULL(pRad->hostapd, NULL, ME, "NULL");
-    return wld_wpaCtrlMngr_getFirstReadyInterface(pRad->hostapd->wpaCtrlMngr);
+    return wld_wpaCtrlMngr_getDefaultInterface(pRad->hostapd->wpaCtrlMngr);
 }
 
 bool wifiGen_hapd_isRunning(T_Radio* pRad) {
@@ -466,9 +466,7 @@ SWL_TABLE(sHapdStateDescMaps,
 swl_rc_ne wifiGen_hapd_getRadState(T_Radio* pRad, chanmgt_rad_state* pDetailedState) {
     ASSERTS_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_wpaCtrlInterface_t* mainIface = s_mainInterface(pRad);
-    ASSERTS_NOT_NULL(mainIface, SWL_RC_ERROR, ME, "%s: No main hapd wpactrl iface", pRad->Name);
-    ASSERTI_TRUE(wld_wpaCtrlInterface_isReady(mainIface), SWL_RC_ERROR,
-                 ME, "%s: main wpactrl iface is not ready", pRad->Name);
+    ASSERTI_NOT_NULL(mainIface, SWL_RC_ERROR, ME, "%s: No main hapd wpactrl iface", pRad->Name);
     char reply[1024] = {0};
     char state[64] = {0};
     if((!wld_wpaCtrl_sendCmdSynced(mainIface, "STATUS", reply, sizeof(reply) - 1)) ||

@@ -414,7 +414,7 @@ wld_secDmn_action_rc_ne wld_rad_hostapd_setMiscParams(T_Radio* pRad) {
 swl_rc_ne wld_rad_hostapd_enable(T_Radio* pR) {
     ASSERT_NOT_NULL(pR, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_wpaCtrlMngr_t* pMgr = wld_secDmn_getWpaCtrlMgr(pR->hostapd);
-    wld_wpaCtrlInterface_t* pIface = wld_wpaCtrlMngr_getFirstReadyInterface(pMgr);
+    wld_wpaCtrlInterface_t* pIface = wld_wpaCtrlMngr_getDefaultInterface(pMgr);
     ASSERT_NOT_NULL(pIface, SWL_RC_ERROR, ME, "%s: hostapd has no wpactrl iface ready", pR->Name);
     bool ret = wld_wpaCtrl_sendCmdCheckResponseExt(pIface, "ENABLE", "OK", 5000);
     ASSERTS_TRUE(ret, SWL_RC_ERROR, ME, "%s: enabling failed", wld_wpaCtrlInterface_getName(pIface));
@@ -543,7 +543,7 @@ bool wld_rad_hostapd_hasActiveApMld(T_Radio* pRad, uint32_t minNLinks) {
 swl_rc_ne wld_rad_hostapd_getCmdReplyParamStr(T_Radio* pRad, const char* cmd, const char* key, char* valStr, size_t valStrSize) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_wpaCtrlMngr_t* pMgr = wld_secDmn_getWpaCtrlMgr(pRad->hostapd);
-    wld_wpaCtrlInterface_t* pIface = wld_wpaCtrlMngr_getFirstReadyInterface(pMgr);
+    wld_wpaCtrlInterface_t* pIface = wld_wpaCtrlMngr_getDefaultInterface(pMgr);
     return wld_wpaCtrl_getSyncCmdParamVal(pIface, cmd, key, valStr, valStrSize);
 }
 
