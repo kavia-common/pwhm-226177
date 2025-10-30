@@ -750,6 +750,12 @@ static bool s_doSetChannel(T_Radio* pRad) {
 }
 
 static bool s_doSyncState(T_Radio* pRad) {
+    chanmgt_rad_state fhDetSta = CM_RAD_UNKNOWN;
+    if(!wld_secDmn_isEnabled(pRad->hostapd)) {
+        fhDetSta = CM_RAD_DOWN;
+    } else {
+        wifiGen_hapd_getRadState(pRad, &fhDetSta);
+    }
     /*
      * when hostapd is alive (i.e radio administratively enabled)
      * and handling DFS clearing (i.e driver does not support DFS_OFFLOAD)
@@ -758,7 +764,7 @@ static bool s_doSyncState(T_Radio* pRad) {
      * => we have to recover by toggling hapd (which eventually triggers a new dfs cac),
      *    otherwise radio remains passively down
      */
-    if((wld_rad_is_5ghz(pRad)) && (wifiGen_hapd_isAlive(pRad)) && (pRad->detailedState == CM_RAD_DOWN)) {
+    if((wld_rad_is_5ghz(pRad)) && (wifiGen_hapd_isAlive(pRad)) && (fhDetSta == CM_RAD_DOWN)) {
         swl_chanspec_t chanSpec;
         _UNUSED_(chanSpec);
         if((!wld_channel_is_band_usable(wld_rad_getSwlChanspec(pRad)) ||
