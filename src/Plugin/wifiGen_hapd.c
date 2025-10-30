@@ -177,9 +177,10 @@ T_AccessPoint* wifiGen_hapd_fetchSockApLink(T_AccessPoint* pAPMld, const char* s
 }
 
 bool wifiGen_hapd_isStartable(T_Radio* pRad) {
-    ASSERT_NOT_NULL(pRad, false, ME, "NULL");
+    ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
     ASSERT_NOT_NULL(pRad->hostapd, false, ME, "NULL");
-    return (pRad->enable && wld_rad_hasEnabledVap(pRad));
+    bool radEnaDm = amxd_object_get_bool(pRad->pBus, "Enable", NULL);
+    return (radEnaDm && wld_rad_hasEnabledVap(pRad));
 }
 
 bool wifiGen_hapd_isStarted(T_Radio* pRad) {
@@ -636,7 +637,7 @@ static bool s_hasHapdSchedRestart(wld_secDmnGrp_t* pSecDmnGrp _UNUSED, void* use
     T_Radio* pRad = (T_Radio*) pSecDmn->userData;
     ASSERT_TRUE(debugIsRadPointer(pRad), false, ME, "INVALID");
     ASSERTI_TRUE(wld_secDmn_isRunning(pSecDmn), false, ME, "%s: secDmn not running", pRad->Name);
-    return s_hasRtmSchedState(pRad, GEN_FSM_START_HOSTAPD);
+    return s_hasRtmSchedState(pRad, GEN_FSM_START_HOSTAPD) || s_hasRtmSchedState(pRad, GEN_FSM_MOD_HOSTAPD);
 }
 
 static wld_secDmnGrp_EvtHandlers_t sGHapdEvtCbs = {
@@ -665,10 +666,37 @@ static swl_rc_ne s_initGlobalHapdGrp(vendor_t* pVdr, bool forceGlob) {
     return rc;
 }
 
-swl_rc_ne wifiGen_hapd_setGlobDmnSettings(vendor_t* pVdr, wld_dmnMgt_dmnExecSettings_t* pCfg) {
+void wifiGen_hapd_restartDaemon(T_Radio* pRad) {
+    ASSERT_NOT_NULL(pRad, , ME, "NULL");
+    SAH_TRACEZ_INFO(ME, "restart %s", pRad->Name);
+    if(wld_secDmn_isRunning(pRad->hostapd)) {
+        wld_secDmn_restart(pRad->hostapd);
+    } else if(wifiGen_hapd_isStartable(pRad)) {
+        setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_START_HOSTAPD);
+        setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_MOD_AP);
+        wld_rad_doCommitIfUnblocked(pRad);
+    }
+}
+
+void wifiGen_hapd_restartAllDaemons(vendor_t* pVdr) {
+    T_Radio* pRad;
+    wld_for_eachRad(pRad) {
+        if((pRad == NULL) || (pRad->vendor != pVdr)) {
+            continue;
+        }
+        wifiGen_hapd_restartDaemon(pRad);
+    }
+}
+
+/**
+ * Handle the change of UseGlobalInstance field, switching from single or multiple instance
+ * Return true when a restart is needed to apply change
+ */
+static bool s_handleUseGlobalInstance(vendor_t* pVdr, wld_dmnMgt_dmnExecSettings_t* pCfg) {
     ASSERT_NOT_NULL(pVdr, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_dmnMgt_dmnExecInfo_t* gHapd = pVdr->globalHostapd;
     ASSERT_NOT_NULL(gHapd, SWL_RC_INVALID_PARAM, ME, "No glob hapd ctx");
+    bool restartNeeded = false;
     bool forceGlob = (pCfg->useGlobalInstance == SWL_TRL_TRUE);
     s_initGlobalHapdGrp(pVdr, forceGlob);
     if(!forceGlob) {
@@ -692,10 +720,21 @@ swl_rc_ne wifiGen_hapd_setGlobDmnSettings(vendor_t* pVdr, wld_dmnMgt_dmnExecSett
                     SAH_TRACEZ_INFO(ME, "add member %s to gHapd %s", pRad->Name, pVdr->name);
                     wld_secDmn_addToGrp(pRad->hostapd, gHapd->pGlobalDmnGrp, pRad->Name);
                 }
-                setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_START_HOSTAPD);
-                wld_rad_doCommitIfUnblocked(pRad);
+                SAH_TRACEZ_INFO(ME, "restart needed %s gHapd %s", pRad->Name, pVdr->name);
+                restartNeeded = true;
             }
         }
+    }
+    return restartNeeded;
+}
+
+swl_rc_ne wifiGen_hapd_setGlobDmnSettings(vendor_t* pVdr, wld_dmnMgt_dmnExecSettings_t* pCfg) {
+    ASSERT_NOT_NULL(pVdr, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERT_NOT_NULL(pCfg, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    bool restartNeeded = s_handleUseGlobalInstance(pVdr, pCfg);
+    if(restartNeeded) {
+        wifiGen_hapd_restartAllDaemons(pVdr);
     }
     return SWL_RC_OK;
 }

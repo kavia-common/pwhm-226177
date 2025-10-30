@@ -90,5 +90,7 @@ bool wifiGen_hapd_parseSockName(const char* sockName, char* linkName, size_t lin
 T_AccessPoint* wifiGen_hapd_fetchSockApLink(T_AccessPoint* pAPMld, const char* sockName);
 swl_rc_ne wifiGen_hapd_getConfiguredCountryCode(T_Radio* pRad, char* country, size_t countrySize);
 void wifiGen_hapd_deauthKnownStations(T_Radio* pRad, bool noAck);
+void wifiGen_hapd_restartDaemon(T_Radio* pRad);
+void wifiGen_hapd_restartAllDaemons(vendor_t* pVdr);
 
 #endif /* INCLUDE_PRIV_PLUGIN_WIFIGEN_HAPD_H_ */

@@ -227,7 +227,7 @@ swl_rc_ne wld_secDmn_start(wld_secDmn_t* pSecDmn) {
 swl_rc_ne wld_secDmn_stop(wld_secDmn_t* pSecDmn) {
     ASSERT_NOT_NULL(pSecDmn, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pSecDmn->dmnProcess, SWL_RC_ERROR, ME, "NULL");
-    ASSERTI_TRUE(wld_dmn_isEnabled(pSecDmn->dmnProcess), SWL_RC_ERROR, ME, "not enabled");
+    ASSERTI_TRUE(wld_dmn_isEnabled(pSecDmn->dmnProcess), SWL_RC_INVALID_STATE, ME, "not enabled");
     wld_secDmn_setRestartNeeded(pSecDmn, false);
     if(wld_secDmn_isGrpMember(pSecDmn)) {
         return wld_secDmnGrp_stopMember(pSecDmn->secDmnGroup, pSecDmn);
@@ -240,7 +240,7 @@ swl_rc_ne wld_secDmn_stop(wld_secDmn_t* pSecDmn) {
 swl_rc_ne wld_secDmn_reload(wld_secDmn_t* pSecDmn) {
     ASSERT_NOT_NULL(pSecDmn, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pSecDmn->dmnProcess, SWL_RC_ERROR, ME, "NULL");
-    ASSERT_TRUE(wld_dmn_isRunning(pSecDmn->dmnProcess), SWL_RC_ERROR, ME, "not running");
+    ASSERT_TRUE(wld_dmn_isRunning(pSecDmn->dmnProcess), SWL_RC_INVALID_STATE, ME, "not running");
     wld_dmn_reloadDeamon(pSecDmn->dmnProcess);
     return SWL_RC_OK;
 }
@@ -248,7 +248,7 @@ swl_rc_ne wld_secDmn_reload(wld_secDmn_t* pSecDmn) {
 swl_rc_ne wld_secDmn_restart(wld_secDmn_t* pSecDmn) {
     ASSERT_NOT_NULL(pSecDmn, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pSecDmn->dmnProcess, SWL_RC_ERROR, ME, "NULL");
-    ASSERT_TRUE(wld_dmn_isRunning(pSecDmn->dmnProcess), SWL_RC_ERROR, ME, "not running");
+    ASSERT_TRUE(wld_dmn_isRunning(pSecDmn->dmnProcess), SWL_RC_INVALID_STATE, ME, "not running");
     wld_secDmn_setRestartNeeded(pSecDmn, false);
     if(wld_secDmn_isGrpMember(pSecDmn)) {
         return wld_secDmnGrp_restartMember(pSecDmn->secDmnGroup, pSecDmn);
