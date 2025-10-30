@@ -67,6 +67,7 @@
 #include "wld_secDmnGrp_priv.h"
 #include "wld_util.h"
 #include "wld_wpaCtrl_api.h"
+#include "wld_wpaCtrlGSock.h"
 
 #define ME "secDmn"
 
@@ -162,6 +163,8 @@ swl_rc_ne wld_secDmn_init(wld_secDmn_t** ppSecDmn, char* cmd, char* startArgs, c
     pSecDmn->dmnProcess = pSecDmn->selfDmnProcess;
     swl_str_copyMalloc(&pSecDmn->cfgFile, cfgFile);
     swl_str_copyMalloc(&pSecDmn->ctrlIfaceDir, ctrlIfaceDir);
+    wld_wpaCtrlGSock_initWithSecDmn(&pSecDmn->selfGlSk, pSecDmn);
+    pSecDmn->glSk = pSecDmn->selfGlSk;
     swl_mapCharInt32_init(&pSecDmn->cfgParamSup);
     swl_mapCharInt32_init(&pSecDmn->cmdSup);
     return SWL_RC_OK;
@@ -188,6 +191,7 @@ swl_rc_ne wld_secDmn_cleanup(wld_secDmn_t** ppSecDmn) {
         wld_secDmnGrp_delMember(pSecDmn->secDmnGroup, pSecDmn);
     }
     pSecDmn->dmnProcess = NULL;
+    wld_wpaCtrlGSock_cleanup(&pSecDmn->selfGlSk);
     swl_mapCharInt32_cleanup(&pSecDmn->cfgParamSup);
     swl_mapCharInt32_cleanup(&pSecDmn->cmdSup);
     W_SWL_FREE(pSecDmn->cfgFile);
@@ -327,6 +331,19 @@ bool wld_secDmn_isAlive(wld_secDmn_t* pSecDmn) {
 bool wld_secDmn_hasAvailableCtrlIface(wld_secDmn_t* pSecDmn) {
     ASSERTS_NOT_NULL(pSecDmn, false, ME, "NULL");
     return (wld_wpaCtrlMngr_getFirstAvailableInterface(pSecDmn->wpaCtrlMngr) != NULL);
+}
+
+wld_wpaCtrlInterface_t* wld_secDmn_getGlobalCtrlIface(wld_secDmn_t* pSecDmn) {
+    ASSERTS_NOT_NULL(pSecDmn, NULL, ME, "NULL");
+    return wld_wpaCtrlGSock_getGIface(pSecDmn->glSk);
+}
+
+bool wld_secDmn_hasGlobalCtrlIface(wld_secDmn_t* pSecDmn) {
+    return wld_wpaCtrlInterface_checkConnectionPath(wld_secDmn_getGlobalCtrlIface(pSecDmn));
+}
+
+bool wld_secDmn_hasReadyGlobalCtrlIface(wld_secDmn_t* pSecDmn) {
+    return wld_wpaCtrlInterface_isReady(wld_secDmn_getGlobalCtrlIface(pSecDmn));
 }
 
 wld_wpaCtrlMngr_t* wld_secDmn_getWpaCtrlMgr(wld_secDmn_t* pSecDmn) {
@@ -535,6 +552,7 @@ swl_rc_ne wld_secDmn_addToGrp(wld_secDmn_t* pSecDmn, wld_secDmnGrp_t* pSecDmnGrp
         SAH_TRACEZ_WARNING(ME, "removing secDmn %p from current group %p, and restore using self proc", pSecDmn, pSecDmnGrp);
         wld_secDmnGrp_delMember(pSecDmnGrp, pSecDmn);
         pSecDmn->dmnProcess = pSecDmn->selfDmnProcess;
+        pSecDmn->glSk = pSecDmn->selfGlSk;
         return SWL_RC_OK;
     }
     if(pSecDmn->secDmnGroup != NULL) {
@@ -552,6 +570,7 @@ swl_rc_ne wld_secDmn_addToGrp(wld_secDmn_t* pSecDmn, wld_secDmnGrp_t* pSecDmnGrp
         wld_dmn_stopDeamon(pSecDmn->selfDmnProcess);
     }
     pSecDmn->dmnProcess = wld_secDmnGrp_getProc(pSecDmnGrp);
+    pSecDmn->glSk = wld_secDmnGrp_getGlSk(pSecDmnGrp);
     pSecDmn->secDmnGroup = pSecDmnGrp;
     wld_secDmn_setRestartNeeded(pSecDmn, false);
     return SWL_RC_OK;
@@ -573,6 +592,7 @@ swl_rc_ne wld_secDmn_delFromGrp(wld_secDmn_t* pSecDmn) {
     swl_rc_ne rc = wld_secDmnGrp_delMember(pSecDmn->secDmnGroup, pSecDmn);
     pSecDmn->secDmnGroup = NULL;
     pSecDmn->dmnProcess = pSecDmn->selfDmnProcess;
+    pSecDmn->glSk = pSecDmn->selfGlSk;
     wld_secDmn_setRestartNeeded(pSecDmn, false);
     return rc;
 }

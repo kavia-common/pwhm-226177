@@ -96,11 +96,13 @@ struct wld_secDmn {
     void* userData;                 /* optional user data available in restart handler. */
     swl_mapCharInt32_t cfgParamSup; /* list of dynamically checked config parameters support */
     swl_mapCharInt32_t cmdSup;      /* list of dynamically checked command support */
+    wld_wpaCtrlGSock_t* glSk;       /* global socket context: pointing to either self gSock or group gSock */
 
     /* private: self//group process management */
     wld_process_t* selfDmnProcess;  /* self daemon process context. */
     wld_secDmnGrp_t* secDmnGroup;   /* grouped (/global) secDmn using one daemon process for multiple wpaCtrl mngrs */
     bool needRestart;               /* flag indicating whether dmn process need a forced restart */
+    wld_wpaCtrlGSock_t* selfGlSk;   /* self global socket context. */
 };
 
 swl_rc_ne wld_secDmn_init(wld_secDmn_t** ppSecDmn, char* cmd, char* startArgs, char* cfgFile, char* ctrlIfaceDir);
@@ -119,6 +121,9 @@ bool wld_secDmn_isRunning(wld_secDmn_t* pSecDmn);
 bool wld_secDmn_isEnabled(wld_secDmn_t* pSecDmn);
 bool wld_secDmn_isAlive(wld_secDmn_t* pSecDmn);
 bool wld_secDmn_hasAvailableCtrlIface(wld_secDmn_t* pSecDmn);
+bool wld_secDmn_hasGlobalCtrlIface(wld_secDmn_t* pSecDmn);
+bool wld_secDmn_hasReadyGlobalCtrlIface(wld_secDmn_t* pSecDmn);
+wld_wpaCtrlInterface_t* wld_secDmn_getGlobalCtrlIface(wld_secDmn_t* pSecDmn);
 wld_wpaCtrlMngr_t* wld_secDmn_getWpaCtrlMgr(wld_secDmn_t* pSecDmn);
 bool wld_secDmn_setCfgParamSupp(wld_secDmn_t* pSecDmn, const char* param, swl_trl_e supp);
 swl_trl_e wld_secDmn_getCfgParamSupp(wld_secDmn_t* pSecDmn, const char* param);
