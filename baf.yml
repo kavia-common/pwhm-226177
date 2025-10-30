@@ -280,3 +280,7 @@ dependencies:
     only: CONFIG_TARGET_intel_x86&&PACKAGE_mod-whm-debug
   - name: "kmod-iwlwav-driver-uci"
     only: CONFIG_TARGET_intel_x86&&PACKAGE_mod-whm
+  - name: "kmod-mac80211"
+    only: CONFIG_PACKAGE_kmod-cfg80211
+  - name: "kmod-mac80211-qca"
+    only: CONFIG_PACKAGE_kmod-cfg80211-qca
