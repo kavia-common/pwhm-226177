@@ -70,6 +70,7 @@
 #include "wld/wld_rad_hostapd_api.h"
 #include "wld/wld_wpaCtrl_api.h"
 #include "wld/wld_wpaCtrl_events.h"
+#include "wld/wld_wpaCtrlGSock.h"
 #include "wld/wld_hostapd_ap_api.h"
 #include "wifiGen_hapd.h"
 #include "wifiGen_events.h"
@@ -298,9 +299,15 @@ static void s_onStopHapdCb(wld_secDmn_t* pSecDmn, void* userdata) {
 static void s_onStartHapdCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata) {
     T_Radio* pRad = (T_Radio*) userdata;
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
+    ASSERT_NOT_NULL(pRad->hostapd, , ME, "NULL");
     const char* mainIface = s_getMainIface(pRad);
     SAH_TRACEZ_WARNING(ME, "%s: hostapd started", mainIface);
-    wld_wpaCtrlMngr_connect(wld_secDmn_getWpaCtrlMgr(pRad->hostapd));
+    wld_wpaCtrlMngr_t* pMgr = wld_secDmn_getWpaCtrlMgr(pRad->hostapd);
+    if(!wifiGen_hapd_isStartable(pRad)) {
+        wld_wpaCtrlMngr_disconnect(pMgr);
+    } else if(wld_wpaCtrlMngr_connect(pMgr)) {
+        wld_wpaCtrlGSock_connect(pRad->hostapd->glSk);
+    }
 }
 
 static char* s_getHapdArgsCb(wld_secDmn_t* pSecDmn, void* userdata _UNUSED) {
@@ -309,6 +316,10 @@ static char* s_getHapdArgsCb(wld_secDmn_t* pSecDmn, void* userdata _UNUSED) {
     char startArgs[256] = {0};
     //set default start args
     swl_str_copy(startArgs, sizeof(startArgs), HOSTAPD_ARGS_FORMAT);
+    const char* gSockPath = wld_wpaCtrlGSock_getGIfacePath(pSecDmn->glSk);
+    if(!swl_str_isEmpty(gSockPath)) {
+        swl_strlst_catFormat(startArgs, sizeof(startArgs), " ", "-g %s", gSockPath);
+    }
     if(!swl_str_isEmpty(pSecDmn->cfgFile)) {
         swl_strlst_cat(startArgs, sizeof(startArgs), " ", pSecDmn->cfgFile);
     }
@@ -329,7 +340,6 @@ static bool s_stopHapdCb(wld_secDmn_t* pSecDmn, void* userdata _UNUSED) {
 
     wld_scan_stop(pRad);
     wifiGen_hapd_deauthKnownStations(pRad, true);
-    wld_wpaCtrlMngr_disconnect(pMgr);
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRad) {
         if(pAP->pSSID) {
@@ -337,11 +347,11 @@ static bool s_stopHapdCb(wld_secDmn_t* pSecDmn, void* userdata _UNUSED) {
         }
     }
     if(!swl_str_isEmpty(sockName)) {
+        wld_wpaCtrlInterface_t* pIface = wld_wpaCtrlGSock_getGIface(pSecDmn->glSk);
         SAH_TRACEZ_WARNING(ME, "terminating hostapd over %s", wld_wpaCtrlInterface_getName(pIface));
-        char reply[128] = {0};
-        swl_rc_ne rc = wld_wpaCtrl_queryToSockExt(HOSTAPD_CTRL_IFACE_DIR, sockName, "TERMINATE", reply, sizeof(reply), 0);
-        ret = (swl_rc_isOk(rc) && ((rc == SWL_RC_CONTINUE) || swl_str_matches(reply, "OK")));
+        ret = wld_wpaCtrl_sendCmd(pIface, "TERMINATE");
     }
+    wld_wpaCtrlMngr_disconnect(pMgr);
     return ret;
 }
 
@@ -570,9 +580,12 @@ uint32_t wifiGen_hapd_countGrpMembers(T_Radio* pRad) {
     return 1;
 }
 
+static T_Radio* s_getGrpMemberRadObj(wld_secDmn_t* pGmb) {
+    return (pGmb && debugIsRadPointer(pGmb->userData)) ? (T_Radio*) pGmb->userData : NULL;
+}
 static uint32_t s_getGrpMemberRadObjIdx(const void* e) {
     wld_secDmn_t* pGmb = e ? *((wld_secDmn_t**) e) : NULL;
-    T_Radio* pR = (pGmb && debugIsRadPointer(pGmb->userData)) ? (T_Radio*) pGmb->userData : NULL;
+    T_Radio* pR = s_getGrpMemberRadObj(pGmb);
     return (pR ? amxd_object_get_index(pR->pBus) : 0);
 }
 static int s_grpMemberRadObjIdxCmp(const void* e1, const void* e2) {
@@ -602,6 +615,10 @@ static char* s_getGlobHapdArgsCb(wld_secDmnGrp_t* pSecDmnGrp, void* userData _UN
      * following the datamodel order, which is also the fsm order
      */
     qsort(grpMembers, nGrpMembers, sizeof(wld_secDmn_t*), s_grpMemberRadObjIdxCmp);
+    const char* gSockPath = wld_wpaCtrlGSock_getGIfacePath(wld_secDmnGrp_getGlSk(pSecDmnGrp));
+    if(!swl_str_isEmpty(gSockPath)) {
+        swl_strlst_catFormat(startArgs, sizeof(startArgs), " ", "-g %s", gSockPath);
+    }
     for(uint32_t i = 0; i < nGrpMembers; i++) {
         //concat all radio ifaces conf files
         swl_strlst_cat(startArgs, sizeof(startArgs), " ", grpMembers[i]->cfgFile);
