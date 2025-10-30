@@ -65,6 +65,7 @@
 
 #include "wld_secDmn_types.h"
 #include "wld_secDmn.h"
+#include "wld_wpaCtrl_types.h"
 
 /*
  * @brief handler to build dynamically arguments before starting daemon
@@ -106,6 +107,7 @@ swl_rc_ne wld_secDmnGrp_setEvtHandlers(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmnGr
 bool wld_secDmnGrp_isEnabled(wld_secDmnGrp_t* pSecDmnGrp);
 bool wld_secDmnGrp_isRunning(wld_secDmnGrp_t* pSecDmnGrp);
 wld_process_t* wld_secDmnGrp_getProc(wld_secDmnGrp_t* pSecDmnGrp);
+wld_wpaCtrlGSock_t* wld_secDmnGrp_getGlSk(wld_secDmnGrp_t* pSecDmnGrp);
 
 /*
  * In order to add/del members to group, secDmn APIs must be used

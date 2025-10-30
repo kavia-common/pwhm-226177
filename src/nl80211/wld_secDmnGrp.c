@@ -67,6 +67,7 @@
 #include <amxp/amxp.h>
 #include "swl/swl_maps.h"
 #include "wld_secDmnGrp_priv.h"
+#include "wld_wpaCtrlGSock.h"
 
 #define ME "secDmnG"
 
@@ -87,6 +88,7 @@ struct wld_secDmnGrp {
     void* userData;                                 /* private user data */
     wld_secDmnGrp_EvtHandlers_t handlers;           /* group event handlers: to allow customizing group process (cmdline, args,...) */
     amxc_llist_t members;                           /* list of secDmn group members, running into same daemon process */
+    wld_wpaCtrlGSock_t* grGlSk;                     /* group global socket context. */
 };
 
 /*
@@ -134,6 +136,7 @@ static void s_onStopProcCb(wld_process_t* pProc _UNUSED, void* userdata) {
         }
         SWL_CALL(member->dmnEvtHdlrs.stopCb, pProc, member->dmnEvtUserData);
     }
+    wld_wpaCtrlGSock_disconnect(pSecDmnGrp->grGlSk);
 }
 
 static void s_onStartProcCb(wld_process_t* pProc, void* userdata) {
@@ -209,6 +212,7 @@ swl_rc_ne wld_secDmnGrp_init(wld_secDmnGrp_t** ppSecDmnGrp, char* cmd, char* sta
             snprintf(dfltName, sizeof(dfltName), "%s-%p", cmd, pSecDmnGrp);
             swl_str_copyMalloc(&pSecDmnGrp->name, dfltName);
         }
+        wld_wpaCtrlGSock_initWithSecDmnGrp(&pSecDmnGrp->grGlSk, pSecDmnGrp, NULL);
         SAH_TRACEZ_INFO(ME, "new secDmn group %s allocated", pSecDmnGrp->name);
     }
     ASSERTI_NULL(pSecDmnGrp->dmnProcess, SWL_RC_OK, ME, "secDmn group %s already initialized", pSecDmnGrp->name);
@@ -245,6 +249,11 @@ wld_process_t* wld_secDmnGrp_getProc(wld_secDmnGrp_t* pSecDmnGrp) {
     return pSecDmnGrp->dmnProcess;
 }
 
+wld_wpaCtrlGSock_t* wld_secDmnGrp_getGlSk(wld_secDmnGrp_t* pSecDmnGrp) {
+    ASSERTS_NOT_NULL(pSecDmnGrp, NULL, ME, "NULL");
+    return pSecDmnGrp->grGlSk;
+}
+
 /*
  * @brief internal api to add secDmn member to group
  */
@@ -269,6 +278,9 @@ swl_rc_ne wld_secDmnGrp_addMember(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmn_t* pSe
         snprintf(name, sizeof(name), "%s-%zu", pSecDmnGrp->name, amxc_llist_size(&pSecDmnGrp->members));
     }
     swl_str_copyMalloc(&member->name, name);
+    if(amxc_llist_is_empty(&pSecDmnGrp->members)) {
+        wld_wpaCtrlGSock_setServerPath(pSecDmnGrp->grGlSk, wld_secDmn_getCtrlIfaceDirPath(pSecDmn));
+    }
     amxc_llist_append(&pSecDmnGrp->members, &member->it);
     SAH_TRACEZ_INFO(ME, "added member (%s/%p) to group (%s/%p)", member->name, pSecDmn, pSecDmnGrp->name, pSecDmnGrp);
     return SWL_RC_OK;
@@ -385,6 +397,9 @@ swl_rc_ne wld_secDmnGrp_delMember(wld_secDmnGrp_t* pSecDmnGrp, wld_secDmn_t* pSe
     }
     SAH_TRACEZ_INFO(ME, "delete member %s (st:%d) from group %s", member->name, member->state, pSecDmnGrp->name);
     amxc_llist_it_take(&member->it);
+    if(amxc_llist_is_empty(&pSecDmnGrp->members)) {
+        wld_wpaCtrlGSock_setServerPath(pSecDmnGrp->grGlSk, NULL);
+    }
     W_SWL_FREE(member->name);
     free(member);
     return SWL_RC_OK;
@@ -405,6 +420,7 @@ swl_rc_ne wld_secDmnGrp_cleanup(wld_secDmnGrp_t** ppSecDmnGrp) {
     wld_secDmnGrp_t* pSecDmnGrp = *ppSecDmnGrp;
     ASSERTS_NOT_NULL(pSecDmnGrp, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_secDmnGrp_dropMembers(pSecDmnGrp);
+    wld_wpaCtrlGSock_cleanup(&pSecDmnGrp->grGlSk);
     amxp_timer_delete(&pSecDmnGrp->actionTimer);
     W_SWL_FREE(pSecDmnGrp->name);
     W_SWL_FREE(*ppSecDmnGrp);
