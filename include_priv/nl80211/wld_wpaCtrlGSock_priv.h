@@ -2,7 +2,7 @@
 **
 ** SPDX-License-Identifier: BSD-2-Clause-Patent
 **
-** SPDX-FileCopyrightText: Copyright (c) 2022 SoftAtHome
+** SPDX-FileCopyrightText: Copyright (c) 2025 SoftAtHome
 **
 ** Redistribution and use in source and binary forms, with or
 ** without modification, are permitted provided that the following
@@ -60,11 +60,18 @@
 **
 ****************************************************************************/
 
-#ifndef __WLD_WPA_CTRL_TYPES_H__
-#define __WLD_WPA_CTRL_TYPES_H__
+#ifndef __WLD_WPA_CTRL_GSOCK_PRIV_H__
+#define __WLD_WPA_CTRL_GSOCK_PRIV_H__
 
-typedef struct wld_wpaCtrlInterface wld_wpaCtrlInterface_t;
-typedef struct wld_wpaCtrlMngr wld_wpaCtrlMngr_t;
-typedef struct wld_wpaCtrlGSock wld_wpaCtrlGSock_t;
+#include "swl/swl_unLiList.h"
+#include "wld_wpaCtrlGSock.h"
+#include "wld_secDmn.h"
 
-#endif /* __WLD_WPA_CTRL_TYPES_H__ */
+struct wld_wpaCtrlGSock {
+    amxc_llist_it_t it;               /* iterator through gock list */
+    char* gName;                      /* global wpactrl socket name */
+    wld_wpaCtrlInterface_t* gIface;   /* global wpactrl interface */
+    wld_wpaCtrlMngr_t* gMgr;          /* manager of global wpactrl interface */
+};
+
+#endif /* __WLD_WPA_CTRL_GSOCK_PRIV_H__ */

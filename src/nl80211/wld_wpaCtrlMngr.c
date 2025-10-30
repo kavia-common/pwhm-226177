@@ -64,6 +64,7 @@
 #include "swl/swl_string.h"
 #include "wld_wpaCtrlMngr_priv.h"
 #include "wld_wpaCtrlInterface_priv.h"
+#include "wld_wpaCtrlGSock.h"
 #include "wld_ssid.h"
 #include <dirent.h>
 
@@ -93,9 +94,19 @@ static int s_filterNames(const struct dirent* pEntry) {
     return 1;
 }
 
+const char* wld_wpaCtrlMngr_getCtrlIfaceDirPath(wld_wpaCtrlMngr_t* pMgr) {
+    ASSERTS_NOT_NULL(pMgr, "", ME, "NULL");
+    wld_secDmn_t* pSecDmn = NULL;
+    if(((pSecDmn = pMgr->pSecDmn) != NULL) ||
+       ((pSecDmn = (wld_secDmn_t*) wld_secDmnGrp_getMemberByPos(pMgr->pSecDmnGrp, 0)) != NULL)) {
+        return wld_secDmn_getCtrlIfaceDirPath(pSecDmn);
+    }
+    return wld_wpaCtrlInterface_getConnectionDirPath(wld_wpaCtrlMngr_getInterface(pMgr, 0));
+}
+
 swl_rc_ne wld_wpaCtrlMngr_checkAllIfaces(wld_wpaCtrlMngr_t* pMgr) {
     ASSERTS_NOT_NULL(pMgr, SWL_RC_INVALID_PARAM, ME, "NULL");
-    const char* ctrlDirPath = wld_secDmn_getCtrlIfaceDirPath(pMgr->pSecDmn);
+    const char* ctrlDirPath = wld_wpaCtrlMngr_getCtrlIfaceDirPath(pMgr);
     ASSERT_STR(ctrlDirPath, SWL_RC_INVALID_STATE, ME, "no ctrl iface dir");
     struct dirent** namelist;
     int n = scandir(ctrlDirPath, &namelist, s_filterNames, alphasort);
@@ -104,9 +115,13 @@ swl_rc_ne wld_wpaCtrlMngr_checkAllIfaces(wld_wpaCtrlMngr_t* pMgr) {
         const char* sockName = namelist[i]->d_name;
         const char* nextSockName = (i + 1 < n) ? namelist[i + 1]->d_name : NULL;
         wld_wpaCtrlInterface_t* pIface = NULL;
-        if((pMgr->pSecDmn != NULL) && !swl_str_startsWith(nextSockName, sockName)) {
+        wld_wpaCtrlGSock_t* pGlSk = wld_wpaCtrlGSock_fetchByGName(sockName);
+        if(pGlSk != NULL) {
+            pIface = wld_wpaCtrlGSock_getGIface(pGlSk);
+        } else if((pMgr->pSecDmn != NULL) && !swl_str_startsWith(nextSockName, sockName)) {
             /*
              * only fetch linkSSID of effective wpaCtrl sockets, by excluding:
+             * - global socket
              * - redirection socket to main mld link
              *   (list is alpha sorted, so redirection has same prefix as next mld link sock name)
              */
@@ -114,7 +129,7 @@ swl_rc_ne wld_wpaCtrlMngr_checkAllIfaces(wld_wpaCtrlMngr_t* pMgr) {
             pIface = wld_ssid_getWpaCtrlIface(pSSID);
         }
         wld_wpaCtrlMngr_t* pCurrMgr = wld_wpaCtrlInterface_getMgr(pIface);
-        if((pCurrMgr != NULL) && (wld_secDmn_isRunning(pCurrMgr->pSecDmn))) {
+        if((pCurrMgr != NULL) && (wld_wpaCtrlMngr_isRunning(pCurrMgr))) {
             const char* currSockName = wld_wpaCtrlInterface_getConnectionSockName(pIface);
             if(!swl_str_matches(currSockName, sockName)) {
                 /*
@@ -136,7 +151,7 @@ swl_rc_ne wld_wpaCtrlMngr_checkAllIfaces(wld_wpaCtrlMngr_t* pMgr) {
                     }
                 }
             }
-            if((pCurrMgr == pMgr) && (!wld_wpaCtrlInterface_isReady(pIface))) {
+            if((!wld_wpaCtrlInterface_isReady(pIface)) && ((pCurrMgr == pMgr) || (pGlSk != NULL))) {
                 bool isEnabled = wld_wpaCtrlInterface_isEnabled(pIface);
                 wld_wpaCtrlInterface_setEnable(pIface, true);
                 if(!wld_wpaCtrlInterface_open(pIface)) {
@@ -193,7 +208,7 @@ static void s_reconnectMgrTimer(amxp_timer_t* timer, void* userdata) {
     ASSERT_TRUE(swl_rc_isOk(rc), , ME, "fail to check available wpactrl ifaces");
     wld_wpaCtrlInterface_t* pIfaceNotReady = wld_wpaCtrlMngr_getFirstNotReadyInterface(pMgr);
     const char* srvName = pIfaceNotReady ? wld_wpaCtrlInterface_getName(pIfaceNotReady) : "";
-    if(!wld_secDmn_isRunning(pMgr->pSecDmn)) {
+    if(!wld_wpaCtrlMngr_isRunning(pMgr)) {
         SAH_TRACEZ_ERROR(ME, "%s: daemon not started yet, no need to connect", srvName);
         //no need to retry, as long as sec daemon is not running
         pMgr->wpaCtrlConnectAttempts += MAX_CONNECTION_ATTEMPTS;
@@ -418,6 +433,28 @@ wld_secDmn_t* wld_wpaCtrlMngr_getSecDmn(const wld_wpaCtrlMngr_t* pMgr) {
     return pMgr->pSecDmn;
 }
 
+bool wld_wpaCtrlMngr_setSecDmnGrp(wld_wpaCtrlMngr_t* pMgr, wld_secDmnGrp_t* pSecDmnGrp) {
+    ASSERTS_NOT_NULL(pMgr, false, ME, "NULL");
+    pMgr->pSecDmnGrp = pSecDmnGrp;
+    return true;
+}
+
+wld_secDmnGrp_t* wld_wpaCtrlMngr_getSecDmnGrp(const wld_wpaCtrlMngr_t* pMgr) {
+    ASSERTS_NOT_NULL(pMgr, NULL, ME, "NULL");
+    return pMgr->pSecDmnGrp ? : wld_secDmn_getGrp(pMgr->pSecDmn);
+}
+
+bool wld_wpaCtrlMngr_isRunning(const wld_wpaCtrlMngr_t* pMgr) {
+    ASSERTS_NOT_NULL(pMgr, false, ME, "NULL");
+    if(pMgr->pSecDmn) {
+        return wld_secDmn_isRunning(pMgr->pSecDmn);
+    }
+    if(pMgr->pSecDmnGrp) {
+        return wld_secDmnGrp_isRunning(pMgr->pSecDmnGrp);
+    }
+    return false;
+}
+
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstInterface(const wld_wpaCtrlMngr_t* pMgr) {
     return wld_wpaCtrlMngr_getInterface(pMgr, 0);
 }
@@ -459,8 +496,8 @@ bool wld_wpaCtrlMngr_isReady(wld_wpaCtrlMngr_t* pMgr) {
  *         false, otherwise.
  */
 bool wld_wpaCtrlMngr_isConnected(wld_wpaCtrlMngr_t* pMgr) {
-    ASSERT_NOT_NULL(pMgr, false, ME, "NULL");
-    ASSERTS_TRUE(wld_secDmn_isRunning(pMgr->pSecDmn), false, ME, "No running server");
+    ASSERTS_NOT_NULL(pMgr, false, ME, "NULL");
+    ASSERTS_TRUE(wld_wpaCtrlMngr_isRunning(pMgr), false, ME, "No running server");
     wld_wpaCtrlInterface_t* ifaceReady = wld_wpaCtrlMngr_getFirstReadyInterface(pMgr);
     ASSERTS_NOT_NULL(ifaceReady, false, ME, "no iface Ready");
     return true;
@@ -515,6 +552,9 @@ bool wld_wpaCtrlMngr_disconnect(wld_wpaCtrlMngr_t* pMgr) {
     swl_unLiList_for_each(it, &pMgr->ifaces) {
         wld_wpaCtrlInterface_t* pIface = *(swl_unLiList_data(&it, wld_wpaCtrlInterface_t * *));
         wld_wpaCtrlInterface_reset(pIface);
+    }
+    if(pMgr->pSecDmn != NULL) {
+        wld_wpaCtrlGSock_disconnectIfUnused(pMgr->pSecDmn->glSk);
     }
     return true;
 }

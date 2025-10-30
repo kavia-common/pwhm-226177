@@ -2,7 +2,7 @@
 **
 ** SPDX-License-Identifier: BSD-2-Clause-Patent
 **
-** SPDX-FileCopyrightText: Copyright (c) 2022 SoftAtHome
+** SPDX-FileCopyrightText: Copyright (c) 2025 SoftAtHome
 **
 ** Redistribution and use in source and binary forms, with or
 ** without modification, are permitted provided that the following
@@ -60,11 +60,29 @@
 **
 ****************************************************************************/
 
-#ifndef __WLD_WPA_CTRL_TYPES_H__
-#define __WLD_WPA_CTRL_TYPES_H__
+#ifndef __WLD_WPA_CTRL_GSOCK_H__
+#define __WLD_WPA_CTRL_GSOCK_H__
 
-typedef struct wld_wpaCtrlInterface wld_wpaCtrlInterface_t;
-typedef struct wld_wpaCtrlMngr wld_wpaCtrlMngr_t;
-typedef struct wld_wpaCtrlGSock wld_wpaCtrlGSock_t;
+#include "wld_wpaCtrl_types.h"
+#include "wld_secDmn_types.h"
 
-#endif /* __WLD_WPA_CTRL_TYPES_H__ */
+swl_rc_ne wld_wpaCtrlGSock_initWithSecDmn(wld_wpaCtrlGSock_t** ppGlSk, wld_secDmn_t* pSecDmn);
+swl_rc_ne wld_wpaCtrlGSock_initWithSecDmnGrp(wld_wpaCtrlGSock_t** ppGlSk, wld_secDmnGrp_t* pSecDmnGrp, const char* serverPath);
+swl_rc_ne wld_wpaCtrlGSock_setServerPath(wld_wpaCtrlGSock_t* pGlSk, const char* serverPath);
+swl_rc_ne wld_wpaCtrlGSock_cleanup(wld_wpaCtrlGSock_t** ppGlSk);
+const char* wld_wpaCtrlGSock_getGName(wld_wpaCtrlGSock_t* pGlSk);
+wld_wpaCtrlInterface_t* wld_wpaCtrlGSock_getGIface(wld_wpaCtrlGSock_t* pGlSk);
+const char* wld_wpaCtrlGSock_getGIfacePath(wld_wpaCtrlGSock_t* pGlSk);
+wld_wpaCtrlMngr_t* wld_wpaCtrlGSock_getGMgr(wld_wpaCtrlGSock_t* pGlSk);
+wld_wpaCtrlGSock_t* wld_wpaCtrlGSock_fetchByGName(const char* name);
+bool wld_wpaCtrlGSock_checkByGName(const char* name);
+bool wld_wpaCtrlGSock_isReady(wld_wpaCtrlGSock_t* pGlSk);
+bool wld_wpaCtrlGSock_isConnected(wld_wpaCtrlGSock_t* pGlSk);
+bool wld_wpaCtrlGSock_isConnecting(wld_wpaCtrlGSock_t* pGlSk);
+swl_rc_ne wld_wpaCtrlGSock_connect(wld_wpaCtrlGSock_t* pGlSk);
+swl_rc_ne wld_wpaCtrlGSock_stopConnecting(wld_wpaCtrlGSock_t* pGlSk);
+swl_rc_ne wld_wpaCtrlGSock_disconnect(wld_wpaCtrlGSock_t* pGlSk);
+uint32_t wld_wpaCtrlGSock_countUsers(wld_wpaCtrlGSock_t* pGlSk);
+swl_rc_ne wld_wpaCtrlGSock_disconnectIfUnused(wld_wpaCtrlGSock_t* pGlSk);
+
+#endif /* __WLD_WPA_CTRL_GSOCK_H__ */

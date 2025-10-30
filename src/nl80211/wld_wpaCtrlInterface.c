@@ -370,7 +370,7 @@ bool wld_wpaCtrlInterface_init(wld_wpaCtrlInterface_t** ppIface, char* interface
  */
 bool wld_wpaCtrlInterface_reset(wld_wpaCtrlInterface_t* pIface) {
     ASSERTS_NOT_NULL(pIface, false, ME, "NULL");
-    const char* ctrlDirPath = wld_wpaCtrlInterface_getConnectionDirPath(pIface);
+    const char* ctrlDirPath = wld_wpaCtrlMngr_getCtrlIfaceDirPath(pIface->pMgr);
     const char* skname = wld_wpaCtrlInterface_getConnectionSockName(pIface);
     const char* ifname = wld_wpaCtrlInterface_getName(pIface);
     wld_wpaCtrlInterface_close(pIface);

@@ -74,10 +74,13 @@
 struct wld_wpaCtrlMngr {
     amxp_timer_t* connectTimer;
     uint8_t wpaCtrlConnectAttempts;
+    /* wpaCtrlMngr refers to one secDmn instance, relative to one radio */
     wld_secDmn_t* pSecDmn;
     void* userData;
     swl_unLiList_t ifaces; //list of wpa_ctrl interfaces, handled by the manager
     wld_wpaCtrl_radioEvtHandlers_cb handlers;
+    /* wpaCtrlMngr refers to secDmnGroup, relative to multiple radios */
+    wld_secDmnGrp_t* pSecDmnGrp;
 };
 
 #define CALL_MGR(pMgr, ifName, fName, ...) \
