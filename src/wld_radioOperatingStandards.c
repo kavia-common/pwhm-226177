@@ -121,6 +121,8 @@ static void s_processOperatingStandards(T_Radio* pR, const char* newVal) {
                     pR->Name,
                     newVal, newStandards, pR->operatingStandards);
 
+    bool enableRad11be = SWL_BIT_IS_SET(newStandards, SWL_RADSTD_BE);
+    wld_rad_updateEhtOperationIE(pR, enableRad11be);
 
     if(pR->operatingStandards != newStandards) {
         pR->pFA->mfn_wrad_supstd(pR, newStandards);

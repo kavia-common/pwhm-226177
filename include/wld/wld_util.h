@@ -470,6 +470,17 @@ swl_rc_ne wld_util_fetchExecutablePath(const char* searchPaths, const char* cmd,
  */
 swl_rc_ne wld_util_getExecutablePath(const char* cmd, char* buf, size_t bufSize);
 
+/*
+ * @brief build EHT Operation Information Element
+ *
+ * @param tgtChspec target channelspec
+ * @param bitmap disabled subchannel bitmap
+ * @param nTx number of transmit antenna
+ * @param nRx number of receive antenna
+ *
+ * @return swl_80211_ehtOpIE_t which contains eht operation IE
+ */
+swl_80211_ehtOpIE_t wld_util_buildEhtOperationIE(swl_chanspec_t tgtChspec, swl_bit32_t bitmap, uint32_t nTx, uint32_t nRx);
 #ifdef __cplusplus
 }/* extern "C" */
 #endif

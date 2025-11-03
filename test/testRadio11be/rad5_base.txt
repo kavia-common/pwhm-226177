@@ -74,6 +74,7 @@
     "MaxAssociatedDevices": 0,
     "WPS_Enrollee_Mode": false,
     "ExternalAcsMgmt": false,
+    "CurrentEhtOperatingIE": "AAAAAAAAAAAAAAA=",
     "MultiAPTypesSupported": "",
     "DelayApUpPeriod": 10,
     "SupportedSensingDataTypes": "",

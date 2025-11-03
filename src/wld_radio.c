@@ -96,6 +96,7 @@
 #include "Utils/wld_autoCommitMgr.h"
 #include "wld/Utils/wld_autoNeighAdd.h"
 
+#include "wld_rad_hostapd_api.h"
 #include "wld_hostapd_cfgFile.h"
 #include "wld_rad_nl80211.h"
 #include "wld_linuxIfStats.h"
@@ -1867,6 +1868,42 @@ static void s_listRadioFeatures(T_Radio* pRad, amxc_var_t* map) {
     }
 }
 
+/**
+ * @brief update EHT Operation IE
+ *
+ * @param pR pointer to radio context
+ */
+void wld_rad_updateEhtOperationIE(T_Radio* pR, bool enableRad11be) {
+    SAH_TRACEZ_IN(ME);
+
+    ssize_t outputSize = 0;
+    char ehtOpBuffer[256] = {0};
+    memset(&pR->ehtOperationIE, 0, sizeof(pR->ehtOperationIE));
+
+    if(enableRad11be) {
+        swl_chanspec_t tgtChspec = wld_chanmgt_getTgtChspec(pR);
+        swl_bit32_t disabledSubchannelBitmap = wld_rad_calculateDisabledSubchannelsBitmap(pR, &tgtChspec);
+        uint32_t nTx = pR->nrAntenna[COM_DIR_TRANSMIT];
+        uint32_t nRx = pR->nrAntenna[COM_DIR_RECEIVE];
+        if(pR->nrAntenna[COM_DIR_TRANSMIT] < 0) {
+            nTx = 0;
+        }
+        if(pR->nrAntenna[COM_DIR_RECEIVE] < 0) {
+            nRx = 0;
+        }
+        pR->ehtOperationIE = wld_util_buildEhtOperationIE(tgtChspec, disabledSubchannelBitmap, nTx, nRx);
+    }
+
+    outputSize = swl_base64_encode(ehtOpBuffer, sizeof(ehtOpBuffer), (swl_bit8_t*) &pR->ehtOperationIE, sizeof(pR->ehtOperationIE));
+    if(outputSize >= (int) sizeof(ehtOpBuffer)) {
+        SAH_TRACEZ_WARNING(ME, "too small buffer %zi, Needed size is %zd", sizeof(ehtOpBuffer), outputSize);
+    } else {
+        swl_typeCharPtr_commitObjectParam(pR->pBus, "CurrentEhtOperatingIE", (char*) ehtOpBuffer);
+    }
+
+    SAH_TRACEZ_OUT(ME);
+}
+
 void syncData_Radio2OBJ(amxd_object_t* object, T_Radio* pR, int set) {
     char ValBuf[32];
     char TBuf[320];
@@ -2000,7 +2037,7 @@ void syncData_Radio2OBJ(amxd_object_t* object, T_Radio* pR, int set) {
             amxd_trans_set_cstring_t(&trans, "SupportedHeMcsNssSet", capBuffer);
         }
 
-        //EHT Physical Capabilities
+        // EHT Physical Capabilities
         outputSize = swl_base64_encode(capBuffer, sizeof(capBuffer), (swl_bit8_t*) &pR->ehtPhyCapabilities, sizeof(pR->ehtPhyCapabilities));
         if(outputSize >= (int) sizeof(capBuffer)) {
             SAH_TRACEZ_WARNING(ME, "too small buffer %zi, Needed size is %zd", sizeof(capBuffer), outputSize);
@@ -5071,6 +5108,9 @@ static void s_setDisabledSubChannels_pwf(void* priv _UNUSED, amxd_object_t* obje
         memcpy(pRad->disabledSubchannels, disabledSubchannels, count * sizeof(disabledSubchannels[0]));
     }
 
+    bool enableRad11be = SWL_BIT_IS_SET(pRad->operatingStandards, SWL_RADSTD_BE);
+    wld_rad_updateEhtOperationIE(pRad, enableRad11be);
+
     wld_rad_doSync(pRad);
 
     SAH_TRACEZ_OUT(ME);
@@ -5083,5 +5123,27 @@ void _wld_rad_setStaticPuncturing_ocf(const char* const sig_name,
                                       const amxc_var_t* const data,
                                       void* const priv) {
     swla_dm_procObjEvtOfLocalDm(&sStaticPuncturingDmHdlrs, sig_name, data, priv);
+}
+
+amxd_status_t _getEHTOperations(amxd_object_t* object,
+                                amxd_function_t* func _UNUSED,
+                                amxc_var_t* args _UNUSED,
+                                amxc_var_t* retval) {
+    SAH_TRACEZ_IN(ME);
+
+    T_Radio* pR = wld_rad_fromObj(object);
+    ASSERTS_NOT_NULL(pR, amxd_status_unknown_error, ME, "no radio mapped");
+
+    amxc_var_set_type(retval, AMXC_VAR_ID_HTABLE);
+    amxc_var_add_key(uint8_t, retval, "EHT Operation Information Present", pR->ehtOperationIE.eht_operation_information_present);
+    amxc_var_add_key(uint8_t, retval, "Control Channel Width", pR->ehtOperationIE.ehtOpInfo.control_channel_width);
+    amxc_var_add_key(uint8_t, retval, "CCFS0", pR->ehtOperationIE.ehtOpInfo.ccfs0);
+    amxc_var_add_key(uint8_t, retval, "CCFS1", pR->ehtOperationIE.ehtOpInfo.ccfs1);
+    amxc_var_add_key(uint8_t, retval, "Disabled Subchannel Bitmap Present", pR->ehtOperationIE.disabled_subchannel_bitmap_present);
+    amxc_var_add_key(uint16_t, retval, "Disabled Subchannel Bitmap", pR->ehtOperationIE.ehtOpInfo.disabled_sub_channel_bitmap);
+    amxc_var_add_key(uint32_t, retval, "Basic EHT-MCS And Nss Set", pR->ehtOperationIE.basic_eht_mcs_n_nss_set);
+
+    SAH_TRACEZ_OUT(ME);
+    return amxd_status_ok;
 }
 

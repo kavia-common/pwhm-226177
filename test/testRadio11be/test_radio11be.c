@@ -71,6 +71,7 @@
 #include "wld_util.h"
 #include "wld_chanmgt.h"
 #include "wld_hostapd_cfgFile.h"
+#include "wld_rad_hostapd_api.h"
 #include "swl/swl_intf.h"
 #include "test-toolbox/ttb_mockClock.h"
 #include "test-toolbox/ttb_object.h"
@@ -375,6 +376,69 @@ static void test_StaticPuncturing_hostapdConfig(void** state _UNUSED) {
     swl_mapChar_cleanup(&cfgMap);
 }
 
+static void test_getEHTOperations(void** state _UNUSED) {
+    uint32_t eht_chwidth_cfg = pRad5->ehtOperationIE.ehtOpInfo.control_channel_width;
+    uint32_t eht_centerfreq_cfg = pRad5->ehtOperationIE.ehtOpInfo.ccfs0;
+    uint32_t eht_centerfreq1_cfg = pRad5->ehtOperationIE.ehtOpInfo.ccfs1;
+    uint32_t eht_bitmap_cfg = pRad5->ehtOperationIE.ehtOpInfo.disabled_sub_channel_bitmap;
+    uint32_t eht_mcs_nss_cfg = pRad5->ehtOperationIE.basic_eht_mcs_n_nss_set;
+
+    uint32_t eht_operation_present_cfg = 0;
+    if(eht_chwidth_cfg || eht_centerfreq_cfg || eht_centerfreq1_cfg || eht_bitmap_cfg) {
+        eht_operation_present_cfg = 1;
+    }
+    uint32_t eht_bitmap_present_cfg = 0;
+    if(eht_bitmap_cfg) {
+        eht_bitmap_present_cfg = 1;
+    }
+
+    ttb_var_t* replyVar;
+    ttb_reply_t* reply = ttb_object_callFun(dm.ttbBus, pRad5->pBus, "getEHTOperations", NULL, &replyVar);
+    assert_true(ttb_object_replySuccess(reply));
+    ttb_mockTimer_goToFutureMs(10);
+
+    const amxc_htable_t* results = amxc_var_constcast(amxc_htable_t, replyVar);
+    assert_non_null(results);
+    amxc_htable_it_t* hit = NULL;
+    amxc_var_t* ht_data = NULL;
+    hit = amxc_htable_get(results, "Control Channel Width");
+    ht_data = amxc_var_from_htable_it(hit);
+    uint32_t eht_chwidth = amxc_var_dyncast(uint32_t, ht_data);
+    ttb_assert_int_eq(eht_chwidth_cfg, eht_chwidth);
+
+    hit = amxc_htable_get(results, "CCFS0");
+    ht_data = amxc_var_from_htable_it(hit);
+    uint32_t eht_centerfreq = amxc_var_dyncast(uint32_t, ht_data);
+    ttb_assert_int_eq(eht_centerfreq_cfg, eht_centerfreq);
+
+    hit = amxc_htable_get(results, "CCFS1");
+    ht_data = amxc_var_from_htable_it(hit);
+    uint32_t eht_centerfreq1 = amxc_var_dyncast(uint32_t, ht_data);
+    ttb_assert_int_eq(eht_centerfreq1_cfg, eht_centerfreq1);
+
+    hit = amxc_htable_get(results, "Disabled Subchannel Bitmap");
+    ht_data = amxc_var_from_htable_it(hit);
+    uint32_t eht_bitmap = amxc_var_dyncast(uint32_t, ht_data);
+    ttb_assert_int_eq(eht_bitmap_cfg, eht_bitmap);
+
+    hit = amxc_htable_get(results, "EHT Operation Information Present");
+    ht_data = amxc_var_from_htable_it(hit);
+    uint32_t eht_operation_present = amxc_var_dyncast(uint32_t, ht_data);
+    ttb_assert_int_eq(eht_operation_present_cfg, eht_operation_present);
+
+    hit = amxc_htable_get(results, "Disabled Subchannel Bitmap Present");
+    ht_data = amxc_var_from_htable_it(hit);
+    uint32_t eht_bitmap_present = amxc_var_dyncast(uint32_t, ht_data);
+    ttb_assert_int_eq(eht_bitmap_present_cfg, eht_bitmap_present);
+
+    hit = amxc_htable_get(results, "Basic EHT-MCS And Nss Set");
+    ht_data = amxc_var_from_htable_it(hit);
+    uint32_t eht_mcs_nss = amxc_var_dyncast(uint32_t, ht_data);
+    ttb_assert_int_eq(eht_mcs_nss_cfg, eht_mcs_nss);
+
+    ttb_object_cleanReply(&reply, &replyVar);
+}
+
 int main(int argc _UNUSED, char* argv[] _UNUSED) {
     sahTraceSetLevel(TRACE_LEVEL_INFO);
     sahTraceAddZone(sahTraceLevel(), "rad");
@@ -387,6 +451,7 @@ int main(int argc _UNUSED, char* argv[] _UNUSED) {
         cmocka_unit_test(test_changeAutoAppRadBws),
         cmocka_unit_test(test_changeManuAppRadBws),
         cmocka_unit_test(test_StaticPuncturing_hostapdConfig),
+        cmocka_unit_test(test_getEHTOperations),
         cmocka_unit_test_setup_teardown(test_changeMldAppRadBws, s_test_changeMldAppRadBws_setup, s_test_changeMldAppRadBw_teardown),
     };
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);

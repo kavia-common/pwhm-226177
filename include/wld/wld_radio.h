@@ -281,6 +281,7 @@ T_EndPoint* wld_rad_nextEp(T_Radio* pRad, T_EndPoint* pEP);
 T_Radio* wld_rad_fromIt(amxc_llist_it_t* it);
 void wld_rad_triggerChangeEvent(T_Radio* pRad, wld_rad_changeEvent_e event, void* data);
 void wld_rad_triggerFrameEvent(T_Radio* pRad, swl_bit8_t* frame, size_t frameLen, int32_t rssi);
+void wld_rad_updateEhtOperationIE(T_Radio* pRad, bool enableRad11be);
 
 /**
  * Add ext module data registration for this radio.

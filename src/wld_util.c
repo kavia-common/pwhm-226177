@@ -2520,3 +2520,64 @@ swl_rc_ne wld_util_getExecutablePath(const char* cmd, char* buf, size_t bufSize)
     return wld_util_fetchExecutablePath(getenv("PATH"), cmd, buf, bufSize);
 }
 
+swl_80211_ehtOpIE_t wld_util_buildEhtOperationIE(swl_chanspec_t tgtChspec, swl_bit32_t bitmap, uint32_t nTx, uint32_t nRx) {
+    swl_80211_ehtOpIE_t ehtOperationIE;
+    memset(&ehtOperationIE, 0, sizeof(ehtOperationIE));
+
+    ehtOperationIE.eht_operation_information_present = 1;
+    swl_channel_t centerChan = swl_chanspec_getCentreChannel(&tgtChspec);
+    swl_bandwidth_e tgtChW = tgtChspec.bandwidth;
+    switch(tgtChW) {
+    case SWL_BW_40MHZ:
+        ehtOperationIE.ehtOpInfo.control_channel_width = 1;
+        ehtOperationIE.ehtOpInfo.ccfs0 = centerChan;
+        break;
+    case SWL_BW_80MHZ:
+        ehtOperationIE.ehtOpInfo.control_channel_width = 2;
+        ehtOperationIE.ehtOpInfo.ccfs0 = centerChan;
+        break;
+    case SWL_BW_160MHZ:
+        ehtOperationIE.ehtOpInfo.control_channel_width = 3;
+        ehtOperationIE.ehtOpInfo.ccfs1 = centerChan;
+        /*
+         * For 160 MHz BSS bandwidth, ccfs0 indicates the channel
+         * center frequency index of the primary 80 MHz channel.
+         */
+        swl_chanspec_t lowerChspec = tgtChspec;
+        lowerChspec.bandwidth = SWL_BW_80MHZ;
+        ehtOperationIE.ehtOpInfo.ccfs0 = swl_chanspec_getCentreChannel(&lowerChspec);
+        break;
+    case SWL_BW_320MHZ:
+        ehtOperationIE.ehtOpInfo.control_channel_width = 4;
+        ehtOperationIE.ehtOpInfo.ccfs1 = centerChan;
+        /*
+         * For 320 MHz BSS bandwidth, indicates the channel
+         * center frequency index of the primary 160 MHz channel.
+         */
+        lowerChspec = tgtChspec;
+        lowerChspec.bandwidth = SWL_BW_160MHZ;
+        ehtOperationIE.ehtOpInfo.ccfs0 = swl_chanspec_getCentreChannel(&lowerChspec);
+        break;
+    case SWL_BW_20MHZ:
+    default:
+        ehtOperationIE.ehtOpInfo.control_channel_width = 0;
+        ehtOperationIE.ehtOpInfo.ccfs0 = centerChan;
+        break;
+    }
+
+    SAH_TRACEZ_INFO(ME, "ccfs0 is %u", ehtOperationIE.ehtOpInfo.ccfs0);
+    SAH_TRACEZ_INFO(ME, "ccfs1 is %u", ehtOperationIE.ehtOpInfo.ccfs1);
+    SAH_TRACEZ_INFO(ME, "control_channel_width is %u", ehtOperationIE.ehtOpInfo.control_channel_width);
+
+    if(bitmap) {
+        ehtOperationIE.disabled_subchannel_bitmap_present = 1;
+    }
+    ehtOperationIE.ehtOpInfo.disabled_sub_channel_bitmap = bitmap;
+    SAH_TRACEZ_INFO(ME, "bitmap is %u", ehtOperationIE.ehtOpInfo.disabled_sub_channel_bitmap);
+
+    uint32_t byte = (uint32_t) (nTx & 0x0F) << 4 | (nRx & 0x0F);
+    ehtOperationIE.basic_eht_mcs_n_nss_set = byte * 0x01010101;
+    SAH_TRACEZ_INFO(ME, "basic eht mcs and nss set is 0x%X", ehtOperationIE.basic_eht_mcs_n_nss_set);
+
+    return ehtOperationIE;
+}

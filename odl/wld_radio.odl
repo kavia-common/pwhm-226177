@@ -1434,6 +1434,36 @@ define probelist_t{
 		*/
 		%read-only string EhtPhyCapabilitiesStr;
 
+                /**
+                 * Radio 802.11be EHT(Extremely High Throughput) Operation IE, raw values, in base64 as per the Tr181 Spec.
+                 */
+		%read-only string CurrentEhtOperatingIE;
+
+                /**
+                 * Returns a htable containing EHT Operations parameters
+                 * @return htable including:
+                 * EHT Operation Information Present : set to 1 if the EHT Operation Information field is present and set to 0 otherwise
+                 * Disabled Subchannel Bitmap Present : set to 1 if the Disabled Subchannel Bitmap subfield is present and set to 0 otherwise
+                 * Control Channel Width : Defines the EHT BSS bandwidth
+                 * CCFS0 : Channel center frequency for a 20, 40, 80 MHz EHT BSS
+                 * CCFS1 : Channel center frequency for a 160 or 320 MHz EHT BSS
+                 * Disabled Subchannel Bitmap : 16-bit bitmap of disabled subchannels
+                 * Basic EHT-MCS And Nss Set : indicates the EHT-MCSs for each number of spatial streams
+                 * Example : WiFi.Radio.2.getEHTOperations() returned
+                 * [
+                 *    {
+                 *        Basic EHT-MCS And Nss Set = 1145324612,
+                 *        CCFS0 = 42,
+                 *        CCFS1 = 0,
+                 *        Control Channel Width = 2,
+                 *        Disabled Subchannel Bitmap = 8,
+                 *        Disabled Subchannel Bitmap Present = 1,
+                 *        EHT Operation Information Present = 1
+                 *    }
+                 * ]
+                 */
+		htable getEHTOperations();
+
 		/** <p> Indicates if Reduced Interframe Space is enabled.</p>
 		 * Default = keep the current mode
 		 * Auto = let the driver to manage the RIFS
