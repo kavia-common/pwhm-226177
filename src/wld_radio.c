@@ -4377,7 +4377,7 @@ void wld_rad_updateState(T_Radio* pRad, bool forceVapUpdate) {
     int curState = pRad->pFA->mfn_wrad_radio_status(pRad);
     wld_status_e oldStatus = pRad->status;
 
-    if((pRad->enable && wld_util_areAllVapsDisabled(pRad) && wld_util_areAllEndpointsDisabled(pRad)) || (pRad->detailedState == CM_RAD_FG_CAC)) {
+    if((pRad->enable && wld_util_areAllVapsDisabled(pRad) && !wld_rad_hasConnectedEp(pRad)) || (pRad->detailedState == CM_RAD_FG_CAC)) {
         pRad->status = RST_DORMANT;
     } else if((pRad->detailedState == CM_RAD_DOWN) || (curState == 0) || (pRad->detailedState == CM_RAD_DEEP_POWER_DOWN)) {
         pRad->status = RST_DOWN;

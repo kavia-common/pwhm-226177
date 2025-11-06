@@ -1624,6 +1624,9 @@ static void s_setEndpointStatus(T_EndPoint* pEP,
         s_writeAssocStats(pEP);
     }
 
+    // After connect / disconnect radio state may become up / down
+    wld_rad_updateState(pEP->pRadio, false);
+
     wld_ep_status_change_event_t event;
     event.ep = pEP;
     event.oldConnectionStatus = oldConnectionStatus;
