@@ -768,6 +768,7 @@ int wifiGen_rad_enable(T_Radio* rad, int val, int flag) {
             }
         } else {
             setBitLongArray(rad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_ENABLE_RAD);
+            wld_rad_setAllMldLinksUnconfigured(rad);
         }
     } else {
         /* GET */

@@ -237,6 +237,7 @@ swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
             aNgAPs[nNgAPs++] = pNgSSID->AP_HOOK;
         }
     }
+    size_t nNgSync = 0;
     for(size_t i = 0; i < nNgAPs; i++) {
         T_AccessPoint* pNgAP = aNgAPs[i];
         if(pNgAP && pNgAP->pSSID && pNgAP->pSSID->pMldLink) {
@@ -259,12 +260,18 @@ swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
                                wld_mld_getLinkName(pNgLink), pSSID->Name);
             pNgAP->pFA->mfn_wvap_setMldUnit(pNgAP);
             wld_autoCommitMgr_notifyVapEdit(pNgAP);
+            nNgSync++;
         }
     }
     if(pSSID->AP_HOOK != NULL) {
         T_AccessPoint* pAP = pSSID->AP_HOOK;
         SAH_TRACEZ_WARNING(ME, "mark AP %s for mld conf refresh", pSSID->Name);
         pAP->pFA->mfn_wvap_setMldUnit(pAP);
+        if(nNgSync > 0) {
+            wld_autoCommitMgr_destroy(pAP->pRadio);
+            wld_autoCommitMgr_init(pAP->pRadio);
+            wld_autoCommitMgr_notifyVapEdit(pAP);
+        }
     }
     return SWL_RC_OK;
 }
