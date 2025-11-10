@@ -955,6 +955,29 @@ static void s_processStdEvent(wld_wpaCtrlInterface_t* pInterface, char* msgData)
     W_SWL_FREE(pParams);
 }
 
+static void s_processRefEvent(wld_wpaCtrlInterface_t* pInterface, char* msgData) {
+    ASSERTS_NOT_NULL(pInterface, , ME, "NULL");
+    ASSERTS_STR(msgData, , ME, "Empty msg");
+    wld_wpaCtrlMngr_t* pMgr = wld_wpaCtrlInterface_getMgr(pInterface);
+    wld_wpaCtrlInterface_t* pRefIface = wld_wpaCtrlMngr_getEventRefIface(pMgr, msgData);
+    ASSERTS_NOT_NULL(pRefIface, , ME, "NULL");
+    wld_wpaCtrlMngr_t* pRefMgr = wld_wpaCtrlInterface_getMgr(pRefIface);
+    ASSERTS_NOT_NULL(pRefMgr, , ME, "NULL");
+    char* eventName = NULL;
+    wld_wpaCtrl_fetchEvent(msgData, WPA_MSG_LEVEL_INFO, " ", NULL, 0, &eventName, NULL);
+    ASSERTS_NOT_NULL(eventName, , ME, "%s: no ref evt in msg (%s)", wld_wpaCtrlInterface_getName(pInterface), msgData);
+    if(swl_str_matches(eventName, "AP-ENABLED")) {
+        if(!wld_wpaCtrlInterface_isReady(pRefIface)) {
+            SAH_TRACEZ_WARNING(ME, "detect msg for disconnected iface(%s), restore connection",
+                               wld_wpaCtrlInterface_getName(pRefIface));
+            wld_wpaCtrlMngr_resumeConnect(pRefMgr, 0);
+        }
+    } else if(swl_str_matches(eventName, "AP-DISABLED")) {
+        s_processStdEvent(pRefIface, msgData);
+    }
+    W_SWL_FREE(eventName);
+}
+
 /**
  * @brief process msgData received from wpa_ctrl server
  *
@@ -990,6 +1013,9 @@ void wld_wpaCtrl_processMsg(wld_wpaCtrlInterface_t* pInterface, char* msgData, s
         }
     }
     W_SWL_FREE(newIfName);
+
+    // 1.1) redirect msg to referenced iface in global socket event
+    s_processRefEvent(pInterface, msgData);
 
     // 2) try to process msg as custom, then as standard
     if(!s_processCustomEvent(pInterface, msgData)) {
