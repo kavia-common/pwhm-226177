@@ -74,6 +74,8 @@ swl_rc_ne wld_rad_hostapd_reload(T_Radio* pR);
 swl_rc_ne wld_rad_hostapd_reconfigure(T_Radio* pR);
 swl_rc_ne wld_rad_hostapd_enable(T_Radio* pR);
 swl_rc_ne wld_rad_hostapd_disable(T_Radio* pR);
+swl_rc_ne wld_rad_hostapd_addConf(T_Radio* pR);
+swl_rc_ne wld_rad_hostapd_removeConf(T_Radio* pR);
 swl_trl_e wld_rad_hostapd_getCfgParamSupp(T_Radio* pRad, const char* param);
 T_AccessPoint* wld_rad_hostapd_getFirstConnectedVap(T_Radio* pRad);
 T_AccessPoint* wld_rad_hostapd_getSavedMainVap(T_Radio* pRad);

@@ -466,6 +466,65 @@ swl_rc_ne wld_rad_hostapd_disable(T_Radio* pR) {
     return SWL_RC_OK;
 }
 
+/**
+ * @brief add entire radio and vaps config to hostapd
+ * (this will do radio setting, and create secondary BSSs netdev ifaces)
+ *
+ * @param pR radio context
+ *
+ * @return SWL_RC_OK when the the adding cmd is accepted.
+ *         SWL_RC_CONTINUE when the command is accepted but still being processed by hostapd
+           (taking more than 1sec)
+ * Otherwise error code.
+ */
+swl_rc_ne wld_rad_hostapd_addConf(T_Radio* pR) {
+    ASSERT_NOT_NULL(pR, SWL_RC_INVALID_PARAM, ME, "NULL");
+    wld_wpaCtrlInterface_t* pgIface = wld_secDmn_getGlobalCtrlIface(pR->hostapd);
+    ASSERT_NOT_NULL(pgIface, SWL_RC_ERROR, ME, "%s: hostapd has no global iface ready", pR->Name);
+    swl_rc_ne rc;
+    rc = wld_wpaCtrl_sendCmdFmtCheckResponse(pgIface, "OK", "ADD bss_config=%s:%s", pR->Name, pR->hostapd->cfgFile);
+    //the call may timeout while being applied, but that only happens on success
+    if(rc == SWL_RC_NOT_AVAILABLE) {
+        rc = SWL_RC_CONTINUE;
+    }
+    return rc;
+}
+
+/**
+ * @brief remove entire radio and vaps config from hostapd
+ * (this will trigger removing all secondary BSSs netdev ifaces and stop radio activity)
+ *
+ * @param pR radio context
+ *
+ * @return SWL_RC_OK when the the removing cmd is accepted.
+ *         SWL_RC_CONTINUE when the command is accepted but still being processed by hostapd
+           (taking more than 1sec)
+ * Otherwise error code.
+ */
+swl_rc_ne wld_rad_hostapd_removeConf(T_Radio* pR) {
+    ASSERT_NOT_NULL(pR, SWL_RC_INVALID_PARAM, ME, "NULL");
+    wld_wpaCtrlMngr_t* pMgr = wld_secDmn_getWpaCtrlMgr(pR->hostapd);
+    wld_secDmn_t* pSecDmn = wld_wpaCtrlMngr_getSecDmn(pMgr);
+    ASSERT_NOT_NULL(pSecDmn, SWL_RC_INVALID_STATE, ME, "NULL");
+    wld_wpaCtrlInterface_t* pIface = wld_wpaCtrlMngr_getDefaultInterface(pMgr);
+    ASSERT_NOT_NULL(pIface, SWL_RC_ERROR, ME, "%s: hostapd has no default wpactrl iface ready", pR->Name);
+    wld_wpaCtrlInterface_t* pgIface = wld_secDmn_getGlobalCtrlIface(pSecDmn);
+    ASSERT_NOT_NULL(pgIface, SWL_RC_ERROR, ME, "%s: hostapd has no global iface ready", pR->Name);
+    swl_rc_ne rc;
+    const char* skname = wld_wpaCtrlInterface_getConnectionSockName(pIface);
+    const char* ifname = wld_wpaCtrlInterface_getName(pIface);
+    if(!swl_str_matches(skname, ifname)) {
+        rc = wld_wpaCtrl_sendCmdFmtCheckResponse(pIface, "OK", "SET interface %s", skname);
+        ASSERT_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to restore main iface name (%s->%s)", pR->Name, ifname, skname);
+    }
+    rc = wld_wpaCtrl_sendCmdFmtCheckResponse(pgIface, "OK", "REMOVE %s", skname);
+    //the call may timeout while being applied, but that only happens on success
+    if(rc == SWL_RC_NOT_AVAILABLE) {
+        rc = SWL_RC_CONTINUE;
+    }
+    return rc;
+}
+
 swl_trl_e wld_rad_hostapd_getCfgParamSupp(T_Radio* pRad, const char* param) {
     ASSERT_NOT_NULL(pRad, SWL_TRL_UNKNOWN, ME, "NULL");
     return wld_secDmn_getCfgParamSupp(pRad->hostapd, param);
