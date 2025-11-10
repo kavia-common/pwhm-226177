@@ -298,7 +298,7 @@ swl_rc_ne wld_wpaCtrlConnection_sendCmdSyncedExt(wpaCtrlConnection_t* pConn, con
             continue;
         }
         ASSERT_FALSE(res < 0, SWL_RC_NOT_AVAILABLE, ME, "%s: select err(%d:%s)", sockName, errno, strerror(errno));
-        ASSERT_NOT_EQUALS(res, 0, SWL_RC_NOT_AVAILABLE, ME, "%s: cmd(%s) timed out", sockName, cmd);
+        ASSERTW_NOT_EQUALS(res, 0, SWL_RC_NOT_AVAILABLE, ME, "%s: cmd(%s) timed out", sockName, cmd);
         ASSERT_NOT_EQUALS(FD_ISSET(fd, &rfds), 0, SWL_RC_NOT_AVAILABLE, ME, "%s: missing reply on fd(%d)", sockName, fd);
         ssize_t nr = recv(fd, reply, replyLen, 0);
         ASSERT_FALSE(nr < 0, SWL_RC_ERROR, ME, "%s: recv err(%d:%s)", sockName, errno, strerror(errno));

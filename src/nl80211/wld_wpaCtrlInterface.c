@@ -456,8 +456,6 @@ const char* wld_wpaCtrlInterface_getConnectionSockName(const wld_wpaCtrlInterfac
  * The first connection is for sending commands and the second one is for receiving unsolicited messages
  *
  * @param wpaCtrlInterface pointer to interface context (to be allocated and established)
- * @param interfaceName interface name
- * @param userdata the data used by the callback
  *
  * @return true on success. Otherwise, error.
  */
@@ -471,7 +469,7 @@ bool wld_wpaCtrlInterface_open(wld_wpaCtrlInterface_t* pIface) {
      * and send attach command to wpa_ctrl server to register for unsolicited msg
      */
     if((!swl_rc_isOk(wld_wpaCtrlConnection_open(pIface->eventConn))) ||
-       (!swl_rc_isOk(wld_wpaCtrlConnection_sendCmdCheckResponse(pIface->eventConn, "ATTACH", "OK")))) {
+       (!swl_rc_isOk(wld_wpaCtrlConnection_sendCmdCheckResponseExt(pIface->eventConn, "ATTACH", "OK", 100)))) {
         SAH_TRACEZ_ERROR(ME, "%s: fail to establish event connection", pIface->name);
         return false;
     }
