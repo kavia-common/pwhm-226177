@@ -762,14 +762,17 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
     ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
     ASSERTS_NOT_NULL(vapConfigMap, false, ME, "NULL");
     int tval = 0;
+    const char* linkIfName = "";
     if(pAP == wld_rad_hostapd_getCfgMainVap(pRad)) {
-        swl_mapChar_add(vapConfigMap, "interface", (char*) wld_hostapd_ap_selectApLinkIface(pAP));
+        linkIfName = wld_hostapd_ap_selectApLinkIface(pAP);
+        swl_mapChar_add(vapConfigMap, "interface", (char*) linkIfName);
     } else {
         if(!wld_hostapd_ap_needWpaCtrlIface(pAP)) {
             SAH_TRACEZ_WARNING(ME, "%s: skip disabled bss", pAP->alias);
             return false;
         }
-        swl_mapChar_add(vapConfigMap, "bss", (char*) wld_hostapd_ap_selectApLinkIface(pAP));
+        linkIfName = wld_hostapd_ap_selectApLinkIface(pAP);
+        swl_mapChar_add(vapConfigMap, "bss", (char*) linkIfName);
     }
     swl_macChar_t bssidStr;
     SWL_MAC_BIN_TO_CHAR(&bssidStr, pSSID->BSSID);
@@ -818,6 +821,11 @@ static bool s_setVapCommonConfig(T_AccessPoint* pAP, swl_mapChar_t* vapConfigMap
              * 1 = yes (MLO) */
             swl_mapCharFmt_addValInt32(vapConfigMap, "mld_ap", 1);
             swl_mapCharFmt_addValInt32(vapConfigMap, "disable_11be", 0);
+            T_SSID* linkIfSSID = wld_ssid_getSsidByIfName(linkIfName);
+            swl_macBin_t* linkIfMac = linkIfSSID ? (swl_macBin_t*) linkIfSSID->MACAddress : NULL;
+            if(!swl_mac_binIsNull(linkIfMac)) {
+                s_checkAndSetParamValueStr(pAP->wpaCtrlInterface, vapConfigMap, "mld_addr", swl_typeMacBin_toBuf32Ref(linkIfMac).buf);
+            }
         } else {
             /* if no MLO, then no 11BE */
             swl_mapCharFmt_addValInt32(vapConfigMap, "disable_11be", 1);

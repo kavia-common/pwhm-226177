@@ -366,6 +366,8 @@ void wifiGen_hapd_initDynCfgParamSupp(T_Radio* pRad) {
     if(wld_secDmn_detectCfgParamsSupp(pRad->hostapd, mrsnoParams, nMrsnoParams, "rsn_override_") > 0) {
         wld_rad_addSuppDrvCap(pRad, wld_rad_getFreqBand(pRad), "MRSNO");
     }
+
+    wld_secDmn_detectCfgParamsSupp(pRad->hostapd, (const char* []) {"mld_addr"}, 1, NULL);
 }
 
 swl_rc_ne wifiGen_hapd_init(T_Radio* pRad) {
