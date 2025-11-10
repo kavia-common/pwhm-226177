@@ -143,6 +143,7 @@ swl_rc_ne wld_ap_hostapd_getStaInfo(T_AccessPoint* pAP, T_AssociatedDevice* pAD)
 swl_rc_ne wld_ap_hostapd_getAllStaInfo(T_AccessPoint* pAP);
 swl_rc_ne wld_ap_hostapd_getNumMldLinks(T_AccessPoint* pAP, uint32_t* pNLinks);
 swl_rc_ne wld_ap_hostapd_getMldLinkId(T_AccessPoint* pAP, int32_t* pLinkId);
+swl_rc_ne wld_ap_hostapd_getRunIface(T_AccessPoint* pAP, char* iface, size_t ifaceStrSize);
 swl_rc_ne wld_ap_hostapd_requestRRMReport(T_AccessPoint* pAP, const swl_macChar_t* sta, uint8_t reqMode, uint8_t operClass, swl_channel_t channel, bool addNeighbor,
                                           uint16_t randomInterval, uint16_t measurementDuration, uint8_t measurementMode, const swl_macChar_t* bssid, const char* ssid);
 swl_rc_ne wld_ap_hostapd_requestRRMReport_ext(T_AccessPoint* pAP, const swl_macChar_t* sta, wld_rrmReq_t* req);

@@ -781,6 +781,31 @@ wld_secDmn_action_rc_ne wld_ap_hostapd_setMldParams(T_AccessPoint* pAP) {
     };
     s_setChangedMultiParams(pAP, pCurrVapParams, pNewVapParams,
                             params, SWL_ARRAY_SIZE(params), &action);
+    /*
+     * if multiple hapd conf updates leads to not detecting mld conf changes
+     * while it differs from the running mld main iface
+     * then it requires resetting/restarting the hostapd instance to recreate mld links
+     */
+    if((action == SECDMN_ACTION_OK_DONE) && wld_wpaCtrlInterface_isReady(pAP->wpaCtrlInterface)) {
+        const char* curCfgIface = "";
+        bool cfgMldAp = false;
+        if(pNewVapParams != NULL) {
+            curCfgIface = swl_mapChar_get(pNewVapParams, "interface");
+            if(swl_str_isEmpty(curCfgIface)) {
+                curCfgIface = swl_mapChar_get(pNewVapParams, "bss");
+            }
+            cfgMldAp = swl_str_matches(swl_mapChar_get(pNewVapParams, "mld_ap"), "1");
+        }
+        char curRunIface[128] = {0};
+        int32_t curLinkId = -1;
+        wld_ap_hostapd_getRunIface(pAP, curRunIface, sizeof(curRunIface));
+        wld_ap_hostapd_getMldLinkId(pAP, &curLinkId);
+        if(!swl_str_matches(curCfgIface, curRunIface) || ((curLinkId > -1) != cfgMldAp)) {
+            SAH_TRACEZ_INFO(ME, "%s: need restart to sync mld runIface(%s)/cfgIface(%s) curLinkId(%d)/cfgMldAp(%d)",
+                            pAP->alias, curRunIface, curCfgIface, curLinkId, cfgMldAp);
+            action = SECDMN_ACTION_OK_NEED_RESTART;
+        }
+    }
     wld_hostapd_deleteConfig(pNewCfg);
     wld_hostapd_deleteConfig(config);
     return action;
@@ -1482,6 +1507,19 @@ swl_rc_ne wld_ap_hostapd_getMldLinkId(T_AccessPoint* pAP, int32_t* pLinkId) {
     swl_rc_ne rc = wld_wpaCtrl_getSyncCmdParamValInt32Def(pAP->wpaCtrlInterface, "STATUS", "link_id", &val, val);
     W_SWL_SETPTR(pLinkId, val);
     return rc;
+}
+
+/*
+ * @brief get the running netdev interface carrying the AP data traffic
+ * This interface is the also current primary link interface in case of APMLD.
+ * @param[in] pAP AccessPoint context
+ * @param[out] iface output buffer where the link netdev iface name is saved
+ * @param[in] ifaceStrSize output buffer size
+ * @return SWL_RC_OK if successful, error code otherwise
+ */
+swl_rc_ne wld_ap_hostapd_getRunIface(T_AccessPoint* pAP, char* iface, size_t ifaceStrSize) {
+    ASSERT_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    return wld_wpaCtrl_getSyncCmdParamVal(pAP->wpaCtrlInterface, "STATUS-DRIVER", "ifname", iface, ifaceStrSize);
 }
 
 swl_trl_e wld_hostapd_ap_getCfgParamSupp(T_AccessPoint* pAP, const char* param) {
