@@ -189,22 +189,50 @@ bool wld_wpaCtrl_sendCmdCheckResponse(wld_wpaCtrlInterface_t* pIface, char* cmd,
     return swl_rc_isOk(wld_wpaCtrlConnection_sendCmdCheckResponse(pIface->cmdConn, cmd, expectedResponse));
 }
 
+static swl_rc_ne s_sendCmdFmtGetResponseExt(wld_wpaCtrlInterface_t* pIface, char* reply, size_t replySize, uint32_t tmOutMSec, char* cmdStr) {
+    const char* wpaCtrlIfName = wld_wpaCtrlInterface_getName(pIface);
+    ASSERTS_TRUE(wld_wpaCtrlInterface_checkConnectionPath(pIface), SWL_RC_INVALID_STATE, ME, "%s: wpactrl link not ready", wpaCtrlIfName);
+    if(wld_wpaCtrlInterface_isReady(pIface)) {
+        return wld_wpaCtrlConnection_sendCmdSyncedExt(pIface->cmdConn, cmdStr, reply, replySize, tmOutMSec);
+    }
+    const char* serverPath = wld_wpaCtrlInterface_getConnectionDirPath(pIface);
+    const char* sockName = wld_wpaCtrlInterface_getConnectionSockName(pIface);
+    swl_rc_ne rc = wld_wpaCtrl_queryToSockExt(serverPath, sockName, cmdStr, reply, sizeof(reply), tmOutMSec);
+    ASSERTS_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to query (%s) to (%s/%s)",
+                 wpaCtrlIfName, cmdStr, serverPath, sockName);
+    return rc;
+}
+
+static swl_rc_ne s_sendCmdFmtCheckResponseExt(wld_wpaCtrlInterface_t* pIface, uint32_t tmOutMSec, char* expectedResponse, char* cmdStr) {
+    const char* wpaCtrlIfName = wld_wpaCtrlInterface_getName(pIface);
+    size_t maxMsgLen = wld_wpaCtrl_getMaxMsgLen();
+    char reply[maxMsgLen];
+    memset(reply, 0, sizeof(reply));
+    swl_rc_ne rc = s_sendCmdFmtGetResponseExt(pIface, reply, sizeof(reply) - 1, tmOutMSec, cmdStr);
+    if(swl_rc_isOk(rc)) {
+        ASSERT_TRUE(swl_str_matches(reply, expectedResponse), SWL_RC_ERROR, ME, "%s: query (%s) reply(%s): unmatch expect(%s)",
+                    wpaCtrlIfName, cmdStr, reply, expectedResponse);
+    }
+    return rc;
+}
+
 /**
  * @brief send formatted command to wpa_ctrl server over established or temporary connection
- * and check the received reply
+ * and check the received reply, within a provided timeout delay
  *
- * @param pIface :the wpa_ctrl interface to which the command is sent
- * @param expectedResponse : string expected reply
- * @param cmdFormat : string command format to be sent
+ * @param[in] pIface :the wpa_ctrl interface to which the command is sent
+ * @param[in] tmOutMSec : timeout in milliseconds waiting for synchronous reply
+ * @param[in] expectedResponse : string expected reply
+ * @param[in] cmdFormat : string command format to be sent
  *
  * @return SWL_RC_OK when the command is answered as expected
  *         SWL_RC_ERROR when the command is rejected
  *         SWL_RC_INVALID_STATE when the wpactrl iface link is not ready
  *         SWL_RC_INVALID_PARAM when the command format is not applicable
+ *         SWL_RC_NOT_IMPLEMENTED when the command not supported on server side
+ *         SWL_RC_NOT_AVAILABLE when the command execution timeouted
  */
-swl_rc_ne wld_wpaCtrl_sendCmdFmtCheckResponse(wld_wpaCtrlInterface_t* pIface, char* expectedResponse, const char* cmdFormat, ...) {
-    const char* wpaCtrlIfName = wld_wpaCtrlInterface_getName(pIface);
-    ASSERTS_TRUE(wld_wpaCtrlInterface_checkConnectionPath(pIface), SWL_RC_INVALID_STATE, ME, "%s: wpactrl link not ready", wpaCtrlIfName);
+swl_rc_ne wld_wpaCtrl_sendCmdFmtCheckResponseExt(wld_wpaCtrlInterface_t* pIface, uint32_t tmOutMSec, char* expectedResponse, const char* cmdFormat, ...) {
     ASSERTS_STR(cmdFormat, SWL_RC_INVALID_PARAM, ME, "empty cmd");
     char cmdStr[512] = {0};
     int32_t ret = 0;
@@ -213,20 +241,34 @@ swl_rc_ne wld_wpaCtrl_sendCmdFmtCheckResponse(wld_wpaCtrlInterface_t* pIface, ch
     ret = vsnprintf(cmdStr, sizeof(cmdStr), cmdFormat, args);
     va_end(args);
     ASSERT_FALSE(ret < 0, SWL_RC_INVALID_PARAM, ME, "Fail to format cmd string");
-    if(wld_wpaCtrlInterface_isReady(pIface)) {
-        return wld_wpaCtrlConnection_sendCmdCheckResponse(pIface->cmdConn, cmdStr, expectedResponse);
-    }
-    size_t maxMsgLen = wld_wpaCtrl_getMaxMsgLen();
-    char reply[maxMsgLen];
-    memset(reply, 0, sizeof(reply));
-    const char* serverPath = wld_wpaCtrlInterface_getConnectionDirPath(pIface);
-    const char* sockName = wld_wpaCtrlInterface_getConnectionSockName(pIface);
-    swl_rc_ne rc = wld_wpaCtrl_queryToSock(serverPath, sockName, cmdStr, reply, sizeof(reply));
-    ASSERTS_TRUE(swl_rc_isOk(rc), rc, ME, "%s: fail to query (%s) to (%s/%s)",
-                 wpaCtrlIfName, cmdStr, serverPath, sockName);
-    ASSERT_TRUE(swl_str_matches(reply, expectedResponse), SWL_RC_ERROR, ME, "%s: query (%s) to (%s/%s) reply(%s): unmatch expect(%s)",
-                wpaCtrlIfName, cmdStr, serverPath, sockName, reply, expectedResponse);
-    return rc;
+    return s_sendCmdFmtCheckResponseExt(pIface, tmOutMSec, expectedResponse, cmdStr);
+}
+
+/**
+ * @brief send formatted command to wpa_ctrl server over established or temporary connection
+ * and check the received reply, within a default timeout delay
+ *
+ * @param[in] pIface :the wpa_ctrl interface to which the command is sent
+ * @param[in] expectedResponse : string expected reply
+ * @param[in] cmdFormat : string command format to be sent
+ *
+ * @return SWL_RC_OK when the command is answered as expected
+ *         SWL_RC_ERROR when the command is rejected
+ *         SWL_RC_INVALID_STATE when the wpactrl iface link is not ready
+ *         SWL_RC_INVALID_PARAM when the command format is not applicable
+ *         SWL_RC_NOT_IMPLEMENTED when the command not supported on server side
+ *         SWL_RC_NOT_AVAILABLE when the command execution timeouted
+ */
+swl_rc_ne wld_wpaCtrl_sendCmdFmtCheckResponse(wld_wpaCtrlInterface_t* pIface, char* expectedResponse, const char* cmdFormat, ...) {
+    ASSERTS_STR(cmdFormat, SWL_RC_INVALID_PARAM, ME, "empty cmd");
+    char cmdStr[512] = {0};
+    int32_t ret = 0;
+    va_list args;
+    va_start(args, cmdFormat);
+    ret = vsnprintf(cmdStr, sizeof(cmdStr), cmdFormat, args);
+    va_end(args);
+    ASSERT_FALSE(ret < 0, SWL_RC_INVALID_PARAM, ME, "Fail to format cmd string");
+    return s_sendCmdFmtCheckResponseExt(pIface, DFLT_SYNC_CMD_TMOUT_MS, expectedResponse, cmdStr);
 }
 
 /**
