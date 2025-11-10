@@ -317,6 +317,9 @@ swl_rc_ne wld_wpaCtrlConnection_sendCmdSyncedExt(wpaCtrlConnection_t* pConn, con
     } while(1);
 
     SAH_TRACEZ_OUT(ME);
+    if(swl_str_startsWith(reply, "UNKNOWN COMMAND")) {
+        return SWL_RC_NOT_IMPLEMENTED;
+    }
     return SWL_RC_OK;
 }
 

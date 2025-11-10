@@ -128,6 +128,8 @@ int32_t wld_secDmn_detectCfgParamsSupp(wld_secDmn_t* pSecDmn, const char* cfgPar
 const char* wld_secDmn_getCtrlIfaceDirPath(wld_secDmn_t* pSecDmn);
 bool wld_secDmn_setCmdSupp(wld_secDmn_t* pSecDmn, const char* cmd, swl_trl_e supp);
 swl_trl_e wld_secDmn_getCmdSupp(wld_secDmn_t* pSecDmn, const char* cmd);
+bool wld_secDmn_learnCmdSuppFromHelpMsg(const char* cliCmd, const char* args, const char* option, swl_trl_e* pSupp);
+bool wld_secDmn_deduceCmdSuppFromExecRc(swl_rc_ne rc, swl_trl_e* pSupp);
 
 #define CALL_SECDMN_MGR_EXT(pSecDmn, fName, ifName, ...) \
     if(pSecDmn != NULL) { \

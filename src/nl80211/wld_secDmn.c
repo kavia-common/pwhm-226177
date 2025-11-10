@@ -449,6 +449,59 @@ swl_trl_e wld_secDmn_getCmdSupp(wld_secDmn_t* pSecDmn, const char* cmd) {
     return supp;
 }
 
+/*
+ * @brief learn command support by checking keyword in daemon cli help message
+ *
+ * @param[in] cmd cli command
+ * @param[in] args arguments to get help message
+ * @param[in] option keyword to be fetched in help message for cmd support deduction
+ * @param[in/out] pointer to support flag updated with supp val when command run is successful
+ *
+ * @return bool true when cmd support has been learned, false otherwise
+ */
+bool wld_secDmn_learnCmdSuppFromHelpMsg(const char* cmd, const char* args, const char* option, swl_trl_e* pSupp) {
+    swl_trl_e trl = pSupp ? *pSupp : SWL_TRL_UNKNOWN;
+    size_t maxMsgLen = wld_wpaCtrl_getMaxMsgLen();
+    char errBuf[maxMsgLen];
+    memset(errBuf, 0, sizeof(errBuf));
+    char outBuf[maxMsgLen];
+    memset(outBuf, 0, sizeof(outBuf));
+    swl_exec_result_t result;
+    memset(&result, 0, sizeof(swl_exec_result_t));
+    result.errBuf = errBuf;
+    result.errBufSize = sizeof(errBuf);
+    result.outBuf = outBuf;
+    result.outBufSize = sizeof(outBuf);
+    swl_rc_ne rc = SWL_EXEC_BUF_EXT(&result, (char*) cmd, (char*) args);
+    if((rc != SWL_RC_OK) || (result.exitInfo.isSignaled) || (result.exitInfo.exitStatus != 0)) {
+        SAH_TRACEZ_WARNING(ME, "fail to exec (%s %s) to check option (%s)", cmd, args, option);
+    } else {
+        trl = ((swl_str_find(errBuf, option) >= 0) || (swl_str_find(outBuf, option) >= 0));
+    }
+    bool ret = ((trl != SWL_TRL_UNKNOWN) && (!pSupp || (*pSupp != trl)));
+    W_SWL_SETPTR(pSupp, trl);
+    return ret;
+}
+
+/*
+ * @brief deduce command support by checking the execution retcode
+ *
+ * @param[in] cmd exec retcode
+ * @param[in/out] pointer to support flag, to be updated if still unknown
+ *
+ * @return true when cmd support has been learned, false otherwise
+ */
+bool wld_secDmn_deduceCmdSuppFromExecRc(swl_rc_ne rc, swl_trl_e* pSupp) {
+    swl_trl_e trl = pSupp ? *pSupp : SWL_TRL_UNKNOWN;
+    if((trl == SWL_TRL_UNKNOWN) &&
+       ((rc >= SWL_RC_ERROR) || (rc == SWL_RC_NOT_AVAILABLE) || (rc == SWL_RC_NOT_IMPLEMENTED))) {
+        trl = ((rc == SWL_RC_OK) || (rc == SWL_RC_NOT_AVAILABLE));
+    }
+    bool ret = ((trl != SWL_TRL_UNKNOWN) && (!pSupp || (*pSupp != trl)));
+    W_SWL_SETPTR(pSupp, trl);
+    return ret;
+}
+
 const char* wld_secDmn_getCtrlIfaceDirPath(wld_secDmn_t* pSecDmn) {
     ASSERTS_NOT_NULL(pSecDmn, "", ME, "NULL");
     return pSecDmn->ctrlIfaceDir;
