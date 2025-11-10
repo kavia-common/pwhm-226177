@@ -74,6 +74,8 @@ typedef enum {
     SECDMN_ACTION_OK_NEED_RELOAD_SECKEY, // Only WPA-PSK Security key params on specific AP
     SECDMN_ACTION_OK_NEED_SIGHUP,
     SECDMN_ACTION_OK_NEED_TOGGLE,        // Like a restart, but keeps available wpactrl sockets
+    SECDMN_ACTION_OK_NEED_RE_ADD_LINK,   // gets specific link iface conf be removed and added again
+    SECDMN_ACTION_OK_NEED_RE_ADD,        // Like a restart, but only gets main iface conf be removed and added again
     SECDMN_ACTION_OK_NEED_RESTART
 } wld_secDmn_action_rc_ne;
 

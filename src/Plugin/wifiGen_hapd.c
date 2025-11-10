@@ -421,7 +421,7 @@ void wifiGen_hapd_enableVapWpaCtrlIface(T_AccessPoint* pAP) {
     wld_wpaCtrlInterface_setEnable(pAP->wpaCtrlInterface, ena);
 }
 
-static void s_enableWpaCtrlIfaces(T_Radio* pRad) {
+void wifiGen_hapd_enableWpaCtrlIfaces(T_Radio* pRad) {
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRad) {
         wifiGen_hapd_enableVapWpaCtrlIface(pAP);
@@ -431,7 +431,7 @@ static void s_enableWpaCtrlIfaces(T_Radio* pRad) {
 swl_rc_ne wifiGen_hapd_startDaemon(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     SAH_TRACEZ_WARNING(ME, "%s: Start hostapd", pRad->Name);
-    s_enableWpaCtrlIfaces(pRad);
+    wifiGen_hapd_enableWpaCtrlIfaces(pRad);
     return wld_secDmn_start(pRad->hostapd);
 }
 
@@ -620,7 +620,11 @@ static char* s_getGlobHapdArgsCb(wld_secDmnGrp_t* pSecDmnGrp, void* userData _UN
         swl_strlst_catFormat(startArgs, sizeof(startArgs), " ", "-g %s", gSockPath);
     }
     for(uint32_t i = 0; i < nGrpMembers; i++) {
-        //concat all radio ifaces conf files
+        T_Radio* pR = s_getGrpMemberRadObj(grpMembers[i]);
+        if(!pR || !wifiGen_hapd_isStartable(pR)) {
+            continue;
+        }
+        //concat all startable radio ifaces conf files
         swl_strlst_cat(startArgs, sizeof(startArgs), " ", grpMembers[i]->cfgFile);
     }
     swl_str_copyMalloc(&args, startArgs);
@@ -631,7 +635,7 @@ static bool s_isHapdIfaceStartable(wld_secDmnGrp_t* pSecDmnGrp _UNUSED, void* us
     ASSERT_NOT_NULL(pSecDmn, false, ME, "NULL");
     T_Radio* pRad = (T_Radio*) pSecDmn->userData;
     ASSERT_TRUE(debugIsRadPointer(pRad), false, ME, "INVALID");
-    s_enableWpaCtrlIfaces(pRad);
+    wifiGen_hapd_enableWpaCtrlIfaces(pRad);
     return wifiGen_hapd_isStartable(pRad);
 }
 

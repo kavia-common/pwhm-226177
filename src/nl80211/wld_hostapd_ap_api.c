@@ -302,10 +302,10 @@ SWL_TABLE(sHapdCfgParamsActionMap,
               {"wep_key1", SECDMN_ACTION_OK_NEED_RESTART},
               {"wep_key2", SECDMN_ACTION_OK_NEED_RESTART},
               {"wep_key3", SECDMN_ACTION_OK_NEED_RESTART},
-              {"interface", SECDMN_ACTION_OK_NEED_RESTART},
-              {"bss", SECDMN_ACTION_OK_NEED_RESTART},
-              {"mld_ap", SECDMN_ACTION_OK_NEED_RESTART},
-              {"disable_11be", SECDMN_ACTION_OK_NEED_RESTART},
+              {"interface", SECDMN_ACTION_OK_NEED_RE_ADD_LINK},
+              {"bss", SECDMN_ACTION_OK_NEED_RE_ADD_LINK},
+              {"mld_ap", SECDMN_ACTION_OK_NEED_RE_ADD_LINK},
+              {"disable_11be", SECDMN_ACTION_OK_NEED_RE_ADD_LINK},
               //params set and applied with main iface toggle
               {"wpa_group_rekey", SECDMN_ACTION_OK_NEED_TOGGLE},
               {"wpa", SECDMN_ACTION_OK_NEED_TOGGLE},
@@ -403,7 +403,7 @@ static bool s_setParam(T_AccessPoint* pAP, const char* param, const char* value,
         W_SWL_SETPTR(pAction, SWL_MAX(*pAction, *pMappedAction));
         /* if within the action there is a conf file relaod, no need to set hostapd memory
          * (reduce invalid conf window) */
-        if(*pAction < SECDMN_ACTION_OK_NEED_RESTART) {
+        if(*pAction < SECDMN_ACTION_OK_NEED_RE_ADD_LINK) {
             ret = wld_ap_hostapd_setParamValue(pAP, param, value, param);
         }
         return ret;
@@ -453,7 +453,7 @@ static bool s_setExistingParam(T_AccessPoint* pAP, swl_mapChar_t* pCurrVapParams
  * @param pAP accesspoint
  * @param ssid the new ssid
  * @return - SECDMN_ACTION_OK_NEED_UPDATE_BEACON when the SSID is updated for the hostapd config file and the hostapd context
- *         - SECDMN_ACTION_OK_NEED_RESTART  when the SSID is updated for the hostapd context but not for the hostapd config file
+ *         - SECDMN_ACTION_OK_NEED_SIGHUP  when the SSID is updated for the hostapd context but not for the hostapd config file
  *         - Otherwise SECDMN_ACTION_ERROR.
  */
 wld_secDmn_action_rc_ne wld_ap_hostapd_setSsid(T_AccessPoint* pAP, const char* ssid) {
@@ -803,7 +803,7 @@ wld_secDmn_action_rc_ne wld_ap_hostapd_setMldParams(T_AccessPoint* pAP) {
         if(!swl_str_matches(curCfgIface, curRunIface) || ((curLinkId > -1) != cfgMldAp)) {
             SAH_TRACEZ_INFO(ME, "%s: need restart to sync mld runIface(%s)/cfgIface(%s) curLinkId(%d)/cfgMldAp(%d)",
                             pAP->alias, curRunIface, curCfgIface, curLinkId, cfgMldAp);
-            action = SECDMN_ACTION_OK_NEED_RESTART;
+            action = SECDMN_ACTION_OK_NEED_RE_ADD_LINK;
         }
     }
     wld_hostapd_deleteConfig(pNewCfg);

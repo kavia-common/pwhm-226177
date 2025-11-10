@@ -66,6 +66,7 @@
 typedef enum {
     GEN_FSM_STOP_HOSTAPD,         /* Stop hostapd */
     GEN_FSM_STOP_WPASUPP,         /* Stop wpa_supplicant */
+    GEN_FSM_REMOVE_HOSTAPD,       /* Remove config of hostapd iface */
     GEN_FSM_DISABLE_HOSTAPD,      /* disable hostapd main interface*/
     GEN_FSM_DISABLE_RAD,          /* Disable Radio device */
     GEN_FSM_SYNC_RAD,             /* Sync Radio conf (cold.down(wt nl80211) / hot.up(wt secDmn))*/
@@ -89,6 +90,7 @@ typedef enum {
     GEN_FSM_ENABLE_EP,            /* Enable Endpoint interface */
     GEN_FSM_CONNECTED_EP,         /* Update when Endpoint is connected */
     GEN_FSM_UPDATE_HOSTAPD,       /* Update hostapd (by sighup): conf in file */
+    GEN_FSM_ADD_HOSTAPD,          /* Add config of all hostapd ifaces */
     GEN_FSM_START_HOSTAPD,        /* start and connect with hostapd */
     GEN_FSM_START_WPASUPP,        /* Start wpa_supplicant */
     GEN_FSM_SYNC_STATE,           /* Sync all interfaces state */
