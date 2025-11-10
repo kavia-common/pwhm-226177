@@ -343,6 +343,67 @@ wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getInterfaceByName(const wld_wpaCtrlMngr
     return NULL;
 }
 
+/**
+ * @brief parse wpactrl global msg and identify the referenced interface
+ * The matching is strictly based on :
+ * - equality between interface name string and socket name
+ * - unique mld link socket having the interface name as prefix
+ *
+ * @param[in] pMgr pointer to wpa ctrl manager
+ * @param[in] msgData received message buffer
+ *
+ * @return pointer to referenced wpaCtrl interface when a match exists
+ *         NULL, otherwise.
+ */
+wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getEventRefIface(wld_wpaCtrlMngr_t* pMgr, const char* msgData) {
+    ASSERTS_NOT_NULL(pMgr, NULL, ME, "NULL");
+    wld_secDmnGrp_t* pSecDmnGrp = pMgr->pSecDmnGrp;
+    ASSERTS_NOT_NULL(pSecDmnGrp, NULL, ME, "NULL");
+    ASSERT_TRUE(swl_str_startsWith(msgData, "IFNAME="), NULL, ME, "invalid prefix");
+    char wpaCtrlIface[128] = {0};
+    ASSERT_TRUE(wld_wpaCtrl_getValueStr(msgData, "IFNAME", wpaCtrlIface, sizeof(wpaCtrlIface)) > 0, NULL, ME, "missing ifname");
+    char* pSep = strchr(wpaCtrlIface, ' ');
+    W_SWL_SETPTR(pSep, 0);
+    uint32_t nRefIfaces = 0;
+    wld_wpaCtrlInterface_t* pRefIface = NULL;
+    for(uint32_t i = 0; i < wld_secDmnGrp_getMembersCount(pSecDmnGrp); i++) {
+        wld_secDmn_t* pSecDmn = (wld_secDmn_t*) wld_secDmnGrp_getMemberByPos(pSecDmnGrp, i);
+        if(!pSecDmn || !pSecDmn->wpaCtrlMngr) {
+            continue;
+        }
+        wld_wpaCtrlMngr_t* pTmpMgr = pSecDmn->wpaCtrlMngr;
+        swl_unLiListIt_t it;
+        swl_unLiList_for_each(it, &pTmpMgr->ifaces) {
+            wld_wpaCtrlInterface_t* pTmpIface = *(swl_unLiList_data(&it, wld_wpaCtrlInterface_t * *));
+            const char* sockName = wld_wpaCtrlInterface_getConnectionSockName(pTmpIface);
+            if(swl_str_matches(sockName, wpaCtrlIface)) {
+                SAH_TRACEZ_INFO(ME, "wpaCtrl iface(%s) sock(%s) is matching IFNAME(%s) => gMsg (%s) can be redirected",
+                                pTmpIface->name, sockName, wpaCtrlIface, msgData);
+                return pTmpIface;
+            }
+            if(!swl_str_startsWith(sockName, wpaCtrlIface)) {
+                continue;
+            }
+            pSep = strstr(sockName, "_link");
+            if((pSep > sockName) && swl_str_nmatches(sockName, wpaCtrlIface, (pSep - sockName))) {
+                pRefIface = pTmpIface;
+                nRefIfaces++;
+            }
+        }
+    }
+    if(nRefIfaces == 1) {
+        const char* sockName = wld_wpaCtrlInterface_getConnectionSockName(pRefIface);
+        SAH_TRACEZ_INFO(ME, "One wpaCtrl iface(%s) sock(%s) is matching IFNAME(%s) => gMsg (%s) can be redirected",
+                        pRefIface->name, sockName, wpaCtrlIface, msgData);
+        return pRefIface;
+    }
+    if(nRefIfaces > 1) {
+        SAH_TRACEZ_INFO(ME, "Multi %d wpaCtrl ifaces are matching IFNAME(%s) => gMsg (%s) can not be redirected",
+                        nRefIfaces, wpaCtrlIface, msgData);
+    }
+    return NULL;
+}
+
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstReadyInterface(const wld_wpaCtrlMngr_t* pMgr) {
     ASSERT_NOT_NULL(pMgr, NULL, ME, "NULL");
     wld_wpaCtrlInterface_t* pFstIface = NULL;
@@ -515,6 +576,23 @@ bool wld_wpaCtrlMngr_connect(wld_wpaCtrlMngr_t* pMgr) {
     ASSERT_NOT_NULL(pMgr, false, ME, "NULL");
     ASSERTI_FALSE(wld_wpaCtrlMngr_isConnected(pMgr), true, ME, "already connected");
     amxp_timer_start(pMgr->connectTimer, FIRST_DELAY_MS);
+    return true;
+}
+
+/**
+ * @brief resume connecting to wpa_ctrl server
+ *
+ * @param[in] pMgr pointer to wpa ctrl manager
+ * @param[in] delayMs optional delay to start connection tries
+ *
+ * @return true if connection is started or already established,
+ *         false otherwise.
+ */
+bool wld_wpaCtrlMngr_resumeConnect(wld_wpaCtrlMngr_t* pMgr, uint32_t delayMs) {
+    ASSERT_NOT_NULL(pMgr, false, ME, "NULL");
+    ASSERTS_TRUE(wld_wpaCtrlMngr_isRunning(pMgr), false, ME, "No running server");
+    ASSERTI_FALSE(wld_wpaCtrlMngr_isReady(pMgr), true, ME, "already connected");
+    amxp_timer_start(pMgr->connectTimer, delayMs);
     return true;
 }
 

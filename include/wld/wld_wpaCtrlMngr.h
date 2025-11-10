@@ -72,6 +72,7 @@ bool wld_wpaCtrlMngr_setEvtHandlers(wld_wpaCtrlMngr_t* pMgr, void* userdata, wld
 bool wld_wpaCtrlMngr_getEvtHandlers(wld_wpaCtrlMngr_t* pMgr, void** userdata, wld_wpaCtrl_radioEvtHandlers_cb* pHandlers);
 bool wld_wpaCtrlMngr_setSecDmnGrp(wld_wpaCtrlMngr_t* pMgr, wld_secDmnGrp_t* pSecDmnGrp);
 bool wld_wpaCtrlMngr_connect(wld_wpaCtrlMngr_t* pMgr);
+bool wld_wpaCtrlMngr_resumeConnect(wld_wpaCtrlMngr_t* pMgr, uint32_t delayMs);
 bool wld_wpaCtrlMngr_disconnect(wld_wpaCtrlMngr_t* pMgr);
 bool wld_wpaCtrlMngr_stopConnecting(wld_wpaCtrlMngr_t* pMgr);
 bool wld_wpaCtrlMngr_isConnecting(wld_wpaCtrlMngr_t* pMgr);
@@ -84,6 +85,7 @@ bool wld_wpaCtrlMngr_registerInterface(wld_wpaCtrlMngr_t* pMgr, wld_wpaCtrlInter
 bool wld_wpaCtrlMngr_unregisterInterface(wld_wpaCtrlMngr_t* pMgr, wld_wpaCtrlInterface_t* pIface);
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getInterface(const wld_wpaCtrlMngr_t* pMgr, int32_t pos);
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getInterfaceByName(const wld_wpaCtrlMngr_t* pMgr, const char* name);
+wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getEventRefIface(wld_wpaCtrlMngr_t* pMgr, const char* msgData);
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstInterface(const wld_wpaCtrlMngr_t* pMgr);
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstReadyInterface(const wld_wpaCtrlMngr_t* pMgr);
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstNotReadyInterface(const wld_wpaCtrlMngr_t* pMgr);
