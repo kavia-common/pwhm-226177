@@ -1950,6 +1950,11 @@ void wld_ap_updateMld(T_SSID* pSSID) {
         return;
     }
 
+    if(affObj == NULL) {
+        SAH_TRACEZ_WARNING(ME, "No AFF object is associated with MLD unit %u", pMld->unit);
+        return;
+    }
+
     wld_nl80211_ifaceInfo_t mldIfaceInfo;
     int32_t linkId = -1;
     memset(&mldIfaceInfo, 0, sizeof(mldIfaceInfo));
