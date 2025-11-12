@@ -4978,3 +4978,92 @@ void _wld_rad_11ax_setConf_ocf(const char* const sig_name,
     swla_dm_procObjEvtOfLocalDm(&sRadio11axDmHdlrs, sig_name, data, priv);
 }
 
+/*
+ * Callback to verify DisabledSubChannel parameter
+ */
+amxd_status_t _wld_rad_validateDisabledSubChannels_pvf(amxd_object_t* object _UNUSED,
+                                                       amxd_param_t* param _UNUSED,
+                                                       amxd_action_t reason _UNUSED,
+                                                       const amxc_var_t* const args,
+                                                       amxc_var_t* const retval _UNUSED,
+                                                       void* priv _UNUSED) {
+    SAH_TRACEZ_IN(ME);
+    ASSERTS_FALSE(amxc_var_is_null(args), amxd_status_invalid_value, ME, "invalid");
+    T_Radio* pRad = wld_rad_fromObj(amxd_object_get_parent(object));
+    ASSERTI_NOT_NULL(pRad, amxd_status_ok, ME, "No Radio mapped");
+
+    amxd_status_t status = amxd_status_invalid_value;
+    char* newValue = amxc_var_dyncast(cstring_t, args);
+    ASSERT_NOT_NULL(newValue, status, ME, "NULL");
+
+    size_t len = 0;
+    swl_channel_t disabledSubChannelsList[SWL_BW_CHANNELS_MAX];
+    len = swl_type_arrayFromChar(swl_type_uint8, disabledSubChannelsList, SWL_BW_CHANNELS_MAX, newValue);
+
+    SAH_TRACEZ_INFO(ME, "Number of disabled subchannels requested is %zd", len);
+
+    if(wld_rad_isChannelSubset(pRad, (uint8_t*) disabledSubChannelsList, len)) {
+        SAH_TRACEZ_INFO(ME, "DisabledSubChannels are a subset of Possible Channels");
+    } else {
+        SAH_TRACEZ_INFO(ME, "DisabledSubChannels are not a subset of Possible Channels");
+        free(newValue);
+        return status;
+    }
+
+    free(newValue);
+
+    SAH_TRACEZ_OUT(ME);
+    return amxd_status_ok;
+}
+
+/*
+ * Callback to configure parameters of Static Puncturing object
+ */
+static void s_setDisabledSubChannels_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_param_t* param _UNUSED, const amxc_var_t* const newValue) {
+    SAH_TRACEZ_IN(ME);
+
+    T_Radio* pRad = wld_rad_fromObj(amxd_object_get_parent(object));
+    ASSERTI_NOT_NULL(pRad, , ME, "INVALID");
+
+    const char* valStr = GET_CHAR(newValue, NULL);
+    SAH_TRACEZ_INFO(ME, "set Static Puncturing DisabledSubChannels to %s", valStr);
+
+    size_t len = 0;
+    swl_channel_t disabledSubChannelsList[SWL_BW_CHANNELS_MAX];
+    len = swl_type_arrayFromChar(swl_type_uint8, disabledSubChannelsList, SWL_BW_CHANNELS_MAX, valStr);
+
+    SAH_TRACEZ_INFO(ME, "Number of disabled subchannels requested is %zd", len);
+
+    uint32_t count = 0;
+    swl_channel_t disabledSubchannels[SWL_BW_CHANNELS_MAX] = {0};
+    for(size_t i = 0; i < len && i < SWL_BW_CHANNELS_MAX; i++) {
+        swl_channel_t chan = disabledSubChannelsList[i];
+        if((chan > 0) && (!swl_typeUInt8_arrayContains(disabledSubchannels, count + 1, chan))) {
+            disabledSubchannels[count++] = disabledSubChannelsList[i];
+        }
+    }
+    if((count == pRad->nrDisabledSubChannels) ||
+       (swl_typeUInt8_arrayMatches(pRad->disabledSubchannels, pRad->nrDisabledSubChannels, disabledSubchannels, count))) {
+        SAH_TRACEZ_INFO(ME, "%s: no change in disabled sub channels list", pRad->Name);
+        return;
+    }
+    swl_typeUInt8_arrayCleanup(pRad->disabledSubchannels, SWL_BW_CHANNELS_MAX);
+    pRad->nrDisabledSubChannels = count;
+    if(count > 0) {
+        memcpy(pRad->disabledSubchannels, disabledSubchannels, count * sizeof(disabledSubchannels[0]));
+    }
+
+    wld_rad_doSync(pRad);
+
+    SAH_TRACEZ_OUT(ME);
+}
+
+SWLA_DM_HDLRS(sStaticPuncturingDmHdlrs,
+              ARR(SWLA_DM_PARAM_HDLR("DisabledSubChannels", s_setDisabledSubChannels_pwf)));
+
+void _wld_rad_setStaticPuncturing_ocf(const char* const sig_name,
+                                      const amxc_var_t* const data,
+                                      void* const priv) {
+    swla_dm_procObjEvtOfLocalDm(&sStaticPuncturingDmHdlrs, sig_name, data, priv);
+}
+

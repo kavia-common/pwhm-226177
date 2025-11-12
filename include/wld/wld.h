@@ -1684,37 +1684,39 @@ struct WLD_RADIO {
     T_EventCounterList vendorCounters;
     T_EventCounter counterList[WLD_RAD_EV_MAX];
     T_EventCounterList genericCounters;
-    int dbgEnable;                                      /* Enable Deamon debugging */
-    char* dbgOutput;                                    /* Filename to store data  */
+    int dbgEnable;                                          /* Enable Deamon debugging */
+    char* dbgOutput;                                        /* Filename to store data  */
     T_RssiEventing naStaRssiMonitor;
-    wld_rad_muMimoInfo_t radMuMimoInfo;                 /* MU MIMO Info. */
-    wld_driverCfg_t driverCfg;                          /* Detailed driver config options */
-    wld_macCfg_t macCfg;                                /* Detailed driver config options */
+    wld_rad_muMimoInfo_t radMuMimoInfo;                     /* MU MIMO Info. */
+    wld_driverCfg_t driverCfg;                              /* Detailed driver config options */
+    wld_macCfg_t macCfg;                                    /* Detailed driver config options */
     wld_rad_delayMgr_t delayMgr;
-    wld_autoCommitRadData_t autoCommitData;             /* struct for managing auto commiting */
-    wld_nl80211_listener_t* nl80211Listener;            /* nl80211 events listener */
-    wld_secDmn_t* hostapd;                              /* hostapd daemon context. */
-    uint32_t wiphy;                                     /* nl80211 wireless physical device id */
-    char wiphyName[IFNAMSIZ];                           /* nl80211 wireless physical device name */
-    wld_nl80211_channelSurveyInfo_t* pLastSurvey;       /* last active chan survey result (cached) */
-    wld_airStats_t* pLastAirStats;                      /* last air stats calculated based on diff with active chan survey result (cached for nl80211) */
-    bool csiEnable;                                     /* Enable CSI */
-    amxc_llist_t csiClientList;                         /* CSI client list */
-    char firmwareVersion[64];                           /* Radio’s WiFi firmware version */
-    char chipVendorName[64];                            /* Radio’s Hw vendor name */
+    wld_autoCommitRadData_t autoCommitData;                 /* struct for managing auto commiting */
+    wld_nl80211_listener_t* nl80211Listener;                /* nl80211 events listener */
+    wld_secDmn_t* hostapd;                                  /* hostapd daemon context. */
+    uint32_t wiphy;                                         /* nl80211 wireless physical device id */
+    char wiphyName[IFNAMSIZ];                               /* nl80211 wireless physical device name */
+    wld_nl80211_channelSurveyInfo_t* pLastSurvey;           /* last active chan survey result (cached) */
+    wld_airStats_t* pLastAirStats;                          /* last air stats calculated based on diff with active chan survey result (cached for nl80211) */
+    bool csiEnable;                                         /* Enable CSI */
+    amxc_llist_t csiClientList;                             /* CSI client list */
+    char firmwareVersion[64];                               /* Radio’s WiFi firmware version */
+    char chipVendorName[64];                                /* Radio’s Hw vendor name */
 
-    wld_extMod_dataList_t extDataList;                  /* Non chipset vendor module data list. @type wld_extMod_registration_t */
+    wld_extMod_dataList_t extDataList;                      /* Non chipset vendor module data list. @type wld_extMod_registration_t */
 
-    wld_radioCap_t cap;                                 /* Datamodel capabilities; */
+    wld_radioCap_t cap;                                     /* Datamodel capabilities; */
 
-    swl_mcs_legacyIndex_m supportedDataTransmitRates;   /* Supported data transmit rates in Mbps */
-    swl_mcs_legacyIndex_m operationalDataTransmitRates; /* Data transmit rates in Mbps at which the radio will permit operation with any associated station */
-    swl_mcs_legacyIndex_m basicDataTransmitRates;       /* The set of data rates, in Mbps, that have to be supported by all stations that desire to join this BSS */
-    void* zwdfsData;                                    /* ZW DFS data */
+    swl_mcs_legacyIndex_m supportedDataTransmitRates;       /* Supported data transmit rates in Mbps */
+    swl_mcs_legacyIndex_m operationalDataTransmitRates;     /* Data transmit rates in Mbps at which the radio will permit operation with any associated station */
+    swl_mcs_legacyIndex_m basicDataTransmitRates;           /* The set of data rates, in Mbps, that have to be supported by all stations that desire to join this BSS */
+    void* zwdfsData;                                        /* ZW DFS data */
 
-    wld_mbssidAdvertisement_mode_m suppMbssidAdsModes;  /* supported MBSSID Advertisement modes */
-    wld_mbssidAdvertisement_mode_e mbssidAdsMode;       /* operating MBSSID Advertisement mode. */
-    amxp_timer_t* setMaxNumStaTimer;                    /* Timer used to delay the setMaxNumStation task */
+    wld_mbssidAdvertisement_mode_m suppMbssidAdsModes;      /* supported MBSSID Advertisement modes */
+    wld_mbssidAdvertisement_mode_e mbssidAdsMode;           /* operating MBSSID Advertisement mode. */
+    amxp_timer_t* setMaxNumStaTimer;                        /* Timer used to delay the setMaxNumStation task */
+    swl_channel_t disabledSubchannels[SWL_BW_CHANNELS_MAX]; /* Disabled Subchannel list, for 11be static channel puncturing */
+    uint32_t nrDisabledSubChannels;                         /* Nr of disabled sub channels */
 };
 
 typedef struct {
