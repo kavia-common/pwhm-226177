@@ -200,6 +200,7 @@ static amxd_status_t s_stamon_createDevice(amxd_object_t* parent, const char* te
 
     const char* macAddr = GET_CHAR(args, "macaddress");
     const char* bssid = GET_CHAR(args, "bssid");
+    const uint8_t chan = GET_UINT32(args, "channel");
     ASSERT_TRUE(swl_mac_charIsValidStaMac((swl_macChar_t*) macAddr), amxd_status_invalid_value, ME, "invalid MACAddress (%s)", macAddr);
     SAH_TRACEZ_INFO(ME, "Creating Device instance with template %s and macAddr %s", template, macAddr);
 
@@ -208,6 +209,10 @@ static amxd_status_t s_stamon_createDevice(amxd_object_t* parent, const char* te
     if(pMD != NULL) {
         SAH_TRACEZ_INFO(ME, "Found Device instance with macAddr %s", macAddr);
         object = pMD->obj;
+        if(chan != pMD->channel) {
+            SAH_TRACEZ_INFO(ME, "Existing Channel : %d Channel to update : %d", pMD->channel, chan);
+            swl_typeUInt8_commitObjectParam(object, "Channel", chan);
+        }
     } else {
 
         amxc_var_t values;
