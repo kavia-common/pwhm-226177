@@ -86,23 +86,6 @@ static bool s_sendHostapdCommand(T_Radio* pR, char* cmd, const char* reason) {
     return wld_wpaCtrl_sendCmdCheckResponse(wpaCtrlInterface, cmd, "OK");
 }
 
-swl_bit32_t wld_rad_calculateDisabledSubchannelsBitmap(T_Radio* pR, swl_chanspec_t* pChSpec) {
-    ASSERT_NOT_NULL(pR, 0, ME, "NULL");
-    ASSERT_NOT_NULL(pChSpec, 0, ME, "NULL");
-    int32_t nbDisChans = pR->nrDisabledSubChannels;
-    ASSERTS_TRUE(nbDisChans > 0, 0, ME, "no disabled channels");
-    swl_bit32_t disabledSubchannelBitmap = 0;
-    swl_channel_t tgtChans[SWL_BW_CHANNELS_MAX] = {0};
-    uint8_t nbTgtChans = swl_chanspec_getChannelsInChanspec(pChSpec, tgtChans, SWL_BW_CHANNELS_MAX);
-    SAH_TRACEZ_INFO(ME, "Number of tgt channels In bw is %d", nbTgtChans);
-    for(uint8_t i = 0; i < nbTgtChans; i++) {
-        if((tgtChans[i] != pChSpec->channel) && swl_typeUInt8_arrayContains(pR->disabledSubchannels, nbDisChans, tgtChans[i])) {
-            W_SWL_BIT_SET(disabledSubchannelBitmap, i);
-        }
-    }
-    return disabledSubchannelBitmap;
-}
-
 /** @brief update the the Operating Standard in the hostapd
  *
  * @param pRad radio
@@ -246,12 +229,9 @@ swl_rc_ne wld_rad_hostapd_switchChannel(T_Radio* pR) {
     }
     if(SWL_BIT_IS_SET(operStd, SWL_RADSTD_BE)) {
         swl_strlst_catFormat(cmd, sizeof(cmd), " ", "eht");
-        swl_bit32_t disabledSubchannelBitmap = wld_rad_calculateDisabledSubchannelsBitmap(pR, &chanspec);
-        if(disabledSubchannelBitmap > 0) {
-            swl_strlst_catFormat(cmd, sizeof(cmd), " ", "punct_bitmap=%d", disabledSubchannelBitmap);
-        }
     }
 
+    /* TODO: punct_bitmap */
     /* TODO: blocktx */
 
     //send command
@@ -358,7 +338,6 @@ wld_secDmn_action_rc_ne wld_rad_hostapd_setChannel(T_Radio* pR) {
         "vht_capab", "vht_oper_centr_freq_seg0_idx", "vht_oper_chwidth",
         "he_oper_centr_freq_seg0_idx", "he_oper_chwidth",
         "eht_oper_centr_freq_seg0_idx", "eht_oper_chwidth",
-        "punct_bitmap",
     };
     for(uint32_t i = 0; i < SWL_ARRAY_SIZE(chanParams); i++) {
         wld_ap_hostapd_setParamValue(primaryVap, chanParams[i], swl_mapChar_get(&radParams, (char*) chanParams[i]), "");

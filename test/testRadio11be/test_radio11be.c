@@ -70,7 +70,6 @@
 #include "wld_assocdev.h"
 #include "wld_util.h"
 #include "wld_chanmgt.h"
-#include "wld_hostapd_cfgFile.h"
 #include "swl/swl_intf.h"
 #include "test-toolbox/ttb_mockClock.h"
 #include "test-toolbox/ttb_object.h"
@@ -351,30 +350,6 @@ static void test_changeMldAppRadBws(void** state _UNUSED) {
     s_setRadCfgAndcheckUpdateRadBw(testsPreMld, SWL_ARRAY_SIZE(testsPreMld));
 }
 
-static void test_StaticPuncturing_hostapdConfig(void** state _UNUSED) {
-    amxd_object_t* radObj = amxd_object_findf(pRad5->pBus, "StaticPuncturing");
-    assert_non_null(radObj);
-
-    assert_true(swl_typeCharPtr_commitObjectParam(radObj, "DisabledSubChannels", "40,44"));
-    ttb_mockTimer_goToFutureMs(1);
-
-    char* data = swl_typeCharPtr_fromObjectParamDef(radObj, "DisabledSubChannels", NULL);
-    assert_string_equal("40,44", data);
-    free(data);
-
-    swl_mapChar_t cfgMap;
-    swl_mapChar_init(&cfgMap);
-
-    wld_hostapd_cfgFile_setRadioConfig(pRad5, &cfgMap);
-
-    ttb_assert_addPrint("Failed to retrieve punct_bitmap");
-    ttb_assert_true(swl_map_has(&cfgMap, "punct_bitmap"));
-    ttb_assert_str_eq(swl_mapChar_get(&cfgMap, "punct_bitmap"), "6");
-    ttb_assert_removeLastPrint();
-
-    swl_mapChar_cleanup(&cfgMap);
-}
-
 int main(int argc _UNUSED, char* argv[] _UNUSED) {
     sahTraceSetLevel(TRACE_LEVEL_INFO);
     sahTraceAddZone(sahTraceLevel(), "rad");
@@ -386,7 +361,6 @@ int main(int argc _UNUSED, char* argv[] _UNUSED) {
         cmocka_unit_test(test_radioStatus),
         cmocka_unit_test(test_changeAutoAppRadBws),
         cmocka_unit_test(test_changeManuAppRadBws),
-        cmocka_unit_test(test_StaticPuncturing_hostapdConfig),
         cmocka_unit_test_setup_teardown(test_changeMldAppRadBws, s_test_changeMldAppRadBws_setup, s_test_changeMldAppRadBw_teardown),
     };
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);

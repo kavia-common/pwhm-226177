@@ -87,6 +87,5 @@ swl_chanspec_t wld_rad_hostapd_getCfgChanspec(T_Radio* pRad);
 swl_rc_ne wld_rad_hostapd_updateAllVapsConfigId(T_Radio* pRad);
 swl_rc_ne wld_rad_hostapd_updateMaxNumStations(T_Radio* pRad);
 bool wld_rad_hostapd_hasActiveApMld(T_Radio* pRad, uint32_t minNLinks);
-swl_bit32_t wld_rad_calculateDisabledSubchannelsBitmap(T_Radio* pR, swl_chanspec_t* pChSpec);
 
 #endif /* __WLD_RAD_API_H__ */

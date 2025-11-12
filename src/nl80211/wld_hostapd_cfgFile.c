@@ -517,11 +517,6 @@ void wld_hostapd_cfgFile_setRadioConfig(T_Radio* pRad, swl_mapChar_t* radConfigM
                 swl_mapCharFmt_addValInt32(radConfigMap, "eht_mu_beamformer", 1);
             }
         }
-
-        swl_bit32_t disabledSubchannelBitmap = wld_rad_calculateDisabledSubchannelsBitmap(pRad, &tgtChspec);
-        if(disabledSubchannelBitmap > 0) {
-            swl_mapCharFmt_addValInt32(radConfigMap, "punct_bitmap", disabledSubchannelBitmap);
-        }
     }
 
     int32_t rtsThreshold = -1;
