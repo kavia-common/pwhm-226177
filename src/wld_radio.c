@@ -5042,7 +5042,7 @@ static void s_setDisabledSubChannels_pwf(void* priv _UNUSED, amxd_object_t* obje
             disabledSubchannels[count++] = disabledSubChannelsList[i];
         }
     }
-    if((count == pRad->nrDisabledSubChannels) ||
+    if((count == pRad->nrDisabledSubChannels) &&
        (swl_typeUInt8_arrayMatches(pRad->disabledSubchannels, pRad->nrDisabledSubChannels, disabledSubchannels, count))) {
         SAH_TRACEZ_INFO(ME, "%s: no change in disabled sub channels list", pRad->Name);
         return;
