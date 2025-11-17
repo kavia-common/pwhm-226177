@@ -189,7 +189,9 @@ swl_rc_ne wld_wpaSupp_ep_getScanResults(T_EndPoint* pEP, wld_scanResults_t* res)
     ASSERT_NOT_NULL(res, SWL_RC_INVALID_PARAM, ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: get scan results", pEP->Name);
 
-    char reply[1024] = {0};
+    size_t maxMsgLen = wld_wpaCtrl_getMaxMsgLen();
+    char reply[maxMsgLen + 1];
+    memset(reply, 0, sizeof(reply));
     bool ret = wld_wpaCtrl_sendCmdSynced(pEP->wpaCtrlInterface, "SCAN_RESULTS", reply, sizeof(reply));
     ASSERT_TRUE(ret, SWL_RC_ERROR, ME, "%s: failed to get scan results", pEP->Name);
 
@@ -211,12 +213,12 @@ swl_rc_ne wld_wpaSupp_ep_getScanResults(T_EndPoint* pEP, wld_scanResults_t* res)
                 swl_chanspec_channelFromMHz(&chanspec, (uint32_t) frequency);
                 result->channel = chanspec.channel;
                 wld_wpaSupp_ep_getBssScanInfo(pEP, &result->bssid, result);
-                if(strstr(security, "WPA2-PSK-CCMP")) {
-                    result->secModeEnabled = SWL_SECURITY_APMODE_WPA2_P;
-                } else if(strstr(security, "WPA2-PSK+SAE-CCMP")) {
-                    result->secModeEnabled = SWL_SECURITY_APMODE_WPA2_WPA3_P;
-                } else if(strstr(security, "WPA2-SAE-CCMP")) {
+                if(swl_str_find(security, "WPA2-SAE") >= 0) {
                     result->secModeEnabled = SWL_SECURITY_APMODE_WPA3_P;
+                } else if(swl_str_find(security, "WPA2-PSK+SAE") >= 0) {
+                    result->secModeEnabled = SWL_SECURITY_APMODE_WPA2_WPA3_P;
+                } else if(swl_str_find(security, "WPA2-PSK") >= 0) {
+                    result->secModeEnabled = SWL_SECURITY_APMODE_WPA2_P;
                 }
                 amxc_llist_it_init(&result->it);
                 amxc_llist_append(&res->ssids, &result->it);
