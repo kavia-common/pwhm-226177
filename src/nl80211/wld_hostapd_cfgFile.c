@@ -206,6 +206,14 @@ static swl_chanspec_t s_getCfgTgtChspec(T_Radio* pRad) {
     swl_chanspec_t tgtChspec = wld_chanmgt_getTgtChspec(pRad);
     swl_chanspec_t defChspec = SWL_CHANSPEC_NEW(wld_chanmgt_getDefaultSupportedChannel(pRad), wld_chanmgt_getDefaultSupportedBandwidth(pRad), pRad->operatingFrequencyBand);
 
+    if(wld_rad_hasConnectedEp(pRad)) {
+        tgtChspec = wld_chanmgt_getCurChspec(pRad);
+        SAH_TRACEZ_WARNING(ME, "%s: radio is used by connected EP, keep current chspec %s",
+                           pRad->Name,
+                           swl_typeChanspecExt_toBuf32(tgtChspec).buf);
+        return tgtChspec;
+    }
+
     /* force AcsBootChannel when Radio is down to the next up */
     if(!wld_rad_isUpExt(pRad) &&
        (pRad->autoChannelEnable || (pRad->externalAcsMgmt && pRad->autoChannelSetByUser)) &&
