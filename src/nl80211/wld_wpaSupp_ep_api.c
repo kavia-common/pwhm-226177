@@ -164,10 +164,12 @@ swl_rc_ne wld_wpaSupp_ep_increaseSecurityModeInCreds(T_EndPoint* pEP, T_WPSCrede
             char ssidStr[SSID_NAME_LEN];
             memset(ssidStr, 0, sizeof(ssidStr));
             convSsid2Str(pResult->ssid, pResult->ssidLen, ssidStr, sizeof(ssidStr));
-            if(swl_str_matches(ssidStr, creds->ssid)
-               && (pResult->secModeEnabled == SWL_SECURITY_APMODE_WPA2_WPA3_P)) {
-                SAH_TRACEZ_INFO(ME, "Increase security mode to WPA2-WPA3 from WPS credentials");
-                creds->secMode = SWL_SECURITY_APMODE_WPA2_WPA3_P;
+            if((swl_str_matches(ssidStr, creds->ssid))
+               && ((pResult->secModeEnabled == SWL_SECURITY_APMODE_WPA2_WPA3_P)
+                   || (pResult->secModeEnabled == SWL_SECURITY_APMODE_WPA3_P))) {
+                SAH_TRACEZ_INFO(ME, "Increase security mode to %s from WPS credentials",
+                                swl_security_apMode_str[pResult->secModeEnabled]);
+                creds->secMode = pResult->secModeEnabled;
                 break;
             }
         }
