@@ -83,6 +83,7 @@ void wld_ssid_setMac(T_SSID* pSSID, swl_macBin_t* macBin);
 bool wld_ssid_hasAutoMacBssIndex(T_SSID* pSSID, int32_t* pBssIndex);
 int32_t wld_rad_getHighestVapAutoMacBssIndex(T_Radio* pRad);
 int16_t wld_ssid_getMLDLinkID(T_SSID* pSSID);
+bool wld_ssid_hasValidMLDLinkID(T_SSID* pSSID);
 void wld_ssid_resetMloStats(T_SSID* pSSID);
 swl_rc_ne wld_ssid_accuMloStats(T_SSID* pSSID, wld_stats_t* pDiffStats);
 swl_rc_ne wld_ssid_getMloStats(T_SSID* pSSID, wld_stats_t* pOutStats);

@@ -3674,8 +3674,9 @@ bool wld_rad_hasActiveApMld(T_Radio* pRad, uint32_t minNLinks) {
     T_AccessPoint* pAP;
     wld_rad_forEachAp(pAP, pRad) {
         if((pAP->pSSID != NULL) &&
-           (wld_mld_isLinkActive(pAP->pSSID->pMldLink)) &&
-           (wld_mld_countNeighActiveLinks(pAP->pSSID->pMldLink) >= minNLinks)) {
+           (wld_ssid_hasValidMLDLinkID(pAP->pSSID)) &&
+           ((minNLinks <= 1) ||
+            (wld_mld_countNeighActiveLinks(pAP->pSSID->pMldLink) >= minNLinks))) {
             return true;
         }
     }

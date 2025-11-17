@@ -815,7 +815,12 @@ static void s_setSSIDConf_ocf(void* priv _UNUSED, amxd_object_t* object, const a
 
 int16_t wld_ssid_getMLDLinkID(T_SSID* pSSID) {
     ASSERTS_NOT_NULL(pSSID, -1, ME, "NULL");
-    return wld_mld_getLinkId(pSSID->pMldLink);
+    return pSSID->mldLinkId;
+}
+
+bool wld_ssid_hasValidMLDLinkID(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, false, ME, "NULL");
+    return (pSSID->mldLinkId >= 0);
 }
 
 void wld_ssid_resetMloStats(T_SSID* pSSID) {
@@ -873,16 +878,26 @@ void wld_ssid_setMLDRole(T_SSID* pSSID, swl_mlo_role_e mldRole) {
     ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "trans apply failure");
 }
 
+static void s_commitMLDLinkId(amxd_object_t* ssidObj) {
+    ASSERTS_NOT_NULL(ssidObj, , ME, "NULL");
+    T_SSID* pSSID = s_findSsid(ssidObj);
+    ASSERTS_NOT_NULL(pSSID, , ME, "NULL");
+    swl_typeInt16_commitObjectParam(ssidObj, "MLDLinkID", pSSID->mldLinkId);
+}
+
 void wld_ssid_setMLDLinkID(T_SSID* pSSID, int16_t mldLinkId) {
     ASSERTS_NOT_NULL(pSSID, , ME, "NULL");
+    if((mldLinkId < 0) && (pSSID->mldRole != SWL_MLO_ROLE_NONE)) {
+        wld_ssid_setMLDRole(pSSID, SWL_MLO_ROLE_NONE);
+    }
     wld_mld_setLinkId(pSSID->pMldLink, mldLinkId);
     ASSERTI_NOT_EQUALS(pSSID->mldLinkId, mldLinkId, , ME, "%s: same id %d", pSSID->Name, mldLinkId);
+    if(mldLinkId < 0) {
+        wld_ssid_resetMloStats(pSSID);
+    }
     pSSID->mldLinkId = mldLinkId;
 
-    amxd_trans_t trans;
-    ASSERT_TRANSACTION_INIT(pSSID->pBus, &trans, , ME, "%s : trans init failure", pSSID->Name);
-    amxd_trans_set_value(int16_t, &trans, "MLDLinkID", mldLinkId);
-    ASSERT_TRANSACTION_LOCAL_DM_END(&trans, , ME, "trans apply failure");
+    swla_delayExec_add((swla_delayExecFun_cbf) s_commitMLDLinkId, pSSID->pBus);
 }
 
 void wld_ssid_setMLDStatus(T_SSID* pSSID, swl_mlo_intfMldStatus_e mldStatus) {

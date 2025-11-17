@@ -79,12 +79,10 @@ swl_rc_ne wld_ssid_nl80211_getMldIfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo_
     W_SWL_SETPTR(pMldIfaceInfo, mldIfaceInfo);
     W_SWL_SETPTR(pLinkId, linkId);
     ASSERT_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "No ssid");
-    wld_mldLink_t* pLink = pSSID->pMldLink;
-    ASSERTI_NOT_NULL(pLink, SWL_RC_INVALID_STATE, ME, "No link");
     swl_macBin_t* pLinkMac = (swl_macBin_t*) pSSID->MACAddress;
-    if(((wld_mld_isLinkActive(pLink)) &&
-        ((ifIndex = wld_mld_getPrimaryLinkIfIndex(pLink)) > 0) &&
-        ((linkId = wld_mld_getLinkId(pLink)) >= 0) &&
+    if(((wld_ssid_hasValidMLDLinkID(pSSID)) &&
+        ((ifIndex = wld_ssid_nl80211_getPrimaryLinkIfIndex(pSSID)) > 0) &&
+        ((linkId = wld_ssid_nl80211_getMldLinkId(pSSID)) >= 0) &&
         (wld_nl80211_getInterfaceInfo(wld_nl80211_getSharedState(), ifIndex, &mldIfaceInfo) >= SWL_RC_OK)) ||
        (wld_nl80211_findMldIfaceByLinkMac(wld_nl80211_getSharedState(), pLinkMac, &mldIfaceInfo, &linkId) >= SWL_RC_OK)) {
         ifIndex = mldIfaceInfo.ifIndex;
@@ -120,7 +118,7 @@ swl_rc_ne wld_ssid_nl80211_getInterfaceInfo(T_SSID* pSSID, wld_nl80211_ifaceInfo
     T_Radio* pRad = pSSID->RADIO_PARENT;
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_STATE, ME, "No mapped radio");
     swl_rc_ne rc = SWL_RC_NOT_AVAILABLE;
-    if(wld_mld_isLinkEnabled(pSSID->pMldLink) || wld_mld_isLinkActive(pSSID->pMldLink)) {
+    if(wld_mld_isLinkEnabled(pSSID->pMldLink) || wld_ssid_hasValidMLDLinkID(pSSID)) {
         rc = wld_ssid_nl80211_getMldIfaceInfo(pSSID, pIfaceInfo, NULL);
     }
     if(rc == SWL_RC_NOT_AVAILABLE) {
@@ -159,7 +157,7 @@ uint32_t wld_ssid_nl80211_getPrimaryLinkIfIndex(T_SSID* pSSID) {
 
 int8_t wld_ssid_nl80211_getMldLinkId(T_SSID* pSSID) {
     ASSERTS_NOT_NULL(pSSID, MLO_LINK_ID_UNKNOWN, ME, "NULL");
-    return wld_mld_getLinkId(pSSID->pMldLink);
+    return wld_ssid_getMLDLinkID(pSSID);
 }
 
 bool wld_ssid_nl80211_matchIfSta(T_SSID* pSSID, wld_nl80211_stationInfo_t* pStationInfo) {
