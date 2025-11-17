@@ -74,6 +74,44 @@
 #define WPASUPP_ARGS_FORMAT "-ddK -i%s -Dnl80211 -c%s"
 #define WPASUPP_CTRL_IFACE_DIR "/var/run/wpa_supplicant"
 
+#define WPA_SUPP_EXIT_REASON_LOAD_FAIL 255
+
+static void s_restartWpaSuppCb(wld_secDmn_t* pSecDmn, void* userdata) {
+    T_EndPoint* pEP = (T_EndPoint*) userdata;
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    const char* mainIface = pEP->Name;
+    ASSERTW_TRUE(wld_endpoint_hasStackEnabled(pEP), , ME, "%s: ep iface %s is not startable", pEP->alias, mainIface);
+    ASSERTW_FALSE(wifiGen_wpaSupp_isRunning(pEP), , ME, "%s: wpa_supplicant running", mainIface);
+    SAH_TRACEZ_WARNING(ME, "%s: restarting wpa_supp", mainIface);
+    wld_secDmn_restartCb(pSecDmn);
+}
+
+static void s_onStopWpaSuppCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata) {
+    T_EndPoint* pEP = (T_EndPoint*) userdata;
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    const char* mainIface = pEP->Name;
+    SAH_TRACEZ_WARNING(ME, "%s: wpa_supp stopped", mainIface);
+    wld_deamonExitInfo_t* pExitInfo = &pSecDmn->dmnProcess->lastExitInfo;
+    if((pExitInfo != NULL) && (pExitInfo->isExited) &&
+       (pExitInfo->exitStatus == WPA_SUPP_EXIT_REASON_LOAD_FAIL)) {
+        SAH_TRACEZ_ERROR(ME, "%s: invalid wpa_supp configuration", mainIface);
+    }
+    wld_endpoint_sync_connection(pEP, false, EPE_NONE);
+    if(pEP->wpsSessionInfo.WPS_PairingInProgress) {
+        wld_endpoint_sendPairingNotification(pEP, NOTIFY_PAIRING_DONE, WPS_CAUSE_CANCELLED, NULL);
+    }
+    //finalize wpa_supp cleanup
+    wifiGen_wpaSupp_stopDaemon(pEP);
+}
+
+static void s_onStartWpaSuppCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata) {
+    T_EndPoint* pEP = (T_EndPoint*) userdata;
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    const char* mainIface = pEP->Name;
+    SAH_TRACEZ_WARNING(ME, "%s: wpa_supp started", mainIface);
+    wld_wpaCtrlMngr_connect(wld_secDmn_getWpaCtrlMgr(pEP->wpaSupp));
+}
+
 swl_rc_ne s_writeWpaSupArgsToBuf(char* args, size_t argsSize, char* confFilePath, size_t confFilePathSize, T_EndPoint* pEP) {
     ASSERT_NOT_NULL(pEP, SWL_RC_ERROR, ME, "NULL");
     bool ret;
@@ -95,6 +133,7 @@ swl_rc_ne s_writeWpaSupArgsToBuf(char* args, size_t argsSize, char* confFilePath
     ASSERTI_TRUE(ret, SWL_RC_ERROR, ME, "%s: writing wpaArgs error", pEP->Name);
     return SWL_RC_OK;
 }
+
 swl_rc_ne wifiGen_wpaSupp_init(T_EndPoint* pEP) {
     ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
     char startArgs[128] = {0};
@@ -103,6 +142,12 @@ swl_rc_ne wifiGen_wpaSupp_init(T_EndPoint* pEP) {
     ASSERT_FALSE(rc < SWL_RC_OK, rc, ME, "%s: Fail to set wpa_supplicant args", pEP->Name);
     rc = wld_secDmn_init(&pEP->wpaSupp, WPASUPP_CMD, startArgs, confFilePath, WPASUPP_CTRL_IFACE_DIR);
     ASSERT_FALSE(rc < SWL_RC_OK, rc, ME, "%s: Fail to init wpa_supplicant", pEP->Name);
+    wld_secDmnEvtHandlers handlers;
+    memset(&handlers, 0, sizeof(handlers));
+    handlers.restartCb = s_restartWpaSuppCb;
+    handlers.stopCb = s_onStopWpaSuppCb;
+    handlers.startCb = s_onStartWpaSuppCb;
+    wld_secDmn_setEvtHandlers(pEP->wpaSupp, &handlers, pEP);
     ASSERT_TRUE(wld_wpaCtrlInterface_init(&pEP->wpaCtrlInterface, pEP->Name, pEP->wpaSupp->ctrlIfaceDir),
                 SWL_RC_ERROR, ME, "%s: Fail to init EP interface", pEP->Name);
     ASSERT_TRUE(wld_wpaCtrlMngr_registerInterface(pEP->wpaSupp->wpaCtrlMngr, pEP->wpaCtrlInterface),
