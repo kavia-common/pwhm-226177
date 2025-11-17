@@ -2158,6 +2158,7 @@ struct S_EndPoint {
     uint64_t wDevId;                          /* nl80211 wireless device id */
     T_EndPointStats stats;
     swla_dm_objActionReadCtx_t onActionReadCtx;
+    amxp_timer_t* refreshChspecTimer;         /* Timer used to refresh connected backhaul chanspec */
 };
 
 typedef struct {

@@ -766,6 +766,7 @@ static void s_registerHadpRadEvtHandlers(wld_secDmn_t* hostapd) {
     }
 }
 
+static void s_refreshBkhChspec(T_Radio* pRad);
 static bool s_doStartHostapd(T_Radio* pRad) {
     wld_secDmn_setRestartNeeded(pRad->hostapd, false);
     ASSERTI_TRUE(wifiGen_hapd_isStartable(pRad), true, ME, "%s: missing enabling conds", pRad->Name);
@@ -785,6 +786,7 @@ static bool s_doStartHostapd(T_Radio* pRad) {
      * Therefore, hapd rad iface need to be enabled to force starting main rad iface and vaps
      */
     if((rc == SWL_RC_DONE) && (wifiGen_hapd_countGrpMembers(pRad) > 1)) {
+        s_refreshBkhChspec(pRad);
         wld_wpaCtrlMngr_t* pMgr = wld_secDmn_getWpaCtrlMgr(pRad->hostapd);
         if(!wld_wpaCtrlMngr_isConnected(pMgr)) {
             wld_wpaCtrlMngr_checkAllIfaces(pMgr);
@@ -1103,6 +1105,36 @@ static swl_chanspec_t s_getEpBssTgtChanspec(T_EndPoint* pEP, swl_macBin_t* bssid
     return chanSpec;
 }
 
+#define BKH_CHSPEC_REFRESH_PERIOD_MS 1000
+static void s_startRefreshEpChspec(T_EndPoint* pEP);
+static void s_refreshEpChspec(amxp_timer_t* timer _UNUSED, void* data) {
+    T_EndPoint* pEP = (T_EndPoint*) data;
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    if(wifiGen_refreshEpConnChspec(pEP) >= SWL_RC_OK) {
+        // keep periodic refresh of backhaul chanspec, as long as EP is connected
+        s_startRefreshEpChspec(pEP);
+        return;
+    }
+    amxp_timer_delete(&pEP->refreshChspecTimer);
+}
+static void s_startRefreshEpChspec(T_EndPoint* pEP) {
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    uint32_t delayMs = BKH_CHSPEC_REFRESH_PERIOD_MS;
+    if(pEP->refreshChspecTimer == NULL) {
+        amxp_timer_new(&pEP->refreshChspecTimer, s_refreshEpChspec, pEP);
+        // the first delayed refresh is done in event handler, 1s after the connection event
+        // the periodic refresh starts 2s later, to avoid requesting twice the refresh
+        delayMs += BKH_CHSPEC_REFRESH_DELAY_MS;
+    }
+    amxp_timer_start(pEP->refreshChspecTimer, delayMs);
+}
+static void s_refreshBkhChspec(T_Radio* pRad) {
+    T_EndPoint* pEP = wld_rad_getFirstEp(pRad);
+    if(pEP && pEP->refreshChspecTimer) {
+        s_refreshEpChspec(pEP->refreshChspecTimer, pEP);
+    }
+}
+
 static bool s_doSyncEpRemoteOperStd(T_EndPoint* pEP, swl_wirelessDevice_infoElements_t* pIEs) {
     ASSERTS_NOT_NULL(pEP, false, ME, "NULL");
     T_Radio* pRad = pEP->pRadio;
@@ -1267,6 +1299,7 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
         wld_ssid_setMLDRole(pEP->pSSID, mldRole);
     }
     s_delayRestoreFronthaul(pRad);
+    s_startRefreshEpChspec(pEP);
 }
 
 static void s_syncOnEpDisconnected(void* userData, char* ifName, bool state) {
@@ -1629,6 +1662,7 @@ static wld_event_callback_t s_vapStatusCbContainer = {
 static void s_writeHapdConfFileCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata) {
     T_Radio* pRad = (T_Radio*) userdata;
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
+    s_refreshBkhChspec(pRad);
     wifiGen_hapd_writeConfig(pRad);
 }
 

@@ -86,6 +86,7 @@ swl_rc_ne wifiGen_ep_createHook(T_EndPoint* pEP) {
 
 swl_rc_ne wifiGen_ep_destroyHook(T_EndPoint* pEP) {
     ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    amxp_timer_delete(&pEP->refreshChspecTimer);
     wifiGen_wpaSupp_cleanup(pEP);
     return SWL_RC_OK;
 }
