@@ -377,7 +377,8 @@ wld_mldLink_t* wld_mld_getNeighLinkByMacAddress(wld_mldLink_t* pLink, swl_macBin
 
 swl_rc_ne wld_mld_setPrimaryLink(wld_mldLink_t* pLink) {
     ASSERTS_NOT_NULL(pLink, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERT_TRUE(wld_mld_isLinkEnabled(pLink), SWL_RC_ERROR, ME, "disabled link %s can not be set as primary", s_getLinkName(pLink));
+    ASSERTI_TRUE(wld_mld_isLinkEnabled(pLink), SWL_RC_INVALID_STATE, ME, "disabled link %s can not be set as primary", s_getLinkName(pLink));
+    ASSERTI_TRUE(wld_mld_isLinkConfigured(pLink), SWL_RC_INVALID_STATE, ME, "unconfigured link %s can not be set as primary", s_getLinkName(pLink));
     wld_mld_t* pMld = pLink->pMld;
     ASSERT_NOT_NULL(pMld, SWL_RC_ERROR, ME, "NULL");
     SAH_TRACEZ_INFO(ME, "set primary link %s of mld unit %d",
@@ -490,7 +491,6 @@ swl_rc_ne wld_mld_setLinkId(wld_mldLink_t* pLink, int32_t linkId) {
         linkId = NO_LINK_ID;
     }
     if(linkId >= 0) {
-        wld_mld_saveLinkConfigured(pLink, true);
         wld_apMld_createAffiliatedAPObject(pLink, linkId);
     }
     ASSERTS_NOT_EQUALS(pLink->linkId, linkId, SWL_RC_OK, ME, "same value");
