@@ -1298,7 +1298,7 @@ static swl_rc_ne s_parseSignalPerChain(struct nlattr* pSigPChain, int8_t* sigArr
         if(i >= maxNChain) {
             break;
         }
-        sigArray[i++] = (int8_t) nla_get_u8(attr);
+        sigArray[i++] = SWL_MIN(0, SWL_MAX((int8_t) nla_get_u8(attr), (int8_t) DEFAULT_BASE_RSSI));
     }
     if(pNChains) {
         *pNChains = i;
@@ -1407,10 +1407,10 @@ swl_rc_ne wld_nl80211_parseStationInfo(struct nlattr* tb[], wld_nl80211_stationI
         pStation->rxErrors = nla_get_u64(pSinfo[NL80211_STA_INFO_RX_DROP_MISC]);
     }
     if(pSinfo[NL80211_STA_INFO_SIGNAL]) {
-        pStation->rssiDbm = nla_get_u8(pSinfo[NL80211_STA_INFO_SIGNAL]);
+        pStation->rssiDbm = SWL_MIN(0, SWL_MAX((int8_t) nla_get_u8(pSinfo[NL80211_STA_INFO_SIGNAL]), (int8_t) DEFAULT_BASE_RSSI));
     }
     if(pSinfo[NL80211_STA_INFO_SIGNAL_AVG]) {
-        pStation->rssiAvgDbm = nla_get_u8(pSinfo[NL80211_STA_INFO_SIGNAL_AVG]);
+        pStation->rssiAvgDbm = SWL_MIN(0, SWL_MAX((int8_t) nla_get_u8(pSinfo[NL80211_STA_INFO_SIGNAL_AVG]), (int8_t) DEFAULT_BASE_RSSI));
     }
     if(pSinfo[NL80211_STA_INFO_TX_BITRATE]) {
         s_parseRateInfo(pSinfo[NL80211_STA_INFO_TX_BITRATE], &pStation->txRate);

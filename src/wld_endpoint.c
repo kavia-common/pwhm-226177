@@ -1543,7 +1543,8 @@ bool wld_endpoint_updateStats(amxd_object_t* obj, T_EndPointStats* stats) {
     amxd_trans_set_uint32_t(&trans, "LastDataDownlinkRate", stats->LastDataDownlinkRate);
     amxd_trans_set_uint32_t(&trans, "LastDataUplinkRate", stats->LastDataUplinkRate);
     amxd_trans_set_uint32_t(&trans, "Retransmissions", stats->Retransmissions);
-    amxd_trans_set_int32_t(&trans, "SignalStrength", stats->SignalStrength);
+    int32_t signal = SWL_MIN(0, SWL_MAX(stats->SignalStrength, (int8_t) DEFAULT_BASE_RSSI));
+    amxd_trans_set_int32_t(&trans, "SignalStrength", signal);
     amxd_trans_set_int32_t(&trans, "SignalNoiseRatio", stats->SignalNoiseRatio);
     amxd_trans_set_int32_t(&trans, "Noise", stats->noise);
     amxd_trans_set_int32_t(&trans, "RSSI", stats->RSSI);
