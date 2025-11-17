@@ -274,7 +274,6 @@ bool wld_wpaCtrlInterface_setConnectionInfo(wld_wpaCtrlInterface_t* pIface, cons
     ASSERT_STR(serverPath, false, ME, "%s: empty server path", pIface->name);
     ASSERT_STR(sockName, false, ME, "%s: empty socket name", pIface->name);
     wld_wpaCtrlInterface_close(pIface);
-    pIface->enable = false;
     // init connection for events
     bool ret = swl_rc_isOk(wld_wpaCtrlConnection_init(&(pIface->eventConn), WPA_CONNECTION_EVENT, serverPath, sockName));
     // init connection for synchronous commands
@@ -318,6 +317,24 @@ bool wld_wpaCtrlInterface_initWithSockName(wld_wpaCtrlInterface_t** ppIface, cha
 
 bool wld_wpaCtrlInterface_init(wld_wpaCtrlInterface_t** ppIface, char* interfaceName, char* serverPath) {
     return wld_wpaCtrlInterface_initWithSockName(ppIface, interfaceName, serverPath, interfaceName);
+}
+
+/*
+ * @brief close wpactrl interface and reset the connection socket name to initial interface name
+ * @param pIface pointer to interface context
+ *
+ * @return true if successful, false otherwise
+ */
+bool wld_wpaCtrlInterface_reset(wld_wpaCtrlInterface_t* pIface) {
+    ASSERTS_NOT_NULL(pIface, false, ME, "NULL");
+    const char* ctrlDirPath = wld_wpaCtrlInterface_getConnectionDirPath(pIface);
+    const char* skname = wld_wpaCtrlInterface_getConnectionSockName(pIface);
+    const char* ifname = wld_wpaCtrlInterface_getName(pIface);
+    wld_wpaCtrlInterface_close(pIface);
+    if(!swl_str_matches(skname, ifname)) {
+        wld_wpaCtrlInterface_setConnectionInfo(pIface, ctrlDirPath, pIface->name);
+    }
+    return true;
 }
 
 bool wld_wpaCtrlInterface_setEvtHandlers(wld_wpaCtrlInterface_t* pIface, void* userdata, wld_wpaCtrl_evtHandlers_cb* pHandlers) {

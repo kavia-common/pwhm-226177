@@ -669,6 +669,7 @@ void wifiGen_refreshVapsIfIdx(T_Radio* pRad) {
             }
             if((wifiGen_hapd_isRunning(pRad)) &&
                (wld_hostapd_ap_needWpaCtrlIface(pAP)) &&
+               (wld_wpaCtrlInterface_checkConnectionPath(pAP->wpaCtrlInterface)) &&
                (!wld_wpaCtrlInterface_isReady(pAP->wpaCtrlInterface))) {
                 wld_wpaCtrlInterface_open(pAP->wpaCtrlInterface);
             }

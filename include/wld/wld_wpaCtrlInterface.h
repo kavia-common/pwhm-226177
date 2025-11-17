@@ -74,6 +74,7 @@ bool wld_wpaCtrlInterface_setEvtHandlers(wld_wpaCtrlInterface_t* pIface, void* u
 bool wld_wpaCtrlInterface_getEvtHandlers(wld_wpaCtrlInterface_t* pIface, void** userdata, wld_wpaCtrl_evtHandlers_cb* pHandlers);
 bool wld_wpaCtrlInterface_open(wld_wpaCtrlInterface_t* pIface);
 void wld_wpaCtrlInterface_close(wld_wpaCtrlInterface_t* pIface);
+bool wld_wpaCtrlInterface_reset(wld_wpaCtrlInterface_t* pIface);
 void wld_wpaCtrlInterface_cleanup(wld_wpaCtrlInterface_t** ppIface);
 bool wld_wpaCtrlInterface_ping(const wld_wpaCtrlInterface_t* pIface);
 bool wld_wpaCtrlInterface_isReady(const wld_wpaCtrlInterface_t* pIface);

@@ -102,8 +102,17 @@ swl_rc_ne wld_wpaCtrlMngr_checkAllIfaces(wld_wpaCtrlMngr_t* pMgr) {
     ASSERT_NOT_EQUALS(n, -1, SWL_RC_ERROR, ME, "fail to scan dir %s", ctrlDirPath);
     for(int i = 0; i < n; i++) {
         const char* sockName = namelist[i]->d_name;
-        T_SSID* pSSID = s_fetchLinkSSID(pMgr, sockName);
-        wld_wpaCtrlInterface_t* pIface = wld_ssid_getWpaCtrlIface(pSSID);
+        const char* nextSockName = (i + 1 < n) ? namelist[i + 1]->d_name : NULL;
+        wld_wpaCtrlInterface_t* pIface = NULL;
+        if((pMgr->pSecDmn != NULL) && !swl_str_startsWith(nextSockName, sockName)) {
+            /*
+             * only fetch linkSSID of effective wpaCtrl sockets, by excluding:
+             * - redirection socket to main mld link
+             *   (list is alpha sorted, so redirection has same prefix as next mld link sock name)
+             */
+            T_SSID* pSSID = s_fetchLinkSSID(pMgr, sockName);
+            pIface = wld_ssid_getWpaCtrlIface(pSSID);
+        }
         wld_wpaCtrlMngr_t* pCurrMgr = wld_wpaCtrlInterface_getMgr(pIface);
         if((pCurrMgr != NULL) && (wld_secDmn_isRunning(pCurrMgr->pSecDmn))) {
             const char* currSockName = wld_wpaCtrlInterface_getConnectionSockName(pIface);
@@ -493,7 +502,7 @@ bool wld_wpaCtrlMngr_disconnect(wld_wpaCtrlMngr_t* pMgr) {
     swl_unLiListIt_t it;
     swl_unLiList_for_each(it, &pMgr->ifaces) {
         wld_wpaCtrlInterface_t* pIface = *(swl_unLiList_data(&it, wld_wpaCtrlInterface_t * *));
-        wld_wpaCtrlInterface_close(pIface);
+        wld_wpaCtrlInterface_reset(pIface);
     }
     return true;
 }
