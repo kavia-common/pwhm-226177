@@ -200,6 +200,7 @@ wld_channel_extensionPos_e wld_rad_getExtensionChannel(T_Radio* pRad);
 
 bool wld_rad_hasEnabledEp(T_Radio* pRad);
 bool wld_rad_hasConnectedEp(T_Radio* pRad);
+bool wld_rad_hasConnectedEpWithRadStd(T_Radio* pRad, swl_radStd_e radStd);
 bool wld_rad_hasOnlyActiveEP(T_Radio* pRad);
 bool wld_rad_hasMainEP(T_Radio* pRad);
 

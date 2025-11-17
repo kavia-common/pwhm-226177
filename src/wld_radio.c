@@ -3507,6 +3507,22 @@ bool wld_rad_hasConnectedEp(T_Radio* pRad) {
     return false;
 }
 
+bool wld_rad_hasConnectedEpWithRadStd(T_Radio* pRad, swl_radStd_e radStd) {
+    ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
+    T_EndPoint* pEP = NULL;
+    /*
+     * Check if any connected EP with a specific radStd operatingStandard
+     */
+    wld_rad_forEachEp(pEP, pRad) {
+        if(pEP->connectionStatus == EPCS_CONNECTED) {
+            if(pEP->stats.operatingStandard == radStd) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool wld_rad_areAllVapsDone(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, false, ME, "NULL");
     T_AccessPoint* pAP = NULL;
@@ -3638,14 +3654,16 @@ bool wld_rad_hasMloSupport(T_Radio* pRad) {
 
 /*
  * returns whether 11BE can be used on radio:
+ * 0) 11be connection established on backhaul
  * 1) 11be operating standard supported and enabled on fronthaul
  * 1.0) MLO not supported
  * 1.1) or rad has at least 1 usable APMLD link (shared mldunit, ssid, secConf ...)
  */
 bool wld_rad_is11beUsable(T_Radio* pRad) {
     ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
-    if(wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_BE) &&
-       (!wld_rad_isMloCapable(pRad) || wld_rad_hasUsableApMld(pRad, 1))) {
+    if(wld_rad_hasConnectedEpWithRadStd(pRad, SWL_RADSTD_BE) ||
+       (wld_rad_checkEnabledRadStd(pRad, SWL_RADSTD_BE) &&
+        (!wld_rad_isMloCapable(pRad) || wld_rad_hasUsableApMld(pRad, 1)))) {
         return true;
     }
     return false;
