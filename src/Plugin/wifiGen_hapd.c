@@ -420,7 +420,7 @@ swl_rc_ne wifiGen_hapd_startDaemon(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     SAH_TRACEZ_WARNING(ME, "%s: Start hostapd", pRad->Name);
     //restore main iface if removed by hostapd
-    s_restoreMainIfaceAndCleanBSSs(pRad, true);
+    s_restoreMainIfaceAndCleanBSSs(pRad, false);
     s_enableWpaCtrlIfaces(pRad);
     return wld_secDmn_start(pRad->hostapd);
 }
