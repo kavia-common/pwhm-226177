@@ -533,11 +533,23 @@ static void s_syncOnRadUp(void* userData, char* ifName, bool state) {
     }
 
     // check and apply dyn detected cfg params
-    if(wld_secDmn_countCfgParamSuppByVal(pRad->hostapd, SWL_TRL_UNKNOWN) > 0) {
+    char unkSupParamsStr[512] = {0};
+    uint32_t nUnkSup = 0;
+    if((nUnkSup = wld_secDmn_getCfgParamsListBySuppVal(pRad->hostapd, unkSupParamsStr, sizeof(unkSupParamsStr), SWL_TRL_UNKNOWN)) > 0) {
+        uint32_t nDetSup = 0;
+        char* unkSupParamsArray[nUnkSup];
+        memset(unkSupParamsArray, 0, sizeof(unkSupParamsArray));
+        swl_typeCharPtr_arrayFromCharSep(unkSupParamsArray, SWL_ARRAY_SIZE(unkSupParamsArray), unkSupParamsStr, ",");
         SAH_TRACEZ_INFO(ME, "%s: try to detect and apply dyn cfg params", pRad->Name);
         wifiGen_hapd_writeConfig(pRad);
-        if(wld_secDmn_countCfgParamSuppByVal(pRad->hostapd, SWL_TRL_TRUE) > 0) {
-            wld_ap_hostapd_sendCommand(pAP, "RELOAD", "refreshConfig");
+        for(uint32_t i = 0; i < nUnkSup; i++) {
+            swl_trl_e trl = wld_secDmn_getCfgParamSupp(pRad->hostapd, unkSupParamsArray[i]);
+            wld_secDmn_setCfgParamSupp(pRad->hostapd, unkSupParamsArray[i], trl);
+            nDetSup += (trl == SWL_TRL_TRUE);
+        }
+        swl_typeCharPtr_arrayCleanup(unkSupParamsArray, nUnkSup);
+        if(nDetSup > 0) {
+            wifiGen_hapd_reloadDaemon(pRad);
         }
     }
 

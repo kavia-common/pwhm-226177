@@ -164,7 +164,7 @@ static swl_rc_ne s_checkAndSetParamValueStr(wld_wpaCtrlInterface_t* pIface, swl_
         } else if(rc == SWL_RC_ERROR) {
             trl = SWL_TRL_FALSE;
         }
-        if(trl != SWL_TRL_UNKNOWN) {
+        if((trl != SWL_TRL_UNKNOWN) || (rc == SWL_RC_INVALID_STATE)) {
             wld_secDmn_setCfgParamSupp(pSecDmn, param, trl);
         }
     }
