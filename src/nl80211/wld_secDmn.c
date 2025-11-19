@@ -364,6 +364,31 @@ swl_trl_e wld_secDmn_getCfgParamSupp(wld_secDmn_t* pSecDmn, const char* param) {
     return supp;
 }
 
+/*
+ * @brief get params with specific support, in a comma separated string list
+ *
+ * @param pSecDmn pointer to security daemon context
+ * @param outBuf[in/out] buffer to be filled with param names list
+ * @param outBuf[in] output buffer size
+ * @param supp[in] required support value
+ *
+ * @return count of matched params
+ */
+uint32_t wld_secDmn_getCfgParamsListBySuppVal(wld_secDmn_t* pSecDmn, char* outBuf, size_t outBufSize, swl_trl_e supp) {
+    uint32_t count = 0;
+    swl_str_copy(outBuf, outBufSize, NULL);
+    ASSERTS_NOT_NULL(pSecDmn, count, ME, "NULL");
+    swl_mapIt_t mapIt;
+    swl_map_for_each(mapIt, &pSecDmn->cfgParamSup) {
+        int32_t* pSupp = (int32_t*) swl_map_itValue(&mapIt);
+        if((pSupp != NULL) && (*pSupp == (int32_t) supp)) {
+            swl_strlst_cat(outBuf, outBufSize, ",", (const char*) swl_map_itKey(&mapIt));
+            count++;
+        }
+    }
+    return count;
+}
+
 uint32_t wld_secDmn_countCfgParamSuppAll(wld_secDmn_t* pSecDmn) {
     ASSERTS_NOT_NULL(pSecDmn, 0, ME, "NULL");
     return swl_map_size(&pSecDmn->cfgParamSup);

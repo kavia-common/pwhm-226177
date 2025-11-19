@@ -120,6 +120,7 @@ bool wld_secDmn_hasAvailableCtrlIface(wld_secDmn_t* pSecDmn);
 wld_wpaCtrlMngr_t* wld_secDmn_getWpaCtrlMgr(wld_secDmn_t* pSecDmn);
 bool wld_secDmn_setCfgParamSupp(wld_secDmn_t* pSecDmn, const char* param, swl_trl_e supp);
 swl_trl_e wld_secDmn_getCfgParamSupp(wld_secDmn_t* pSecDmn, const char* param);
+uint32_t wld_secDmn_getCfgParamsListBySuppVal(wld_secDmn_t* pSecDmn, char* outBuf, size_t outBufSize, swl_trl_e supp);
 uint32_t wld_secDmn_countCfgParamSuppAll(wld_secDmn_t* pSecDmn);
 uint32_t wld_secDmn_countCfgParamSuppChecked(wld_secDmn_t* pSecDmn);
 uint32_t wld_secDmn_countCfgParamSuppByVal(wld_secDmn_t* pSecDmn, swl_trl_e supp);
