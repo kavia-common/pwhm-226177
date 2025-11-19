@@ -286,55 +286,50 @@ swl_rc_ne wld_rad_hostapd_reconfigure(T_Radio* pR) {
     ASSERT_NOT_NULL(pSecDmn, SWL_RC_INVALID_STATE, ME, "NULL");
     wld_wpaCtrlInterface_t* pIface = wld_wpaCtrlMngr_getDefaultInterface(pMgr);
     ASSERT_NOT_NULL(pIface, SWL_RC_INVALID_STATE, ME, "%s: hostapd has no wpactrl iface available", pR->Name);
-    swl_rc_ne rc = SWL_RC_INVALID_STATE;
-
-    /*
-     * learning support of UPDATE cmd
-     */
-    swl_trl_e trl = wld_secDmn_getCmdSupp(pSecDmn, "UPDATE");
-    if(trl != SWL_TRL_FALSE) {
-        rc = wld_wpaCtrl_sendCmdFmtCheckResponse(pIface, "OK", "UPDATE ");
-        //the call may timeout while being applied, but that only happens on success
-        if(rc == SWL_RC_NOT_AVAILABLE) {
-            rc = SWL_RC_OK;
-        }
-        if((trl == SWL_TRL_UNKNOWN) && (rc >= SWL_RC_ERROR)) {
-            trl = (rc == SWL_RC_OK);
-            wld_secDmn_setCmdSupp(pSecDmn, "UPDATE", trl);
-        }
-        if(trl == SWL_TRL_TRUE) {
-            return rc;
-        }
-    }
+    swl_rc_ne rc = SWL_RC_NOT_IMPLEMENTED;
 
     /*
      * learning support of RELOAD_CONFIG cmd
      */
-    rc = SWL_RC_INVALID_PARAM;
-    trl = wld_secDmn_getCmdSupp(pSecDmn, "RELOAD_CONFIG");
-    if(trl != SWL_TRL_UNKNOWN) {
-        if(trl == SWL_TRL_TRUE) {
-            rc = wld_wpaCtrl_sendCmdFmtCheckResponse(pIface, "OK", "RELOAD_CONFIG");
-            if(rc == SWL_RC_NOT_AVAILABLE) {
-                rc = SWL_RC_OK;
-            }
+    swl_trl_e trl = wld_secDmn_getCmdSupp(pSecDmn, "RELOAD_CONFIG");
+    if(trl == SWL_TRL_UNKNOWN) {
+        /*
+         * Before hostapd 2.11 (rev 0102c5c6067f15af4fa2ee0ca5bc0ed70b62ffc1):
+         * hostapd was using prefix matching for ENABLE/RELOAD/DISABLE
+         * which is confusing about RELOAD_CONFIG support
+         * temporary workaround: using cmd line to detect support
+         */
+        if(wld_secDmn_learnCmdSuppFromHelpMsg("hostapd_cli", "-h", "reload_config", &trl)) {
+            wld_secDmn_setCmdSupp(pSecDmn, "RELOAD_CONFIG", trl);
         }
-        return rc;
+    }
+    if(trl != SWL_TRL_FALSE) {
+        rc = wld_wpaCtrl_sendCmdFmtCheckResponseExt(pIface, 100, "OK", "RELOAD_CONFIG");
+        //the call may timeout while being applied, but that only happens on success
+        if(rc == SWL_RC_NOT_AVAILABLE) {
+            rc = SWL_RC_OK;
+        }
+        if(wld_secDmn_deduceCmdSuppFromExecRc(rc, &trl)) {
+            wld_secDmn_setCmdSupp(pSecDmn, "RELOAD_CONFIG", trl);
+        }
     }
 
     /*
-     * Before hostapd 2.11 (rev 0102c5c6067f15af4fa2ee0ca5bc0ed70b62ffc1):
-     * hostapd was using prefix matching for ENABLE/RELOAD/DISABLE
-     * which is confusing about RELOAD_CONFIG support
-     * temporary workaround: using cmd line to detect support
+     * learning support of UPDATE cmd (ONLY when needed as alternative cmd)
      */
-    char buffer[128] = {0};
-    SWL_EXEC_BUF(buffer, sizeof(buffer), "hostapd_cli", "-i %s reload_config", wld_wpaCtrlInterface_getName(pIface));
-    if(!swl_str_isEmpty(buffer)) {
-        char* p = strrchr(buffer, '\n');
-        W_SWL_SETPTR(p, 0);
-        rc = swl_str_matches(buffer, "OK") ? SWL_RC_OK : SWL_RC_ERROR;
-        wld_secDmn_setCmdSupp(pSecDmn, "RELOAD_CONFIG", (rc == SWL_RC_OK));
+    if(trl == SWL_TRL_FALSE) {
+        trl = wld_secDmn_getCmdSupp(pSecDmn, "UPDATE");
+        if(trl == SWL_TRL_FALSE) {
+            return rc;
+        }
+        rc = wld_wpaCtrl_sendCmdFmtCheckResponseExt(pIface, 100, "OK", "UPDATE ");
+        //the call may timeout while being applied, but that only happens on success
+        if(rc == SWL_RC_NOT_AVAILABLE) {
+            rc = SWL_RC_OK;
+        }
+        if(wld_secDmn_deduceCmdSuppFromExecRc(rc, &trl)) {
+            wld_secDmn_setCmdSupp(pSecDmn, "UPDATE", trl);
+        }
     }
 
     return rc;
