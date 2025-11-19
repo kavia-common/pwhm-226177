@@ -819,7 +819,7 @@ static bool s_doEnableEp(T_EndPoint* pEP, T_Radio* pRad) {
     ASSERT_TRUE(pEP->toggleBssOnReconnect, true, ME, "%s: do not disable hostapd", pEP->Name);
     // check if there is a running hostapd in order to disable it in order allow to wpa_supplicant to connect.
     // Otherwise, wpa_supplicant will fail to connect
-    if(wifiGen_hapd_isRunning(pRad)) {
+    if(wld_endpoint_isReady(pEP) && wifiGen_hapd_isRunning(pRad)) {
         wpaSuppStartingAttempts = 0;
         amxp_timer_new(&wpaSuppTimer, s_startWpaSuppTimer, pEP);
         amxp_timer_set_interval(wpaSuppTimer, RETRY_DELAY_MS);
