@@ -370,7 +370,7 @@ static void s_mngrReadyCb(void* userData, char* ifName, bool isReady) {
             wld_channel_clear_passive_band(wld_rad_getSwlChanspec(pRad));
         }
         CALL_SECDMN_MGR_EXT(pRad->hostapd, fSyncOnRadioUp, ifName, isRadReady);
-        wld_rad_updateState(pRad, false);
+        wld_rad_updateState(pRad, isRadReady);
         return;
     }
     ASSERTS_TRUE(isReady, , ME, "Not ready");
@@ -835,6 +835,9 @@ static void s_apDisabledCb(void* userData, char* ifName) {
     SAH_TRACEZ_INFO(ME, "%s: AP iface disabled", ifName);
     T_AccessPoint* pAP = (T_AccessPoint*) userData;
     ASSERT_TRUE(debugIsVapPointer(pAP), , ME, "INVALID");
+    if(pAP->pSSID) {
+        wld_mld_resetLinkId(pAP->pSSID->pMldLink);
+    }
     wld_vap_updateState(pAP);
 }
 

@@ -498,16 +498,18 @@ static void s_apEnabledEvt(wld_wpaCtrlInterface_t* pInterface, char* event, char
     // Example: AP-ENABLED
     // This event notifies that hapd main interface has setup completed
     SAH_TRACEZ_INFO(ME, "%s: %s", pInterface->name, event);
-    if(pInterface == wld_wpaCtrlMngr_getFirstReadyInterface(pInterface->pMgr)) {
+    if(pInterface == wld_wpaCtrlMngr_getDefaultInterface(pInterface->pMgr)) {
         CALL_MGR_I_NA(pInterface, fMainApSetupCompletedCb);
     }
+    CALL_INTF_NA(pInterface, fApEnabledCb);
 }
 
 static void s_apDisabledEvt(wld_wpaCtrlInterface_t* pInterface, char* event, char* params _UNUSED) {
     // Example: AP-DISABLED
     // This event notifies that hapd main interface is disabled, or that secondary bss is removed from conf
     SAH_TRACEZ_INFO(ME, "%s: %s", pInterface->name, event);
-    if(pInterface == wld_wpaCtrlMngr_getFirstReadyInterface(pInterface->pMgr)) {
+    CALL_INTF_NA(pInterface, fApDisabledCb);
+    if(pInterface == wld_wpaCtrlMngr_getDefaultInterface(pInterface->pMgr)) {
         CALL_MGR_I_NA(pInterface, fMainApDisabledCb);
     }
 }
@@ -528,6 +530,9 @@ static void s_apIfaceDisabledEvt(wld_wpaCtrlInterface_t* pInterface, char* event
 
 static void s_ifaceTerminatingEvt(wld_wpaCtrlInterface_t* pInterface, char* event, char* params _UNUSED) {
     // Example: CTRL-EVENT-TERMINATING
+    if(!pInterface->pMgr || !pInterface->pMgr->pSecDmn) {
+        return;
+    }
     SAH_TRACEZ_WARNING(ME, "%s: %s", pInterface->name, event);
     bool isMgrTerm = (pInterface->isReady && (wld_wpaCtrlMngr_countReadyInterfaces(pInterface->pMgr) == 1));
     pInterface->isReady = false;
@@ -937,8 +942,8 @@ static void s_processStdEvent(wld_wpaCtrlInterface_t* pInterface, char* msgData)
     char* evtList[nStdEvts];
     swl_table_columnToArray(evtList, nStdEvts, &sWpaCtrlEvents, 0);
     // All wpa msgs including events are sent with level MSG_INFO (3)
-    ASSERTS_TRUE(wld_wpaCtrl_fetchEvent(msgData, WPA_MSG_LEVEL_INFO, " ", evtList, nStdEvts, &eventName, &pParams), ,
-                 ME, "%s: this is not standard wpa_ctrl event %s", wld_wpaCtrlInterface_getName(pInterface), msgData);
+    wld_wpaCtrl_fetchEvent(msgData, WPA_MSG_LEVEL_INFO, " ", evtList, nStdEvts, &eventName, &pParams);
+    ASSERTI_NOT_NULL(eventName, , ME, "%s: no standard wpa_ctrl event in msg (%s)", wld_wpaCtrlInterface_getName(pInterface), msgData);
     evtParser_f fEvtParser = s_getEventParser(eventName);
     if(fEvtParser) {
         fEvtParser(pInterface, eventName, pParams);
