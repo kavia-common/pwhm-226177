@@ -81,6 +81,7 @@ amxd_status_t wld_apMld_deleteAffiliatedAPObjects(wld_mldLink_t* pStartLink);
 amxd_status_t wld_apMld_clearMld(wld_mld_t* pMld_internal);
 wld_mld_t* wld_apMld_getMldfromObj(amxd_object_t* mldObj);
 amxd_status_t wld_apMld_updateAffAP(wld_mldLink_t* pLink);
+swl_rc_ne wld_apMld_updateDM(T_SSID* pSSID);
 
 /*
  * @brief check whether one APMLD link have applicable and shared
