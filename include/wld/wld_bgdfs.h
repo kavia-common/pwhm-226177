@@ -76,6 +76,7 @@ typedef enum {
     BGDFS_STATUS_CLEAR,            // System is clearing
     BGDFS_STATUS_CLEAR_EXT,        // System is clearing using external provider
     BGDFS_STATUS_CLEAR_CONTINUOUS, // System is clearing indefinitely
+    BGDFS_STATUS_ERROR,            // System clearing in error
     BGDFS_STATUS_MAX
 } wld_bgdfsStatus_e;
 

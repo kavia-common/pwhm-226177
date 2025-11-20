@@ -2332,7 +2332,7 @@ define probelist_t{
 				 * Current status of bg dfs clearing
 				 */
 				%read-only string Status{
-					on action validate call check_enum ["Off","Idle","Clearing","ExtClearing","ContinuousClearing"];
+					on action validate call check_enum ["Off","Idle","Clearing","ExtClearing","ContinuousClearing","Error"];
 					default "Off";
 				}
 

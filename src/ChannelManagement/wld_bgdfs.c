@@ -82,6 +82,7 @@ static const char* wld_bgdfsStatus_str[BGDFS_STATUS_MAX] = {
     "Clearing",
     "ExtClearing",
     "ContinuousClearing",
+    "Error",
 };
 
 static const char* wld_dfsResult_str[DFS_RESULT_MAX] = {
@@ -99,7 +100,7 @@ static const char* wld_dfsType_str[BGDFS_TYPE_MAX] = {
 static const wld_bgdfsStatus_e wld_dfsTypeToStatus[BGDFS_TYPE_MAX] = {
     BGDFS_STATUS_CLEAR,
     BGDFS_STATUS_CLEAR_EXT,
-    BGDFS_STATUS_CLEAR_CONTINUOUS
+    BGDFS_STATUS_CLEAR_CONTINUOUS,
 };
 
 static void s_writeConfig(T_Radio* pRad, amxd_trans_t* trans) {
@@ -333,7 +334,7 @@ swl_rc_ne wld_bgdfs_startExt(T_Radio* pRad, wld_startBgdfsArgs_t* args) {
 
     bool legacy = false;
     swl_rc_ne ret = pRad->pFA->mfn_wrad_bgdfs_start_ext(pRad, args);
-    if(ret < 0) {
+    if(!swl_rc_isOk(ret)) {
         if(ret == SWL_RC_NOT_IMPLEMENTED) {
             // if not implemented, try normal one
             ret = pRad->pFA->mfn_wrad_bgdfs_start(pRad, args->channel);
@@ -347,6 +348,9 @@ swl_rc_ne wld_bgdfs_startExt(T_Radio* pRad, wld_startBgdfsArgs_t* args) {
         SAH_TRACEZ_WARNING(ME, "%s: bgdfs seems not supported when trying cac %d/%d => mark as unavailable",
                            pRad->Name, args->channel, args->bandwidth);
         wld_bgdfs_setAvailable(pRad, false);
+    } else {
+        pRad->bgdfs_config.status = BGDFS_STATUS_ERROR;
+        wld_bgdfs_setAvailable(pRad, pRad->bgdfs_config.available);
     }
 
     return ret;

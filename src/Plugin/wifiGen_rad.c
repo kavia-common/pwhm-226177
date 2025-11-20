@@ -933,11 +933,15 @@ int wifiGen_rad_txpow(T_Radio* pRad, int val, int set) {
  */
 static swl_rc_ne s_checkAndStartZwDfs(T_Radio* pRad, bool direct) {
     if(!wld_rad_is_5ghz(pRad) ||
-       !swl_channel_isDfs(pRad->targetChanspec.chanspec.channel) ||
+       !swl_chanspec_isDfs(pRad->targetChanspec.chanspec) ||
        !wld_rad_isUpExt(pRad) ||
        wld_secDmn_isGrpRestarting(pRad->hostapd) ||
        (wld_chanmgt_getCurBw(pRad) > pRad->maxChannelBandwidth) ||
        (pRad->bgdfs_config.status != BGDFS_STATUS_IDLE)) {
+        if(pRad->bgdfs_config.status == BGDFS_STATUS_ERROR) {
+            pRad->bgdfs_config.status = BGDFS_STATUS_IDLE;
+            wld_bgdfs_setAvailable(pRad, pRad->bgdfs_config.available);
+        }
         return SWL_RC_DONE;
     }
     if(wld_channel_is_band_passive(pRad->targetChanspec.chanspec)) {
