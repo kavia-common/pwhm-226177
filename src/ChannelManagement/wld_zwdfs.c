@@ -331,5 +331,6 @@ swl_rc_ne wld_zwdfs_deinit(T_Radio* pRad) {
     wld_event_remove_callback(gWld_queue_rad_onStatusChange, &s_onRadioStatusChange);
     amxp_timer_delete(&fsm->fsmCtx.timer);
     W_SWL_FREE(fsm);
+    pRad->zwdfsData = NULL;
     return SWL_RC_OK;
 }
