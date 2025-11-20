@@ -396,7 +396,7 @@ static void s_mainApSetupCompletedCb(void* userData, char* ifName) {
     pRad->pFA->mfn_wrad_poschans(pRad, NULL, 0);
     s_syncCurrentChannel(pRad, pRad->targetChanspec.reason);
     wld_channel_clear_passive_band(wld_rad_getSwlChanspec(pRad));
-    if(s_saveHapdRadDetState(pRad, CM_RAD_UP)) {
+    if(s_saveHapdRadDetState(pRad, CM_RAD_UP) || !wld_rad_hasActiveVap(pRad)) {
         CALL_SECDMN_MGR_EXT(pRad->hostapd, fSyncOnRadioUp, ifName, true);
     }
     wld_rad_updateState(pRad, true);
@@ -572,10 +572,10 @@ static void s_newInterfaceCb(void* pRef, void* pData _UNUSED, wld_nl80211_ifaceI
             if(s_checkEnabledIfacesCreatedReady(pMgr, pRad)) {
                 chanmgt_rad_state radDetState = CM_RAD_UNKNOWN;
                 wifiGen_hapd_getRadState(pRad, &radDetState);
-                if(!s_saveHapdRadDetState(pRad, radDetState)) {
+                bool isRadReady = (radDetState == CM_RAD_UP);
+                if(!(s_saveHapdRadDetState(pRad, radDetState) || (isRadReady > wld_rad_hasActiveVap(pRad)))) {
                     return;
                 }
-                bool isRadReady = (radDetState == CM_RAD_UP);
                 bool isRadStarting = (radDetState == CM_RAD_FG_CAC) || (radDetState == CM_RAD_CONFIGURING);
                 SAH_TRACEZ_INFO(ME, "%s: rad %s isRadReady:%d isRadStarting:%d",
                                 pAP->alias, pRad->Name, isRadReady, isRadStarting);
