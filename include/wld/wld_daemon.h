@@ -135,13 +135,23 @@ typedef bool (* wld_dmn_reloadHandler)(wld_process_t* pProc, void* userdata);
  */
 typedef bool (* wld_dmn_stopHandler)(wld_process_t* pProc, void* userdata);
 
+/*
+ * @brief handler notifying child process's is up to be started (imminent)
+ * allowing to prepare resources
+ *
+ * @param pProc process context
+ * @param userdata private data context pointer registered when starting the process
+ */
+typedef void (* wld_dmn_preStartHandler)(wld_process_t* pProc, void* userdata);
+
 typedef struct {
-    wld_dmn_restartHandler restartCb; // optional handler to manage child process restarting
-    wld_dmn_onStopHandler stopCb;     // optional handler called after child process end
-    wld_dmn_onStartHandler startCb;   // optional handler called after child process start
-    wld_dmn_getArgsHandler getArgsCb; // optional handler to build process args dynamically just before starting it
-    wld_dmn_reloadHandler reload;     // optional handler to reload process configuration
-    wld_dmn_stopHandler stop;         // optional handler to terminate process
+    wld_dmn_restartHandler restartCb;   // optional handler to manage child process restarting
+    wld_dmn_onStopHandler stopCb;       // optional handler called after child process end
+    wld_dmn_onStartHandler startCb;     // optional handler called after child process start
+    wld_dmn_getArgsHandler getArgsCb;   // optional handler to build process args dynamically just before starting it
+    wld_dmn_reloadHandler reload;       // optional handler to reload process configuration
+    wld_dmn_stopHandler stop;           // optional handler to terminate process
+    wld_dmn_preStartHandler preStartCb; // optional handler called just before child process start
 } wld_deamonEvtHandlers;
 
 /* wld daemon context. */

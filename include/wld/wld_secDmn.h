@@ -75,14 +75,16 @@ typedef void (* wld_secDmn_onStartHandler)(wld_secDmn_t* pSecDmn, void* userdata
 typedef char* (* wld_secDmn_getArgsHandler)(wld_secDmn_t* pSecDmn, void* userdata);
 typedef bool (* wld_secDmn_stopHandler)(wld_secDmn_t* pSecDmn, void* userdata);
 typedef void (* wld_secDmn_writeCfgHandler)(wld_secDmn_t* pSecDmn, void* userdata);
+typedef void (* wld_secDmn_preStartHandler)(wld_secDmn_t* pSecDmn, void* userdata);
 
 typedef struct {
-    wld_secDmn_restartHandler restartCb;   // optional handler to manage security daemon restarting
-    wld_secDmn_onStopHandler stopCb;       // optional handler to get notification for security daemon process end
-    wld_secDmn_onStartHandler startCb;     // optional handler post-startup
-    wld_secDmn_getArgsHandler getArgs;     // optional handler to provide security daemon arguments on startup
-    wld_secDmn_stopHandler stop;           // optional handler to terminate security daemon
-    wld_secDmn_writeCfgHandler writeCfgCb; // optional handler to write the config file of the security daemon
+    wld_secDmn_restartHandler restartCb;     // optional handler to manage security daemon restarting
+    wld_secDmn_onStopHandler stopCb;         // optional handler to get notification for security daemon process end
+    wld_secDmn_onStartHandler startCb;       // optional handler post-startup
+    wld_secDmn_getArgsHandler getArgs;       // optional handler to provide security daemon arguments on startup
+    wld_secDmn_stopHandler stop;             // optional handler to terminate security daemon
+    wld_secDmn_writeCfgHandler writeCfgCb;   // optional handler to write the config file of the security daemon
+    wld_secDmn_preStartHandler preStartCb;   // optional handler pre-startup
 } wld_secDmnEvtHandlers;
 
 struct wld_secDmn {

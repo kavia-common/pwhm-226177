@@ -269,6 +269,7 @@ bool wld_dmn_startDeamon(wld_process_t* dmn_process) {
         }
     }
 
+    SWL_CALL(dmn_process->handlers.preStartCb, dmn_process, dmn_process->userData);
     int ret = amxp_proc_ctrl_start(dmn_process->process, 0, dmn_process->settings);
     if(ret != 0) {
         SAH_TRACEZ_ERROR(ME, "Failed to start %s dmn_process", dmn_process->cmd);
@@ -295,7 +296,7 @@ bool wld_dmn_startDeamon(wld_process_t* dmn_process) {
         if(dmn_process->status == WLD_DAEMON_STATE_ERROR) {
             SAH_TRACEZ_ERROR(ME, "Process %s restarts after a crash.", dmn_process->cmd);
         } else if(dmn_process->status == WLD_DAEMON_STATE_RESTARTING) {
-            SAH_TRACEZ_ERROR(ME, "Process %s restarts by user request.", dmn_process->cmd);
+            SAH_TRACEZ_WARNING(ME, "Process %s restarts by user request.", dmn_process->cmd);
         }
         dmn_process->restarts++;
         dmn_process->totalRestarts++;

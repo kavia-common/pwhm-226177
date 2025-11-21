@@ -170,12 +170,23 @@ static bool s_stopProcCb(wld_process_t* pProc, void* userdata) {
     return ret;
 }
 
+static void s_preStartProcCb(wld_process_t* pProc, void* userdata) {
+    wld_secDmnGrp_t* pSecDmnGrp = (wld_secDmnGrp_t*) userdata;
+    ASSERT_NOT_NULL(pSecDmnGrp, , ME, "NULL");
+    amxc_llist_for_each(it, &pSecDmnGrp->members) {
+        wld_secDmnGrp_member_t* member = amxc_container_of(it, wld_secDmnGrp_member_t, it);
+        SAH_TRACEZ_INFO(ME, "notify preStart to member %s (st:%d)", member->name, member->state);
+        SWL_CALL(member->dmnEvtHdlrs.preStartCb, pProc, member->dmnEvtUserData);
+    }
+}
+
 static wld_deamonEvtHandlers fProcCbs = {
     .restartCb = s_restartProcCb,
     .stopCb = s_onStopProcCb,
     .startCb = s_onStartProcCb,
     .getArgsCb = s_getArgsProcCb,
     .stop = s_stopProcCb,
+    .preStartCb = s_preStartProcCb,
 };
 
 static void s_processGrpAction(amxp_timer_t* timer, void* userdata);

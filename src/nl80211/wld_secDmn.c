@@ -126,12 +126,21 @@ static bool s_stopProcCb(wld_process_t* pProc _UNUSED, void* userdata) {
     return false;
 }
 
+static void s_preStartProcCb(wld_process_t* pProc _UNUSED, void* userdata) {
+    wld_secDmn_t* pSecDmn = (wld_secDmn_t*) userdata;
+    ASSERT_NOT_NULL(pSecDmn, , ME, "NULL");
+    if(pSecDmn->handlers.preStartCb) {
+        pSecDmn->handlers.preStartCb(pSecDmn, pSecDmn->userData);
+    }
+}
+
 static wld_deamonEvtHandlers fProcCbs = {
     .restartCb = s_restartProcCb,
     .stopCb = s_onStopProcCb,
     .startCb = s_onStartProcCb,
     .getArgsCb = s_getArgsProcCb,
     .stop = s_stopProcCb,
+    .preStartCb = s_preStartProcCb,
 };
 
 swl_rc_ne wld_secDmn_init(wld_secDmn_t** ppSecDmn, char* cmd, char* startArgs, char* cfgFile, char* ctrlIfaceDir) {
