@@ -243,7 +243,7 @@ define rrm_t{
 		/**
 		 * Configurable instance alias to be used for higher layers.
 		 */
-		%persistent %protected string CustomAlias;
+		%persistent string CustomAlias;
 
 		/** Index in the AccessPoint tree (also for the SSID tree,
 		 *  both are inline) */
