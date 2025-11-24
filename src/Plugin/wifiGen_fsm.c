@@ -739,7 +739,7 @@ static void s_restoreFronthaul(T_Radio* pRad) {
         wld_epConnectionStatus_e connState = EPCS_DISABLED;
         wld_wpaSupp_ep_getConnState(wld_rad_getEnabledEndpoint(pRad), &connState);
         if((connState == EPCS_IDLE) || (connState == EPCS_DISABLED) ||
-           (connState == EPCS_CONNECTED) || (connState == EPCS_DISCONNECTED)) {
+           (connState == EPCS_CONNECTED) || (connState == EPCS_DISCONNECTED) || (connState == EPCS_PASSIVE)) {
             SAH_TRACEZ_INFO(ME, "%s: restore fronthaul chanspec conf", pRad->Name);
             pRad->pFA->mfn_wrad_setChanspec(pRad, true);
         }
@@ -1250,6 +1250,8 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     T_Radio* pRad = (T_Radio*) userData;
     T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    T_SSID* pSSID = pEP->pSSID;
+    ASSERT_NOT_NULL(pSSID, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: connected endpoint", pEP->Name);
     wld_nl80211_ifaceInfo_t epIfInfo;
     swl_rc_ne rc = wld_ep_nl80211_getInterfaceInfo(pEP, &epIfInfo);
@@ -1339,6 +1341,25 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     }
     s_delayRestoreFronthaul(pRad);
     s_startRefreshEpChspec(pEP);
+
+    wld_mldLink_t* pLink = pSSID->pMldLink;
+    wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
+        T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
+        if(pEP->pSSID == pNgSSID) {
+            continue;
+        }
+        s_delayRestoreFronthaul(pNgSSID->RADIO_PARENT);
+        s_startRefreshEpChspec(pNgSSID->ENDP_HOOK);
+    }
+}
+
+static void s_checkRadioRestoreFronthaul(T_Radio* pRad) {
+    chanmgt_rad_state detRadState = CM_RAD_UNKNOWN;
+    if((wifiGen_hapd_getRadState(pRad, &detRadState) == SWL_RC_OK) &&
+       (detRadState != CM_RAD_UP)) {
+        //restore tgt chanspec after disconnection
+        s_delayRestoreFronthaul(pRad);
+    }
 }
 
 static void s_syncOnEpDisconnected(void* userData, char* ifName, bool state) {
@@ -1371,12 +1392,16 @@ static void s_syncOnEpDisconnected(void* userData, char* ifName, bool state) {
     wld_bStaMld_update();
 
     ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
-    chanmgt_rad_state detRadState = CM_RAD_UNKNOWN;
-    if((wifiGen_hapd_getRadState(pRad, &detRadState) == SWL_RC_OK) &&
-       (detRadState != CM_RAD_UP)) {
-        SAH_TRACEZ_INFO(ME, "%s: restore fronthaul chanspec conf", pEP->Name);
-        //restore tgt chanspec after disconnection
-        s_delayRestoreFronthaul(pRad);
+    SAH_TRACEZ_INFO(ME, "%s: restore fronthaul chanspec conf", pEP->Name);
+    s_checkRadioRestoreFronthaul(pRad);
+    wld_mldLink_t* pLink = pSSID->pMldLink;
+    wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
+        T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
+        if(pSSID == pNgSSID) {
+            continue;
+        }
+        SAH_TRACEZ_INFO(ME, "%s: restore fronthaul chanspec conf", pNgSSID->Name);
+        s_checkRadioRestoreFronthaul(pNgSSID->RADIO_PARENT);
     }
 }
 
@@ -1403,6 +1428,8 @@ static void s_syncOnEpScanFail(void* userData, char* ifName, int error) {
     T_Radio* pRad = (T_Radio*) userData;
     T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    T_SSID* pSSID = pEP->pSSID;
+    ASSERT_NOT_NULL(pSSID, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: EP failed to start scan: error(%d)", pEP->Name, error);
     if(error == -EBUSY) {
         if(wld_scan_isRunning(pRad)) {
@@ -1423,6 +1450,14 @@ static void s_syncOnEpScanFail(void* userData, char* ifName, int error) {
         }
     } else if(error == -ENOENT) {
         s_delayRestoreFronthaul(pRad);
+        wld_mldLink_t* pLink = pSSID->pMldLink;
+        wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
+            T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
+            if(pSSID == pNgSSID) {
+                continue;
+            }
+            s_delayRestoreFronthaul(pNgSSID->RADIO_PARENT);
+        }
     }
 }
 

@@ -1353,7 +1353,10 @@ static void s_stationAssociatedEvt(void* pRef, char* ifName, swl_macBin_t* bBssi
 
 swl_rc_ne wifiGen_refreshEpConnChspec(T_EndPoint* pEP) {
     ASSERT_TRUE(debugIsEpPointer(pEP), SWL_RC_INVALID_PARAM, ME, "INVALID");
-    ASSERTI_EQUALS(pEP->connectionStatus, EPCS_CONNECTED, SWL_RC_INVALID_STATE, ME, "%s: ep is not connected", pEP->Name);
+    if((pEP->connectionStatus != EPCS_CONNECTED) && (pEP->connectionStatus != EPCS_PASSIVE)) {
+        SAH_TRACEZ_INFO(ME, "%s: ep is not connected/passive", pEP->Name);
+        return SWL_RC_INVALID_STATE;
+    }
     T_Radio* pRad = pEP->pRadio;
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_STATE, ME, "%s: no radio mapped", pEP->Name);
     // update radio datamodel

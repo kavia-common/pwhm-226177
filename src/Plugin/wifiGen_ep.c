@@ -444,7 +444,10 @@ swl_rc_ne wifiGen_ep_sendManagementFrame(T_EndPoint* pEP, swl_80211_mgmtFrameCon
 
 swl_rc_ne wifiGen_ep_getConnChspec(T_EndPoint* pEP, swl_chanspec_t* pChanSpec) {
     ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERTI_EQUALS(pEP->connectionStatus, EPCS_CONNECTED, SWL_RC_INVALID_STATE, ME, "%s: ep is not connected", pEP->Name);
+    if((pEP->connectionStatus != EPCS_CONNECTED) && (pEP->connectionStatus != EPCS_PASSIVE)) {
+        SAH_TRACEZ_INFO(ME, "%s: ep is not connected/passive", pEP->Name);
+        return SWL_RC_INVALID_STATE;
+    }
     wld_nl80211_ifaceInfo_t ifaceInfo;
     memset(&ifaceInfo, 0, sizeof(ifaceInfo));
     swl_rc_ne rc;

@@ -3494,6 +3494,19 @@ bool wld_rad_hasEnabledEp(T_Radio* pRad) {
     return (pEP != NULL);
 }
 
+bool wld_rad_hasPassiveEp(T_Radio* pRad) {
+    ASSERT_NOT_NULL(pRad, false, ME, "NULL");
+    T_EndPoint* pEP = NULL;
+
+    /* Check if NO EP is passive */
+    wld_rad_forEachEp(pEP, pRad) {
+        if(pEP->connectionStatus == EPCS_PASSIVE) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool wld_rad_hasConnectedEp(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, false, ME, "NULL");
     T_EndPoint* pEP = NULL;
@@ -4388,7 +4401,7 @@ void wld_rad_updateState(T_Radio* pRad, bool forceVapUpdate) {
     int curState = pRad->pFA->mfn_wrad_radio_status(pRad);
     wld_status_e oldStatus = pRad->status;
 
-    if((pRad->enable && wld_util_areAllVapsDisabled(pRad) && !wld_rad_hasConnectedEp(pRad)) || (pRad->detailedState == CM_RAD_FG_CAC)) {
+    if((pRad->enable && wld_util_areAllVapsDisabled(pRad) && !wld_rad_hasConnectedEp(pRad) && !wld_rad_hasPassiveEp(pRad)) || (pRad->detailedState == CM_RAD_FG_CAC)) {
         pRad->status = RST_DORMANT;
     } else if((pRad->detailedState == CM_RAD_DOWN) || (curState == 0) || (pRad->detailedState == CM_RAD_DEEP_POWER_DOWN)) {
         pRad->status = RST_DOWN;

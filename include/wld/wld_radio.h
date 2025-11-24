@@ -199,6 +199,14 @@ bool wld_rad_hasChannelWidthCovered(T_Radio* pRad, swl_bandwidth_e chW);
 wld_channel_extensionPos_e wld_rad_getExtensionChannel(T_Radio* pRad);
 
 bool wld_rad_hasEnabledEp(T_Radio* pRad);
+/**
+ * @brief Check if radio has any endpoint in passive connection status
+ *
+ * @param pRad pointer to radio structure to check
+ *
+ * @return true if at least one endpoint is in passive state, false otherwise
+ */
+bool wld_rad_hasPassiveEp(T_Radio* pRad);
 bool wld_rad_hasConnectedEp(T_Radio* pRad);
 bool wld_rad_hasConnectedEpWithRadStd(T_Radio* pRad, swl_radStd_e radStd);
 bool wld_rad_hasOnlyActiveEP(T_Radio* pRad);

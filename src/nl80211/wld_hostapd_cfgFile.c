@@ -206,9 +206,9 @@ static swl_chanspec_t s_getCfgTgtChspec(T_Radio* pRad) {
     swl_chanspec_t tgtChspec = wld_chanmgt_getTgtChspec(pRad);
     swl_chanspec_t defChspec = SWL_CHANSPEC_NEW(wld_chanmgt_getDefaultSupportedChannel(pRad), wld_chanmgt_getDefaultSupportedBandwidth(pRad), pRad->operatingFrequencyBand);
 
-    if(wld_rad_hasConnectedEp(pRad)) {
+    if(wld_rad_hasConnectedEp(pRad) || wld_rad_hasPassiveEp(pRad)) {
         tgtChspec = wld_chanmgt_getCurChspec(pRad);
-        SAH_TRACEZ_WARNING(ME, "%s: radio is used by connected EP, keep current chspec %s",
+        SAH_TRACEZ_WARNING(ME, "%s: radio is used by connected/passive EP, keep current chspec %s",
                            pRad->Name,
                            swl_typeChanspecExt_toBuf32(tgtChspec).buf);
         return tgtChspec;
