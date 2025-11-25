@@ -471,12 +471,28 @@ swl_trl_e wld_rad_hostapd_getCfgParamSupp(T_Radio* pRad, const char* param) {
     return wld_secDmn_getCfgParamSupp(pRad->hostapd, param);
 }
 
+static bool s_isApLoaded(T_AccessPoint* pAP) {
+    return (pAP && pAP->enable &&
+            wld_wpaCtrlInterface_checkConnectionPath(pAP->wpaCtrlInterface));
+}
+
+/*
+ * @brief return AccessPoint context of the first loaded vap among BSSs
+ * indicated in radio's hostapd config file
+ *
+ * @param pRad radio context
+ *
+ * @return AccessPoint context, or NULL in case of error
+ */
 T_AccessPoint* wld_rad_hostapd_getFirstConnectedVap(T_Radio* pRad) {
     if(pRad && pRad->enable) {
+        T_AccessPoint* pMainAP = wld_rad_hostapd_getSavedMainVap(pRad);
+        if(s_isApLoaded(pMainAP)) {
+            return pMainAP;
+        }
         T_AccessPoint* pAP = NULL;
         wld_rad_forEachAp(pAP, pRad) {
-            if(pAP->enable &&
-               wld_wpaCtrlInterface_checkConnectionPath(pAP->wpaCtrlInterface)) {
+            if((pAP != pMainAP) && s_isApLoaded(pAP)) {
                 return pAP;
             }
         }
