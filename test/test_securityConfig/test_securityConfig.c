@@ -172,6 +172,7 @@ static bool setup_internal_context_for_wpa3_cm(wld_th_dm_t* dm) {
         T_SSID* pSSID = band->vapPrivSSID;
 
         // Radio Internal Context
+        pRad->supportedStandards |= M_SWL_RADSTD_BE;
         pRad->operatingStandards |= M_SWL_RADSTD_BE;
 
         // AccessPoint internal context
@@ -289,12 +290,54 @@ static void test_wpa3_compatibility_mode(void** state _UNUSED) {
     }
 }
 
+static void test_setAndGetCfgParamsSupp(void** state _UNUSED) {
+    wld_th_dmBand_t* band2 = &dm.bandList[SWL_FREQ_BAND_2_4GHZ];
+    T_Radio* pRad = band2->rad;
+
+    struct {
+        const char* paramName;
+        swl_trl_e supp;
+    } entries[] = {
+        {"param_sup1", SWL_TRL_TRUE, },
+        {"param_unk1", SWL_TRL_UNKNOWN, },
+        {"param_uns1", SWL_TRL_FALSE, },
+        {"param_unk2", SWL_TRL_UNKNOWN, },
+        {"param_uns2", SWL_TRL_FALSE, },
+        {"param_sup2", SWL_TRL_TRUE, },
+        {"param_sup3", SWL_TRL_TRUE, },
+        {"param_sup4", SWL_TRL_TRUE, },
+        {"param_unk3", SWL_TRL_TRUE, },
+        {"param_uns3", SWL_TRL_FALSE, },
+        {"param_unk4", SWL_TRL_TRUE, },
+    };
+
+    size_t maxLen = 512;
+    char expParams[SWL_TRL_MAX][maxLen];
+    for(uint32_t i = 0; i < SWL_TRL_MAX; i++) {
+        expParams[i][0] = 0;
+        wld_secDmn_getCfgParamsListBySuppVal(pRad->hostapd, expParams[i], maxLen, i);
+    }
+    for(uint32_t i = 0; i < SWL_ARRAY_SIZE(entries); i++) {
+        wld_secDmn_setCfgParamSupp(pRad->hostapd, entries[i].paramName, entries[i].supp);
+        swl_strlst_cat(expParams[entries[i].supp], maxLen, ",", entries[i].paramName);
+    }
+
+    char outBuf[maxLen];
+    for(uint32_t i = 0; i < SWL_TRL_MAX; i++) {
+        outBuf[0] = 0;
+        uint32_t cnt = wld_secDmn_getCfgParamsListBySuppVal(pRad->hostapd, outBuf, maxLen, i);
+        assert_int_equal(cnt, swl_str_countChar(outBuf, ',') + 1);
+        assert_string_equal(outBuf, expParams[i]);
+    }
+}
+
 int main(int argc _UNUSED, char* argv[] _UNUSED) {
     sahTraceSetLevel(TRACE_LEVEL_CALLSTACK);
     sahTraceAddZone(sahTraceLevel(), ME);
 
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_wpa3_compatibility_mode),
+        cmocka_unit_test(test_setAndGetCfgParamsSupp),
     };
 
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);
