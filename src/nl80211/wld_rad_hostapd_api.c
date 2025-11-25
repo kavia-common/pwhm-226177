@@ -67,6 +67,7 @@
 #include "wld_rad_hostapd_api.h"
 #include "wld_hostapd_ap_api.h"
 #include "wld_hostapd_cfgFile.h"
+#include "wld_hostapd_cfgManager_priv.h"
 #include "swl/map/swl_mapCharFmt.h"
 
 #define ME "hapdRad"
@@ -481,6 +482,41 @@ T_AccessPoint* wld_rad_hostapd_getFirstConnectedVap(T_Radio* pRad) {
         }
     }
     return NULL;
+}
+
+/*
+ * @brief return AccessPoint context of the main interface
+ * indicated in radio's hostapd config file
+ *
+ * @param pRad radio context
+ *
+ * @return AccessPoint context, or NULL in case of error
+ */
+T_AccessPoint* wld_rad_hostapd_getSavedMainVap(T_Radio* pRad) {
+    ASSERTS_NOT_NULL(pRad, NULL, ME, "NULL");
+    ASSERTS_NOT_NULL(pRad->hostapd, NULL, ME, "NULL");
+    wld_hostapd_config_t* config = NULL;
+    bool ret = wld_hostapd_loadConfig(&config, pRad->hostapd->cfgFile);
+    ASSERTI_TRUE(ret, NULL, ME, "no saved config");
+    T_AccessPoint* pMainAP = NULL;
+    amxc_llist_it_t* it = amxc_llist_get_first(&config->vaps);
+    if(it != NULL) {
+        wld_hostapdVapInfo_t* vapInfo = amxc_llist_it_get_data(it, wld_hostapdVapInfo_t, it);
+        if(vapInfo != NULL) {
+            T_AccessPoint* pTmpAP = NULL;
+            if(!swl_mac_binIsNull(&vapInfo->bssid)) {
+                if(((pTmpAP = wld_ap_getVapByBssid(&vapInfo->bssid)) != NULL) && (pTmpAP->pRadio == pRad)) {
+                    pMainAP = pTmpAP;
+                }
+            } else if(!swl_str_isEmpty(vapInfo->bssName)) {
+                if(((pTmpAP = wld_vap_get_vap(vapInfo->bssName)) != NULL) && (pTmpAP->pRadio == pRad)) {
+                    pMainAP = pTmpAP;
+                }
+            }
+        }
+    }
+    wld_hostapd_deleteConfig(config);
+    return pMainAP;
 }
 
 T_AccessPoint* wld_rad_hostapd_getCfgMainVap(T_Radio* pRad) {
