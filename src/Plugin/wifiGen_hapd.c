@@ -201,7 +201,7 @@ static void s_restoreMainAp(T_AccessPoint* pMainAP) {
     }
 }
 
-static void s_restoreMainIfaceAndCleanBSSs(T_Radio* pRad, bool clean) {
+void wifiGen_hapd_prepareIfaces(T_Radio* pRad, bool clean) {
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
     ASSERT_NOT_NULL(pRad->hostapd, , ME, "NULL");
     SWL_CALL(pRad->hostapd->handlers.writeCfgCb, pRad->hostapd, pRad);
@@ -226,7 +226,7 @@ static void s_restoreMainIfaceAndCleanBSSs(T_Radio* pRad, bool clean) {
                 continue;
             }
         }
-        if(doClean && !wld_vap_isDummyVap(pAP) && (pAP->index > 0)) {
+        if(doClean && !wld_vap_isDummyVap(pAP) && (pAP->index > 0) && (!swl_str_matches(pAP->alias, pRad->Name))) {
             SAH_TRACEZ_WARNING(ME, "%s: delete unused vap iface %s", pRad->Name, pAP->alias);
             pRad->pFA->mfn_wrad_delvapif(pRad, pAP->alias);
         }
@@ -234,7 +234,7 @@ static void s_restoreMainIfaceAndCleanBSSs(T_Radio* pRad, bool clean) {
 }
 
 void wifiGen_hapd_restoreMainIface(T_Radio* pRad) {
-    return s_restoreMainIfaceAndCleanBSSs(pRad, false);
+    wifiGen_hapd_prepareIfaces(pRad, false);
 }
 
 void wifiGen_hapd_deauthKnownStations(T_Radio* pRad, bool noAck) {
@@ -260,7 +260,6 @@ static const char* s_getMainIface(T_Radio* pRad) {
 static void s_restartHapdCb(wld_secDmn_t* pSecDmn, void* userdata) {
     T_Radio* pRad = (T_Radio*) userdata;
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
-    wifiGen_hapd_restoreMainIface(pRad);
     const char* mainIface = s_getMainIface(pRad);
     ASSERTW_TRUE(wifiGen_hapd_isStartable(pRad), , ME, "%s: hostapd iface %s is not startable", pRad->Name, mainIface);
     ASSERTW_FALSE(wifiGen_hapd_isRunning(pRad), , ME, "%s: hostapd running", mainIface);
@@ -422,8 +421,6 @@ static void s_enableWpaCtrlIfaces(T_Radio* pRad) {
 swl_rc_ne wifiGen_hapd_startDaemon(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
     SAH_TRACEZ_WARNING(ME, "%s: Start hostapd", pRad->Name);
-    //restore main iface if removed by hostapd
-    s_restoreMainIfaceAndCleanBSSs(pRad, false);
     s_enableWpaCtrlIfaces(pRad);
     return wld_secDmn_start(pRad->hostapd);
 }
@@ -618,7 +615,6 @@ static bool s_isHapdIfaceStartable(wld_secDmnGrp_t* pSecDmnGrp _UNUSED, void* us
     T_Radio* pRad = (T_Radio*) pSecDmn->userData;
     ASSERT_TRUE(debugIsRadPointer(pRad), false, ME, "INVALID");
     s_enableWpaCtrlIfaces(pRad);
-    wifiGen_hapd_restoreMainIface(pRad);
     return wifiGen_hapd_isStartable(pRad);
 }
 

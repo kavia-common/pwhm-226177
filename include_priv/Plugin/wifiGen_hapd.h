@@ -85,6 +85,7 @@ void wifiGen_hapd_initDynCfgParamSupp(T_Radio* pRad);
 bool wifiGen_hapd_isStarted(T_Radio* pRad);
 bool wifiGen_hapd_isStartable(T_Radio* pRad);
 void wifiGen_hapd_restoreMainIface(T_Radio* pRad);
+void wifiGen_hapd_prepareIfaces(T_Radio* pRad, bool clean);
 void wifiGen_hapd_enableVapWpaCtrlIface(T_AccessPoint* pAP);
 bool wifiGen_hapd_parseSockName(const char* sockName, char* linkName, size_t linkNameSize, int32_t* pLinkId);
 T_AccessPoint* wifiGen_hapd_fetchSockApLink(T_AccessPoint* pAPMld, const char* sockName);

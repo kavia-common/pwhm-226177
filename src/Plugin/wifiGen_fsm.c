@@ -1089,11 +1089,24 @@ static void s_writeHapdConfFileCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata)
     wifiGen_hapd_writeConfig(pRad);
 }
 
+static void s_preStartHapdCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata) {
+    T_Radio* pRad = (T_Radio*) userdata;
+    ASSERT_NOT_NULL(pRad, , ME, "NULL");
+    /*
+     * prepare ifaces even for non-startable radios
+     * to avoid later delay when adding conf
+     */
+    wifiGen_hapd_prepareIfaces(pRad, false);
+}
+
 static void s_updateHapdDmnEvtHandlers(T_Radio* pRad) {
     ASSERTS_NOT_NULL(pRad, , ME, "NULL");
     ASSERTS_NOT_NULL(pRad->hostapd, , ME, "NULL");
     if(pRad->hostapd->handlers.writeCfgCb == NULL) {
         pRad->hostapd->handlers.writeCfgCb = s_writeHapdConfFileCb;
+    }
+    if(pRad->hostapd->handlers.preStartCb == NULL) {
+        pRad->hostapd->handlers.preStartCb = s_preStartHapdCb;
     }
 }
 
