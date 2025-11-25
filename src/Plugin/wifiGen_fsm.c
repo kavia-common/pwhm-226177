@@ -280,6 +280,32 @@ static void s_clearRadDynConfActions(T_Radio* pRad) {
     }
 }
 
+static bool s_checkApMld(T_Radio* pRad, uint32_t minNLinks) {
+    return (wld_rad_isMloCapable(pRad) &&
+            (wld_rad_hasUsableApMld(pRad, minNLinks) ||
+             wld_rad_hostapd_hasActiveApMld(pRad, minNLinks)));
+}
+static bool s_hasMultiLinkApMld(T_Radio* pRad) {
+    return s_checkApMld(pRad, 2);
+}
+static bool s_checkApAcAction(T_Radio* pRad, wifiGen_fsmStates_e action) {
+    if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, action)) {
+        T_AccessPoint* pAP = NULL;
+        wld_rad_forEachAp(pAP, pRad) {
+            if(isBitSetLongArray(pAP->fsm.FSM_AC_BitActionArray, FSM_BW, action)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+static void s_clearApAcAction(T_Radio* pRad, wifiGen_fsmStates_e action) {
+    T_AccessPoint* pAP = NULL;
+    wld_rad_forEachAp(pAP, pRad) {
+        clearBitLongArray(pAP->fsm.FSM_AC_BitActionArray, FSM_BW, action);
+    }
+}
+
 static bool s_isLinkRemoveSupported(T_Radio* pRad) {
     swl_trl_e supp = wld_secDmn_getCmdSupp(pRad->hostapd, "LINK_REMOVE");
     if(supp == SWL_TRL_UNKNOWN) {
@@ -329,7 +355,7 @@ static void s_schedNextAction(wld_secDmn_action_rc_ne action, T_AccessPoint* pAP
          * convert toggle into restart, when rad has ap member of MultiLink MLO (current or expected):
          * links from other radios have to rebuilt
          */
-        if(wld_rad_hostapd_hasActiveApMld(pRad, 2) || wld_rad_hasUsableApMld(pRad, 2)) {
+        if(s_hasMultiLinkApMld(pRad)) {
             SAH_TRACEZ_WARNING(ME, "%s: 11be/mlo enabled => need to restart isof toggle", pRad->Name);
             s_schedNextAction(SECDMN_ACTION_OK_NEED_RESTART, pAP, pRad);
             return;
@@ -379,19 +405,18 @@ static bool s_doEnableAp(T_AccessPoint* pAP, T_Radio* pRad) {
     bool mainIfaceChanged = ((pMainAPCur != pMainAPCfg) && ((pMainAPCur == NULL) || (pAP == pMainAPCur) || (pAP == pMainAPCfg)));
     bool wpaCtrlEnaChanged = (wld_wpaCtrlInterface_checkConnectionPath(pAP->wpaCtrlInterface) != wld_hostapd_ap_needWpaCtrlIface(pAP));
     if(mainIfaceChanged || wpaCtrlEnaChanged) {
-        if(wld_rad_hasMloSupport(pRad) && wld_rad_hasUsableApMld(pRad, 1)) {
+        wifiGen_hapd_enableVapWpaCtrlIface(pAP);
+        if(mainIfaceChanged) {
+            SAH_TRACEZ_WARNING(ME, "%s: Main iface changed: sched re-add radio %s", pAP->alias, pRad->Name);
+            s_schedNextAction(SECDMN_ACTION_OK_NEED_RE_ADD, pAP, pRad);
+        } else if(s_hasMultiLinkApMld(pRad)) {
             SAH_TRACEZ_INFO(ME, "%s: has multi-band APMLD: need to restart hostapd", pAP->alias);
             s_schedNextAction(SECDMN_ACTION_OK_NEED_RE_ADD_LINK, pAP, pRad);
-            return true;
+        } else {
+            SAH_TRACEZ_WARNING(ME, "%s: sched reload all radio %s VAPs to update wpaCtrl ifaces", pAP->alias, pRad->Name);
+            s_schedNextAction(SECDMN_ACTION_OK_NEED_SIGHUP, pAP, pRad);
+            setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_SYNC_STATE);
         }
-        wifiGen_hapd_enableVapWpaCtrlIface(pAP);
-        SAH_TRACEZ_WARNING(ME, "%s: sched reload all radio %s VAPs to update wpaCtrl ifaces", pAP->alias, pRad->Name);
-        s_schedNextAction(SECDMN_ACTION_OK_NEED_SIGHUP, pAP, pRad);
-        if(mainIfaceChanged) {
-            SAH_TRACEZ_WARNING(ME, "%s: Main iface changed: sched toggle radio %s", pAP->alias, pRad->Name);
-            s_schedNextAction(SECDMN_ACTION_OK_NEED_TOGGLE, pAP, pRad);
-        }
-        setBitLongArray(pRad->fsmRad.FSM_BitActionArray, FSM_BW, GEN_FSM_SYNC_STATE);
         return true;
     }
     ASSERTI_TRUE(wld_wpaCtrlInterface_isReady(pAP->wpaCtrlInterface), true, ME, "%s: wpaCtrl disconnected", pAP->alias);
@@ -449,10 +474,8 @@ static bool s_doRadSync(T_Radio* pRad) {
 }
 
 static bool s_doStopHostapd(T_Radio* pRad) {
-    if(!wld_secDmn_checkRestartNeeded(pRad->hostapd)) {
-        ASSERTI_TRUE(wld_secDmn_hasAvailableCtrlIface(pRad->hostapd), true, ME, "%s: hapd has no available socket", pRad->Name);
-    }
     ASSERTI_TRUE(wifiGen_hapd_isRunning(pRad), true, ME, "%s: hapd stopped", pRad->Name);
+
     /*
      * as we are stopping radio, no need to wait for deauth notif
      * so we can cleanup ap's AD list
@@ -473,9 +496,25 @@ static bool s_doStopHostapd(T_Radio* pRad) {
         SAH_TRACEZ_INFO(ME, "%s: restart hostapd returns rc : %d", pRad->Name, rc);
         return true;
     }
-    ASSERTI_TRUE(wifiGen_hapd_isStarted(pRad), true, ME, "%s: hostapd instance not started", pRad->Name);
     if(wld_secDmn_isRestarting(pRad->hostapd)) {
         SAH_TRACEZ_WARNING(ME, "%s: hostapd instance is restarting: let's stop afterwards", pRad->Name);
+        return true;
+    }
+
+    bool hasApMldAction = s_checkApAcAction(pRad, GEN_FSM_MOD_MLD);
+    bool hasApMldMultiLink = s_hasMultiLinkApMld(pRad);
+    if(!wifiGen_hapd_isStarted(pRad)) {
+        SAH_TRACEZ_INFO(ME, "%s: hostapd instance not started", pRad->Name);
+        /*
+         * if hostapd instance is being started,
+         * with having Apmld reconf action for a non multi-link,
+         * then the start action will override the mlo reconf action
+         */
+        if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_HOSTAPD) &&
+           hasApMldAction && !hasApMldMultiLink) {
+            SAH_TRACEZ_WARNING(ME, "%s: skip mld handler as no multilink ", pRad->Name);
+            s_clearApAcAction(pRad, GEN_FSM_MOD_MLD);
+        }
         return true;
     }
     SAH_TRACEZ_INFO(ME, "%s: stop hostapd", pRad->Name);
@@ -486,15 +525,23 @@ static bool s_doStopHostapd(T_Radio* pRad) {
      * Therefore, hapd rad iface need to be disabled to force stop all vaps
      */
     if((rc == SWL_RC_CONTINUE) && (wifiGen_hapd_countGrpMembers(pRad) > 1)) {
+        /*
+         * if hostapd instance is being stopped,
+         * with having Apmld reconf action for a non multi-link,
+         * then the stop action will override the mlo reconf action
+         */
+        if(hasApMldAction) {
+            if(hasApMldMultiLink) {
+                SAH_TRACEZ_INFO(ME, "%s: let mld handler manage radio disabling", pRad->Name);
+                wld_rad_fsm_clearFsmBitForAll(pRad, GEN_FSM_DISABLE_HOSTAPD);
+                return true;
+            }
+            SAH_TRACEZ_WARNING(ME, "%s: skip mld handler as no multilink ", pRad->Name);
+            s_clearApAcAction(pRad, GEN_FSM_MOD_MLD);
+        }
         if(wld_secDmn_hasReadyGlobalCtrlIface(pRad->hostapd)) {
             SAH_TRACEZ_INFO(ME, "%s: need to remove config", pRad->Name);
             setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_REMOVE_HOSTAPD);
-            return true;
-        }
-        if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_MOD_MLD) &&
-           wld_rad_hostapd_hasActiveApMld(pRad, 2)) {
-            SAH_TRACEZ_INFO(ME, "%s: let mld handler manage radio disabling", pRad->Name);
-            wld_rad_fsm_clearFsmBitForAll(pRad, GEN_FSM_DISABLE_HOSTAPD);
             return true;
         }
         SAH_TRACEZ_INFO(ME, "%s: need to disable hostapd", pRad->Name);
@@ -648,19 +695,19 @@ static bool s_doStartHostapd(T_Radio* pRad) {
      */
     if((rc == SWL_RC_DONE) && (wifiGen_hapd_countGrpMembers(pRad) > 1)) {
         wld_wpaCtrlMngr_t* pMgr = wld_secDmn_getWpaCtrlMgr(pRad->hostapd);
-        if(!wld_secDmn_hasAvailableCtrlIface(pRad->hostapd) &&
-           wld_secDmn_hasReadyGlobalCtrlIface(pRad->hostapd)) {
-            SAH_TRACEZ_WARNING(ME, "%s: need to add config", pRad->Name);
-            setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_ADD_HOSTAPD);
-            s_registerHadpRadEvtHandlers(pRad->hostapd);
-            return true;
-        }
         if(!wld_wpaCtrlMngr_isConnected(pMgr)) {
             wld_wpaCtrlMngr_checkAllIfaces(pMgr);
         }
         chanmgt_rad_state detState = CM_RAD_UNKNOWN;
-        wifiGen_hapd_getRadState(pRad, &detState);
-        if(detState == CM_RAD_DOWN) {
+        if(wld_secDmn_hasGlobalCtrlIface(pRad->hostapd)) {
+            if(wld_secDmn_hasAvailableCtrlIface(pRad->hostapd)) {
+                SAH_TRACEZ_WARNING(ME, "%s: need to remove old conf and add new one", pRad->Name);
+                s_schedNextAction(SECDMN_ACTION_OK_NEED_RE_ADD, NULL, pRad);
+            } else {
+                SAH_TRACEZ_WARNING(ME, "%s: need to add config", pRad->Name);
+                setBitLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_ADD_HOSTAPD);
+            }
+        } else if(swl_rc_isOk(wifiGen_hapd_getRadState(pRad, &detState)) && (detState == CM_RAD_DOWN)) {
             SAH_TRACEZ_INFO(ME, "%s: need to enable hostapd", pRad->Name);
             wld_rad_hostapd_enable(pRad);
             //update hostapd conf to consider changed configs while it was disabled
