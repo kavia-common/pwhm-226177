@@ -214,7 +214,7 @@ static void s_readCtrl(int fd, void* priv _UNUSED) {
 
 swl_rc_ne wld_wpaCtrlConnection_open(wpaCtrlConnection_t* pConn) {
     ASSERT_NOT_NULL(pConn, SWL_RC_INVALID_PARAM, ME, "NULL");
-    ASSERTS_FALSE(pConn->wpaPeer > 0, SWL_RC_OK, ME, "already connected");
+    ASSERTS_FALSE(pConn->wpaPeer > 0, SWL_RC_DONE, ME, "already connected");
     int fd = socket(PF_UNIX, SOCK_DGRAM, 0);
     ASSERT_FALSE(fd < 0, SWL_RC_ERROR, ME, "socket(PF_UNIX, SOCK_DGRAM, 0) failed");
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);

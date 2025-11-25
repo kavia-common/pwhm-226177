@@ -330,14 +330,20 @@ wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getInterfaceByName(const wld_wpaCtrlMngr
 
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstReadyInterface(const wld_wpaCtrlMngr_t* pMgr) {
     ASSERT_NOT_NULL(pMgr, NULL, ME, "NULL");
+    wld_wpaCtrlInterface_t* pFstIface = NULL;
+    uint64_t fstSkInode = 0;
     swl_unLiListIt_t it;
     swl_unLiList_for_each(it, &pMgr->ifaces) {
         wld_wpaCtrlInterface_t* pIface = *(swl_unLiList_data(&it, wld_wpaCtrlInterface_t * *));
         if(wld_wpaCtrlInterface_isReady(pIface)) {
-            return pIface;
+            uint64_t skInode = wld_wpaCtrlInterface_getConnectionInode(pIface);
+            if(!pFstIface || (skInode && (!fstSkInode || (skInode < fstSkInode)))) {
+                pFstIface = pIface;
+                fstSkInode = skInode;
+            }
         }
     }
-    return NULL;
+    return pFstIface;
 }
 
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstNotReadyInterface(const wld_wpaCtrlMngr_t* pMgr) {
@@ -354,14 +360,20 @@ wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstNotReadyInterface(const wld_wpaC
 
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getFirstAvailableInterface(const wld_wpaCtrlMngr_t* pMgr) {
     ASSERT_NOT_NULL(pMgr, NULL, ME, "NULL");
+    wld_wpaCtrlInterface_t* pFstIface = NULL;
+    uint64_t fstSkInode = 0;
     swl_unLiListIt_t it;
     swl_unLiList_for_each(it, &pMgr->ifaces) {
         wld_wpaCtrlInterface_t* pIface = *(swl_unLiList_data(&it, wld_wpaCtrlInterface_t * *));
         if(wld_wpaCtrlInterface_checkConnectionPath(pIface)) {
-            return pIface;
+            uint64_t skInode = wld_wpaCtrlInterface_getConnectionInode(pIface);
+            if(!pFstIface || (skInode && (!fstSkInode || (skInode < fstSkInode)))) {
+                pFstIface = pIface;
+                fstSkInode = skInode;
+            }
         }
     }
-    return NULL;
+    return pFstIface;
 }
 
 wld_wpaCtrlInterface_t* wld_wpaCtrlMngr_getDefaultInterface(const wld_wpaCtrlMngr_t* pMgr) {
