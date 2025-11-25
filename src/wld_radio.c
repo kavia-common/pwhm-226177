@@ -1873,14 +1873,14 @@ static void s_listRadioFeatures(T_Radio* pRad, amxc_var_t* map) {
  *
  * @param pR pointer to radio context
  */
-void wld_rad_updateEhtOperationIE(T_Radio* pR, bool enableRad11be) {
+void wld_rad_updateEhtOperationIE(T_Radio* pR) {
     SAH_TRACEZ_IN(ME);
 
     ssize_t outputSize = 0;
     char ehtOpBuffer[256] = {0};
     memset(&pR->ehtOperationIE, 0, sizeof(pR->ehtOperationIE));
 
-    if(enableRad11be) {
+    if(wld_rad_is11beUsable(pR)) {
         swl_chanspec_t tgtChspec = wld_chanmgt_getTgtChspec(pR);
         swl_bit32_t disabledSubchannelBitmap = wld_rad_calculateDisabledSubchannelsBitmap(pR, &tgtChspec);
         uint32_t nTx = pR->nrAntenna[COM_DIR_TRANSMIT];
@@ -4089,6 +4089,9 @@ void wld_rad_chan_update_model(T_Radio* pRad, amxd_trans_t* trans) {
     amxd_trans_set_cstring_t(targetTrans, "ChannelBandwidthChangeReason", g_wld_channelChangeReason_str[pRad->channelBandwidthChangeReason]);
 
     swla_trans_finalize(&tmpTrans, NULL);
+
+    // update EHT Operation IE when channel changes
+    wld_rad_updateEhtOperationIE(pRad);
 }
 
 void wld_rad_updateOperatingClass(T_Radio* pRad) {
@@ -5108,8 +5111,7 @@ static void s_setDisabledSubChannels_pwf(void* priv _UNUSED, amxd_object_t* obje
         memcpy(pRad->disabledSubchannels, disabledSubchannels, count * sizeof(disabledSubchannels[0]));
     }
 
-    bool enableRad11be = SWL_BIT_IS_SET(pRad->operatingStandards, SWL_RADSTD_BE);
-    wld_rad_updateEhtOperationIE(pRad, enableRad11be);
+    wld_rad_updateEhtOperationIE(pRad);
 
     wld_rad_doSync(pRad);
 

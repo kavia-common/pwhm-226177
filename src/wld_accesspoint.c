@@ -2513,6 +2513,9 @@ static void s_vap_updateState(T_AccessPoint* pAP) {
     wld_apRssiMon_updateEnable(pAP);
     swl_rc_ne ret = wld_apMld_updateDM(pSSID);
     ASSERT_EQUALS(ret, SWL_RC_OK, , ME, "Failed to update APMLD DM properly");
+
+    // update EHT Operation IE when VAP state changes
+    wld_rad_updateEhtOperationIE(pRad);
 }
 
 void wld_vap_updateState(T_AccessPoint* pAP) {
