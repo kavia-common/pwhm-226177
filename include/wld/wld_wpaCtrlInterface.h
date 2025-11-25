@@ -85,6 +85,7 @@ void wld_wpaCtrlInterface_setEnable(wld_wpaCtrlInterface_t* pIface, bool enable)
 bool wld_wpaCtrlInterface_isEnabled(const wld_wpaCtrlInterface_t* pIface);
 const char* wld_wpaCtrlInterface_getConnectionDirPath(const wld_wpaCtrlInterface_t* pIface);
 bool wld_wpaCtrlInterface_checkConnectionPath(const wld_wpaCtrlInterface_t* pIface);
+uint64_t wld_wpaCtrlInterface_getConnectionInode(const wld_wpaCtrlInterface_t* pIface);
 const char* wld_wpaCtrlInterface_getConnectionSockName(const wld_wpaCtrlInterface_t* pIface);
 
 #define CALL_INTF_EXT(pIntf, fName, ...) \

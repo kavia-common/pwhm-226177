@@ -63,6 +63,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include "wld.h"
 #include "wld_wpaCtrl_api.h"
 #include "wld_wpaCtrlInterface_priv.h"
@@ -444,6 +445,22 @@ const char* wld_wpaCtrlInterface_getConnectionDirPath(const wld_wpaCtrlInterface
 bool wld_wpaCtrlInterface_checkConnectionPath(const wld_wpaCtrlInterface_t* pIface) {
     const char* path = wld_wpaCtrlInterface_getPath(pIface);
     return wld_wpaCtrl_checkSockPath(path);
+}
+
+/**
+ * @brief return inode of wpactrl server socket file
+ *
+ * @param wpaCtrlInterface pointer to interface context
+ *
+ * @return uint64_t ino_t of socket file when found successfully, 0 otherwise.
+ */
+uint64_t wld_wpaCtrlInterface_getConnectionInode(const wld_wpaCtrlInterface_t* pIface) {
+    const char* path = wld_wpaCtrlInterface_getPath(pIface);
+    ASSERTS_STR(path, 0, ME, "no srv path");
+    struct stat sb;
+    memset(&sb, 0, sizeof(sb));
+    ASSERTI_EQUALS(stat(path, &sb), 0, 0, ME, "fail to get stat of %s", path);
+    return (uint64_t) sb.st_ino;
 }
 
 const char* wld_wpaCtrlInterface_getConnectionSockName(const wld_wpaCtrlInterface_t* pIface) {
