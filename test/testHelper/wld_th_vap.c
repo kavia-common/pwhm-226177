@@ -75,6 +75,7 @@
 #include "wld_util.h"
 #include "wld.h"
 #include "wld_radio.h"
+#include "wld_ssid.h"
 #include "wld_assocdev.h"
 #include "wld_th_mockVendor.h"
 #include "test-toolbox/ttb_mockTimer.h"
@@ -82,12 +83,44 @@
 
 #define ME "thVAP"
 
+int wld_th_vap_vendorCb_bssid(T_Radio* pRad, T_AccessPoint* pAP, unsigned char* buf, int bufsize, int set) {
+    SAH_TRACEZ_INFO(ME, "%p - %p - %p - %d - %d", pRad, pAP, buf, bufsize, set);
+    if(!pRad && !pAP) {
+        return SWL_RC_INVALID_PARAM;
+    }
+    if(set & SET) {
+        return SWL_RC_NOT_IMPLEMENTED;
+    }
+    if(!buf || (bufsize < ETHER_ADDR_STR_LEN)) {
+        return SWL_RC_INVALID_PARAM;
+    }
+    swl_macBin_t* srcBMac = NULL;
+    if(pAP) {
+        T_SSID* pSSID = (T_SSID*) pAP->pSSID;
+        assert_non_null(pSSID);
+        srcBMac = (swl_macBin_t*) pSSID->BSSID;
+    } else {
+        srcBMac = (swl_macBin_t*) pRad->MACAddr;
+    }
+    // String formatted or octet based ?
+    swl_mac_binToCharSep((swl_macChar_t*) buf, srcBMac, false, ':');
+    return SWL_RC_OK;
+}
 
 int wld_th_vap_vendorCb_addVapIf(T_Radio* rad _UNUSED, char* vap _UNUSED, int bufsize _UNUSED) {
     assert_non_null(rad);
     assert_non_null(vap);
     assert_true(bufsize > 0);
     int vapIdx = ((1 + amxc_llist_it_index_of(&rad->it)) * 10) + wld_rad_countIfaces(rad);
+    if((bufsize > 0) && !swl_str_isEmpty(vap)) {
+        T_AccessPoint* pAP = wld_rad_vap_from_name(rad, vap);
+        if(pAP && pAP->pSSID) {
+            // generate BSSID and save it
+            swl_macBin_t macBin = SWL_MAC_BIN_NEW();
+            wld_ssid_generateBssid(rad, pAP, pAP->pSSID->autoMacRefIndex + 1, &macBin);
+            wld_ssid_setBssid(pAP->pSSID, &macBin);
+        }
+    }
     return vapIdx;
 }
 
@@ -120,6 +153,7 @@ T_AccessPoint* wld_th_vap_createVap(amxb_bus_ctx_t* const bus_ctx, wld_th_mockVe
 
 
     assert_int_equal(amxb_call(bus_ctx, "WiFi", "addVAPIntf", &args, NULL, 5), 0);
+    ttb_mockTimer_goToFutureMs(10);
 
     amxc_var_clean(&args);
 

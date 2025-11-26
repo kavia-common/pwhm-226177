@@ -99,6 +99,7 @@ void wld_th_vap_destroyHook(T_AccessPoint* pAP);
 
 
 int wld_th_vap_vendorCb_addVapIf(T_Radio* rad, char* vap, int bufsize);
+int wld_th_vap_vendorCb_bssid(T_Radio* pRad, T_AccessPoint* pAP, unsigned char* buf, int bufsize, int set);
 int wld_th_vap_status(T_AccessPoint* pAP);
 swl_rc_ne wld_th_vap_getStationStats(T_AccessPoint* pAP);
 int wld_th_vap_enable(T_AccessPoint* pAP, int enable, int set);

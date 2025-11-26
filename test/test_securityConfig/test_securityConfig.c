@@ -72,6 +72,7 @@
 #include <swl/swl_security.h>
 #include <amxd/amxd_object.h>
 #include "wld_hostapd_cfgFile.h"
+#include "wld_rad_hostapd_api.h"
 #include "nl80211/wld_hostapd_cfgManager_priv.h"
 #include "wld_secDmn.h"
 #include "wld_wpaCtrlInterface.h"
@@ -79,6 +80,7 @@
 
 
 #include "../testHelper/wld_th_dm.h"
+#include "../testHelper/wld_th_vap.h"
 #include <test-toolbox/ttb.h>
 
 
@@ -174,6 +176,7 @@ static bool setup_internal_context_for_wpa3_cm(wld_th_dm_t* dm) {
         // Radio Internal Context
         pRad->supportedStandards |= M_SWL_RADSTD_BE;
         pRad->operatingStandards |= M_SWL_RADSTD_BE;
+        wld_rad_addSuppDrvCap(pRad, wld_rad_getFreqBand(pRad), "MLO");
 
         // AccessPoint internal context
         pAP->secModesAvailable |= M_SWL_SECURITY_APMODE_WPA3_P_CM;
@@ -331,6 +334,55 @@ static void test_setAndGetCfgParamsSupp(void** state _UNUSED) {
     }
 }
 
+static void test_edit_hostapd_conf(void** state _UNUSED) {
+    for(size_t i = 0; i < SWL_FREQ_BAND_MAX && i < SWL_ARRAY_SIZE(radNames); i++) {
+        wld_th_dmBand_t* band = &dm.bandList[i];
+        T_Radio* pRad = band->rad;
+        wld_hostapd_cfgFile_createExt(pRad);
+        assert_int_equal(access(pRad->hostapd->cfgFile, F_OK), 0);
+        assert_ptr_equal(band->vapPriv, wld_rad_hostapd_getSavedMainVap(pRad));
+        assert_ptr_equal(band->vapPriv, wld_rad_hostapd_getCfgMainVap(pRad));
+        char vapIface[32] = {0};
+        swl_rc_ne rc = wld_ap_hostapd_getCfgInterface(band->vapPriv, vapIface, sizeof(vapIface));
+        assert_true(swl_rc_isOk(rc));
+        assert_string_equal(vapIface, band->vapPriv->alias);
+
+        //add new vap
+        char newApName[32] = {0};
+        swl_str_catFormat(newApName, sizeof(newApName), "vap%sNew", swl_freqBandShort_str[pRad->operatingFrequencyBand]);
+        T_AccessPoint* pNewAp = wld_th_vap_createVap(dm.ttbBus->bus_ctx, NULL, pRad, newApName);
+        assert_non_null(pNewAp);
+
+        //check new vap disable not added to hostapd conf
+        wld_hostapd_cfgFile_createExt(pRad);
+        rc = wld_ap_hostapd_getCfgInterface(pNewAp, vapIface, sizeof(vapIface));
+        assert_int_equal(rc, SWL_RC_ERROR); //secondary bss not added to conf, as still disabled
+
+        //enable new vap
+        swl_typeUInt8_commitObjectParam(pNewAp->pBus, "Enable", 1);
+        ttb_mockTimer_goToFutureMs(10);
+
+        //check new vap enabled added to hostapd conf
+        wld_hostapd_cfgFile_createExt(pRad);
+        rc = wld_ap_hostapd_getCfgInterface(pNewAp, vapIface, sizeof(vapIface));
+        assert_int_equal(rc, SWL_RC_OK); //secondary bss not added to conf, as still disabled
+        assert_string_equal(vapIface, pNewAp->alias);
+
+        //disable priv vap and enable new vap
+        swl_typeUInt8_commitObjectParam(band->vapPriv->pBus, "Enable", 0);
+        ttb_mockTimer_goToFutureMs(10);
+
+        //check main iface changed
+        wld_hostapd_cfgFile_createExt(pRad);
+        assert_ptr_equal(pNewAp, wld_rad_hostapd_getSavedMainVap(pRad));
+        assert_ptr_equal(pNewAp, wld_rad_hostapd_getCfgMainVap(pRad));
+
+        //restore enabling priv vap
+        swl_typeUInt8_commitObjectParam(band->vapPriv->pBus, "Enable", 1);
+        ttb_mockTimer_goToFutureMs(10);
+    }
+}
+
 int main(int argc _UNUSED, char* argv[] _UNUSED) {
     sahTraceSetLevel(TRACE_LEVEL_CALLSTACK);
     sahTraceAddZone(sahTraceLevel(), ME);
@@ -338,6 +390,7 @@ int main(int argc _UNUSED, char* argv[] _UNUSED) {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_wpa3_compatibility_mode),
         cmocka_unit_test(test_setAndGetCfgParamsSupp),
+        cmocka_unit_test(test_edit_hostapd_conf),
     };
 
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);

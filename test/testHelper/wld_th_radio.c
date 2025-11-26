@@ -231,6 +231,7 @@ int wld_th_rad_vendorCb_poschans(T_Radio* rad, uint8_t* buf _UNUSED, int bufsize
 int wld_th_radio_vendorCb_supports(T_Radio* rad, char* buf _UNUSED, int bufsize _UNUSED) {
     assert_non_null(rad);
     rad->driverCfg.skipSocketIO = true;
+    rad->maxNrHwBss = 32;
 
     wld_th_radCap_t* cap = s_findCap(rad->Name);
     if(cap != NULL) {

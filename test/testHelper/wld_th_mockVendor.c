@@ -101,6 +101,7 @@ static T_CWLD_FUNC_TABLE s_functionTable = {
     .mfn_wvap_update_rssi_stats = wld_th_vap_getStationStats,
     .mfn_wvap_status = wld_th_vap_status,
     .mfn_wvap_ssid = wld_th_vap_ssid,
+    .mfn_wvap_bssid = wld_th_vap_vendorCb_bssid,
     .mfn_wendpoint_stats = wld_th_ep_getStats,
 };
 
