@@ -300,6 +300,23 @@ swl_rc_ne wld_mld_deinitMgr(wld_mldMgr_t** ppMgr) {
     return SWL_RC_OK;
 }
 
+wld_mld_t* wld_mld_getMldByUnit(wld_ssidType_e mldType, int32_t mldUnit) {
+    ASSERTS_TRUE(mldType < WLD_SSID_TYPE_MAX, NULL, ME, "Invalid mldType %d", mldType);
+    ASSERTS_TRUE(mldUnit >= 0, NULL, ME, "Invalid mldUnit %d", mldUnit);
+    T_Radio* pRad = NULL;
+    wld_for_eachRad(pRad) {
+        if(pRad && pRad->vendor && pRad->vendor->pMldMgr) {
+            wld_mldGroup_t* pGroup = s_findGroupInMgr(pRad->vendor->pMldMgr, mldType);
+            if(pGroup) {
+                wld_mld_t* pMld = NULL;
+                s_findMldInGroup(pGroup, mldUnit, &pMld, NULL);
+                return pMld;
+            }
+        }
+    }
+    return NULL;
+}
+
 wld_mldLink_t* wld_mld_registerLink(T_SSID* pSSID, int32_t unit) {
     ASSERTS_NOT_NULL(pSSID, NULL, ME, "NULL");
     wld_mld_t* pTgtMld = s_getTargetMld(pSSID, unit);
@@ -628,6 +645,31 @@ bool wld_mld_isLinkActiveInMultiLink(wld_mldLink_t* pLink) {
 static wld_mldLink_t* s_linkFromIt(amxc_llist_it_t* it) {
     ASSERTS_NOT_NULL(it, NULL, ME, "NULL");
     return amxc_llist_it_get_data(it, wld_mldLink_t, it);
+}
+
+/**
+ * Return the first link usable sorted by frequency.
+ */
+wld_mldLink_t* wld_mld_firstUsableNeighLinkByFreq(wld_mldLink_t* pLink) {
+    ASSERTS_NOT_NULL(pLink, NULL, ME, "NULL");
+    wld_mldLink_t* tgtLink = NULL;
+    swl_freqBandExt_e tgtFreq = SWL_FREQ_BAND_EXT_NONE;
+    amxc_llist_for_each(it, pLink->it.llist) {
+        wld_mldLink_t* pLink = amxc_container_of(it, wld_mldLink_t, it);
+        T_SSID* pSSID = pLink->pSSID;
+        if(pSSID == NULL) {
+            continue;
+        }
+        T_Radio* pRad = pSSID->RADIO_PARENT;
+        if(pRad == NULL) {
+            continue;
+        }
+        if(wld_mld_isLinkConfigured(pLink) && wld_mld_isLinkUsable(pLink) && (pRad->operatingFrequencyBand < tgtFreq)) {
+            tgtLink = pLink;
+            tgtFreq = pRad->operatingFrequencyBand;
+        }
+    }
+    return tgtLink;
 }
 
 wld_mldLink_t* wld_mld_firstNeighLink(wld_mldLink_t* pLink) {

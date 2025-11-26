@@ -168,8 +168,33 @@ uint32_t wld_mld_countNeighUsableLinks(wld_mldLink_t* pLink);
 wld_mldLink_t* wld_mld_getNeighLinkByRad(wld_mldLink_t* pLink, T_Radio* pRad);
 wld_mldLink_t* wld_mld_getNeighLinkByMacAddress(wld_mldLink_t* pLink, swl_macBin_t* macBin);
 
+/**
+ * @brief Get first usable neighboring MLD link sorted by frequency band
+ *
+ * Finds the first configured and usable neighboring MLD link with the
+ * lowest frequency band among all available neighbor links.
+ *
+ * @param pLink reference MLD link to search neighbors from
+ *
+ * @return pointer to first usable neighbor link by frequency, NULL if none found
+ */
+wld_mldLink_t* wld_mld_firstUsableNeighLinkByFreq(wld_mldLink_t* pLink);
+
 wld_mldLink_t* wld_mld_firstNeighLink(wld_mldLink_t* pLink);
 wld_mldLink_t* wld_mld_nextNeighLink(wld_mldLink_t* pLink);
+
+/**
+ * @brief Retrieve MLD structure by type and unit number
+ *
+ * Searches through all radio vendors and MLD managers to find an MLD
+ * structure matching the specified type and unit number.
+ *
+ * @param mldType the SSID type of the MLD to search for
+ * @param mldUnit the unit number of the MLD to retrieve
+ *
+ * @return pointer to MLD structure if found, NULL otherwise
+ */
+wld_mld_t* wld_mld_getMldByUnit(wld_ssidType_e mldType, int32_t mldUnit);
 
 #define wld_for_eachNeighMldLink(pNeighLink, pRefLink) \
     for(pNeighLink = wld_mld_firstNeighLink(pRefLink); pNeighLink; pNeighLink = wld_mld_nextNeighLink(pNeighLink))
