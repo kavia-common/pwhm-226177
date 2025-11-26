@@ -123,6 +123,117 @@ static void test_wld_daemon_setArgList_reset(void** state) {
     wld_dmn_cleanupDaemon(&dmnProcess);
 }
 
+typedef struct {
+    char callSeq[512];
+} testData_t;
+testData_t testData = {
+    .callSeq = {"\0"},
+};
+static char* s_getArgsHandler(wld_process_t* pProc, void* userdata) {
+    testData_t* pTestData = (testData_t*) userdata;
+    assert_non_null(pProc);
+    assert_non_null(pTestData);
+    char* args = NULL;
+    char startArgs[256] = {0};
+    //modified sleep arg: 60
+    swl_str_catFormat(startArgs, sizeof(startArgs), "%s %d", pProc->cmd, 60);
+    swl_str_copyMalloc(&args, startArgs);
+    swl_strlst_catFormat(pTestData->callSeq, sizeof(pTestData->callSeq), "/", "GET_ARGS");
+    return args;
+}
+static void s_preStartHandler(wld_process_t* pProc, void* userdata) {
+    testData_t* pTestData = (testData_t*) userdata;
+    assert_non_null(pProc);
+    assert_non_null(pTestData);
+    swl_strlst_catFormat(pTestData->callSeq, sizeof(pTestData->callSeq), "/", "PRE_START");
+}
+static void s_onStartHandler(wld_process_t* pProc, void* userdata) {
+    testData_t* pTestData = (testData_t*) userdata;
+    assert_non_null(pProc);
+    assert_non_null(pTestData);
+    swl_strlst_catFormat(pTestData->callSeq, sizeof(pTestData->callSeq), "/", "ON_START");
+}
+static void s_restartHandler(wld_process_t* pProc, void* userdata) {
+    testData_t* pTestData = (testData_t*) userdata;
+    assert_non_null(pProc);
+    assert_non_null(pTestData);
+    swl_strlst_catFormat(pTestData->callSeq, sizeof(pTestData->callSeq), "/", "RESTART");
+    wld_dmn_startDeamon(pProc);
+}
+static bool s_stopHandler(wld_process_t* pProc, void* userdata) {
+    testData_t* pTestData = (testData_t*) userdata;
+    assert_non_null(pProc);
+    assert_non_null(pTestData);
+    swl_strlst_catFormat(pTestData->callSeq, sizeof(pTestData->callSeq), "/", "STOP");
+    return false;
+}
+static void s_onStopHandler(wld_process_t* pProc, void* userdata) {
+    testData_t* pTestData = (testData_t*) userdata;
+    assert_non_null(pProc);
+    assert_non_null(pTestData);
+    swl_strlst_catFormat(pTestData->callSeq, sizeof(pTestData->callSeq), "/", "ON_STOP");
+}
+
+wld_process_t dmnProcess;
+static int s_test_startStop_setup(void** state) {
+    *state = &dmnProcess;
+    return 0;
+}
+static int s_test_startStop_teardown(void** state) {
+    wld_process_t* pProc = *state;
+    wld_dmn_cleanupDaemon(pProc);
+    return 0;
+}
+static void test_wld_daemon_startStop(void** state) {
+    (void) state;
+
+    bool bRet;
+    wld_process_t* pProc = &dmnProcess;
+
+    bRet = wld_dmn_initializeDeamon(pProc, "sleep");
+    assert_true(bRet);
+
+    wld_daemonMonitorConf_t dmnMoniConf = {
+        .enableParam = true,
+        .instantRestartLimit = 3,
+        .minRestartInterval = 5,
+    };
+    wld_dmn_setMonitorConf(&dmnMoniConf);
+
+    //initial sleep arg: 30
+    wld_dmn_setArgList(pProc, "30");
+
+    wld_deamonEvtHandlers handlers = {
+        .getArgsCb = s_getArgsHandler,
+        .preStartCb = s_preStartHandler,
+        .startCb = s_onStartHandler,
+        .restartCb = s_restartHandler,
+        .stop = s_stopHandler,
+        .stopCb = s_onStopHandler,
+    };
+    bRet = wld_dmn_setDeamonEvtHandlers(pProc, &handlers, &testData);
+    assert_true(bRet);
+
+    bRet = wld_dmn_startDeamon(pProc);
+    assert_true(bRet);
+
+    assert_non_null(pProc->process);
+    pid_t pid = amxp_subproc_get_pid(pProc->process->proc);
+    assert_int_not_equal(pid, 0);
+    assert_true(wld_dmn_isEnabled(pProc));
+    assert_true(wld_dmn_isRunning(pProc));
+    assert_int_equal(pProc->nrArgs, 2);
+    assert_string_equal(pProc->argList[2], "60");
+    assert_string_equal(testData.callSeq, "GET_ARGS/PRE_START/ON_START");
+
+    sleep(1);
+
+    bRet = wld_dmn_stopDeamon(pProc);
+    assert_true(bRet);
+
+    assert_string_equal(testData.callSeq, "GET_ARGS/PRE_START/ON_START/ON_STOP");
+}
+
 static int s_setupSuite(void** state) {
     (void) state;
     return 0;
@@ -144,6 +255,7 @@ int main(int argc _UNUSED, char* argv[] _UNUSED) {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_wld_daemon_setArgList),
         cmocka_unit_test(test_wld_daemon_setArgList_reset),
+        cmocka_unit_test_setup_teardown(test_wld_daemon_startStop, s_test_startStop_setup, s_test_startStop_teardown),
     };
     int rc = cmocka_run_group_tests(tests, s_setupSuite, s_teardownSuite);
     sahTraceClose();
