@@ -69,6 +69,7 @@
 #include "wld/wld_wpaCtrl_api.h"
 #include "wld/wld_rad_nl80211.h"
 #include "wld/wld_ap_nl80211.h"
+#include "wld/wld_ep_nl80211.h"
 #include "wld/wld_rad_hostapd_api.h"
 #include "wld/wld_wpaSupp_ep_api.h"
 #include "wld/wld_secDmn.h"
@@ -83,6 +84,7 @@
 #include "wld/wld_chanmgt.h"
 #include "wld/wld_sensing.h"
 #include "wld/wld_eventing.h"
+#include "wld/wld_bStaMld.h"
 #include "wld/Utils/wld_autoNeighAdd.h"
 #include "swl/swl_hex.h"
 #include "swl/swl_ieee802_1x_defs.h"
@@ -1401,6 +1403,24 @@ static void s_stationConnectedEvt(void* pRef, char* ifName, swl_macBin_t* bBssid
      * in order to give time for channel sync, on driver side
      */
     swla_delayExec_addTimeout((swla_delayExecFun_cbf) s_refreshChspecOnEpConnected, strdup(ifName), BKH_CHSPEC_REFRESH_DELAY_MS);
+
+    /* Update all EndPoint ConnectionStatus matching the same MLDUnit and having a valid MLDLinkID */
+    wld_mldLink_t* pLink = pEP->pSSID->pMldLink;
+    wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
+        T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
+        if(pEP->pSSID == pNgSSID) {
+            continue;
+        }
+
+        if(!wld_mld_isLinkUsable(pNgLink)
+           || !wld_ssid_hasValidMLDLinkID(pNgSSID)
+           || (pNgSSID->mldRole != SWL_MLO_ROLE_AUXILIARY)) {
+            continue;
+        }
+
+        // All other endpoints are in passive mode
+        wld_endpoint_setConnectionStatus(pNgSSID->ENDP_HOOK, EPCS_PASSIVE, EPE_NONE);
+    }
 }
 
 static void s_stationScanStartedEvt(void* pRef, char* ifName) {

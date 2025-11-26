@@ -74,6 +74,7 @@
 #include "wld/wld_chanmgt.h"
 #include "wld/wld_wpaCtrlGSock.h"
 #include "wld/wld_secDmn.h"
+#include "wld/wld_bStaMld.h"
 
 #include "wifiGen_fsm.h"
 
@@ -1081,6 +1082,13 @@ static bool s_doConnectEp(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
     return true;
 }
 
+static bool s_doSetEpMld(T_EndPoint* pEP, T_Radio* pRad) {
+    ASSERTS_NOT_NULL(pEP, true, ME, "NULL");
+    ASSERTS_NOT_NULL(pRad, true, ME, "NULL");
+    ASSERTI_TRUE(wld_rad_isMloCapable(pRad), true, ME, "%s: not mlo capable", pRad->Name);
+    return true;
+}
+
 static bool s_doStopWpaSupp(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
     ASSERTS_TRUE(wifiGen_wpaSupp_isRunning(pEP), true, ME, "%s: wpa_supplicant stopped", pEP->Name);
     SAH_TRACEZ_INFO(ME, "%s: stop wpa_supplicant", pEP->Name);
@@ -1188,6 +1196,55 @@ static bool s_doSyncEpRemoteRegDom(T_EndPoint* pEP, swl_wirelessDevice_infoEleme
     return false;
 }
 
+static void s_updateEpMld(T_EndPoint* pEP, wld_nl80211_ifaceInfo_t* epIfInfo) {
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    ASSERT_NOT_NULL(epIfInfo, , ME, "NULL");
+    T_SSID* pSSID = pEP->pSSID;
+    ASSERT_NOT_NULL(pSSID, , ME, "NULL");
+    T_Radio* pRad = pEP->pRadio;
+    ASSERT_NOT_NULL(pRad, , ME, "NULL");
+
+    int32_t linkId = NO_LINK_ID;
+    swl_chanspec_t chanSpec;
+    swl_mlo_role_e mldRole = SWL_MLO_ROLE_NONE;
+    if(epIfInfo->nMloLinks > 0) {
+        swl_freqBandExt_e band = pRad->operatingFrequencyBand;
+        if(band >= SWL_FREQ_BAND_EXT_NONE) {
+            band = wld_chanmgt_getCurChspec(pRad).band;
+        }
+        const wld_nl80211_ifaceMloLinkInfo_t* pLinkInfo =
+            wld_nl80211_fetchIfaceMloLinkByFreqBand(epIfInfo, band);
+        if(pLinkInfo) {
+            if(pLinkInfo->linkPos == 0) {
+                mldRole = SWL_MLO_ROLE_PRIMARY;
+            } else {
+                mldRole = SWL_MLO_ROLE_AUXILIARY;
+            }
+            linkId = pLinkInfo->link.linkId;
+        }
+    }
+    wld_ssid_setMLDLinkID(pSSID, linkId);
+    wld_ssid_setMLDRole(pSSID, mldRole);
+}
+
+static void s_updateAllEpMld(T_EndPoint* pEP, wld_nl80211_ifaceInfo_t* epIfInfo) {
+    ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    ASSERT_NOT_NULL(epIfInfo, , ME, "NULL");
+    T_SSID* pSSID = pEP->pSSID;
+    ASSERT_NOT_NULL(pSSID, , ME, "NULL");
+
+    s_updateEpMld(pEP, epIfInfo);
+
+    wld_mldLink_t* pLink = pSSID->pMldLink;
+    wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
+        T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
+        if(pSSID == pNgSSID) {
+            continue;
+        }
+        s_updateEpMld(pNgSSID->ENDP_HOOK, epIfInfo);
+    }
+}
+
 static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
     ASSERTS_TRUE(state, , ME, "not connected");
     T_Radio* pRad = (T_Radio*) userData;
@@ -1277,26 +1334,8 @@ static void s_syncOnEpConnected(void* userData, char* ifName, bool state) {
             }
         }
 
-        int32_t linkId = NO_LINK_ID;
-        swl_mlo_role_e mldRole = SWL_MLO_ROLE_NONE;
-        if(epIfInfo.nMloLinks > 0) {
-            swl_freqBandExt_e band = pRad->operatingFrequencyBand;
-            if(band >= SWL_FREQ_BAND_EXT_NONE) {
-                band = wld_chanmgt_getCurChspec(pRad).band;
-            }
-            const wld_nl80211_ifaceMloLinkInfo_t* pLinkInfo =
-                wld_nl80211_fetchIfaceMloLinkByFreqBand(&epIfInfo, band);
-            if(pLinkInfo) {
-                if(pLinkInfo->linkPos == 0) {
-                    mldRole = SWL_MLO_ROLE_PRIMARY;
-                } else {
-                    mldRole = SWL_MLO_ROLE_AUXILIARY;
-                }
-                linkId = pLinkInfo->link.linkId;
-            }
-        }
-        wld_ssid_setMLDLinkID(pEP->pSSID, linkId);
-        wld_ssid_setMLDRole(pEP->pSSID, mldRole);
+        s_updateAllEpMld(pEP, &epIfInfo);
+        wld_bStaMld_update();
     }
     s_delayRestoreFronthaul(pRad);
     s_startRefreshEpChspec(pEP);
@@ -1307,9 +1346,30 @@ static void s_syncOnEpDisconnected(void* userData, char* ifName, bool state) {
     T_Radio* pRad = (T_Radio*) userData;
     T_EndPoint* pEP = wld_rad_ep_from_name(pRad, ifName);
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
+    T_SSID* pSSID = pEP->pSSID;
+    ASSERT_NOT_NULL(pSSID, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "%s: disconnected endpoint", pEP->Name);
-    wld_ssid_setMLDLinkID(pEP->pSSID, NO_LINK_ID);
-    wld_ssid_setMLDRole(pEP->pSSID, SWL_MLO_ROLE_NONE);
+
+    wld_nl80211_ifaceInfo_t epIfInfo;
+    swl_rc_ne rc = wld_ep_nl80211_getInterfaceInfo(pEP, &epIfInfo);
+    if(swl_rc_isOk(rc)) {
+        s_updateAllEpMld(pEP, &epIfInfo);
+    } else {
+        wld_ssid_setMLDLinkID(pSSID, MLO_LINK_ID_UNKNOWN);
+        wld_ssid_setMLDRole(pSSID, SWL_MLO_ROLE_NONE);
+
+        wld_mldLink_t* pLink = pSSID->pMldLink;
+        wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
+            T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
+            if(pSSID == pNgSSID) {
+                continue;
+            }
+            wld_ssid_setMLDLinkID(pNgSSID, MLO_LINK_ID_UNKNOWN);
+            wld_ssid_setMLDRole(pNgSSID, SWL_MLO_ROLE_NONE);
+        }
+    }
+    wld_bStaMld_update();
+
     ASSERTS_TRUE(wifiGen_hapd_isAlive(pRad), , ME, "%s: hapd not running", pRad->Name);
     chanmgt_rad_state detRadState = CM_RAD_UNKNOWN;
     if((wifiGen_hapd_getRadState(pRad, &detRadState) == SWL_RC_OK) &&
@@ -1459,6 +1519,13 @@ static bool s_doStartWpaSupp(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
             return true;
         }
     }
+
+    T_SSID* primSSID = wld_mld_getPrimaryLinkSsid(pEP->pSSID->pMldLink);
+    if((primSSID != NULL) && (primSSID != pEP->pSSID)) {
+        SAH_TRACEZ_INFO(ME, "Not the primary interface, blocking %s", pEP->alias);
+        return true;
+    }
+
     SAH_TRACEZ_INFO(ME, "%s: start wpa_supplicant", pEP->Name);
     wifiGen_wpaSupp_startDaemon(pEP);
     s_registerWpaSuppRadEvtHandlers(pEP->wpaSupp);
@@ -1542,6 +1609,7 @@ void s_checkEpDependency(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
         if(!wifiGen_wpaSupp_isRunning(pEP)) {
             setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_WPASUPP);
         }
+        setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_MOD_MLD);
     }
     if(isBitSetLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_ENABLE_EP)) {
         setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_WPASUPP);
@@ -1555,6 +1623,29 @@ void s_checkEpDependency(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
     if(isBitSetLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_WPASUPP) ||
        isBitSetLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_CONNECT_EP)) {
         wld_ssid_setMLDStatus(pEP->pSSID, wld_mld_checkMLDStatus(pEP->pSSID));
+    }
+    if(isBitSetLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_MOD_MLD)) {
+        T_SSID* pSSID = pEP->pSSID;
+        ASSERTS_NOT_NULL(pSSID, , ME, "%s: no ssid ctx", pEP->alias);
+        // Update wpa_supp configuration file
+        setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_MOD_WPASUPP);
+        T_SSID* primSSID = wld_mld_getPrimaryLinkSsid(pEP->pSSID->pMldLink);
+        if((primSSID != NULL) && (primSSID != pEP->pSSID)) {
+            // Stop wpa_supp if not the primary link
+            setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_STOP_WPASUPP);
+        } else {
+            if(wifiGen_wpaSupp_isRunning(pEP)) {
+                // Reload wpa_supp and update status
+                setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_UPDATE_WPASUPP);
+                setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_CONNECT_EP);
+            } else {
+                // Start wpa_supp if SSID is the primary link or if there is no primary at all
+                setBitLongArray(pEP->fsm.FSM_AC_BitActionArray, FSM_BW, GEN_FSM_START_WPASUPP);
+            }
+        }
+        if(wld_mld_isLinkUsable(pSSID->pMldLink) != wld_mld_isLinkConfigured(pSSID->pMldLink)) {
+            wld_mld_setLinkConfigured(pSSID->pMldLink, wld_mld_isLinkUsable(pSSID->pMldLink));
+        }
     }
 }
 
@@ -1605,7 +1696,7 @@ wld_fsmMngr_action_t actions[GEN_FSM_MAX] = {
     {FSM_ACTION(GEN_FSM_MOD_COUNTRYCODE), .doRadFsmAction = s_doSetCountryCode},
     {FSM_ACTION(GEN_FSM_SYNC_RAD), .doRadFsmAction = s_doRadSync, .doVapFsmAction = s_doSetApSec},
     {FSM_ACTION(GEN_FSM_MOD_BSSID), .doVapFsmAction = s_doSetBssid},
-    {FSM_ACTION(GEN_FSM_MOD_MLD), .doVapFsmAction = s_doSetApMld},
+    {FSM_ACTION(GEN_FSM_MOD_MLD), .doVapFsmAction = s_doSetApMld, .doEpFsmAction = s_doSetEpMld},
     {FSM_ACTION(GEN_FSM_MOD_SEC), .doVapFsmAction = s_doSetApSec},
     {FSM_ACTION(GEN_FSM_MOD_AP), .doVapFsmAction = s_doSyncAp},
     {FSM_ACTION(GEN_FSM_MOD_SSID), .doVapFsmAction = s_doSetSsid},

@@ -237,7 +237,7 @@ static wld_mldLink_t* s_getHapdCfgPrimAPMldLink(T_AccessPoint* pAP) {
  *
  * @return SWL_RC_OK on success, error code otherwise
  */
-swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
+static swl_rc_ne s_reconfigureNeighLinkAPs(T_SSID* pSSID) {
     ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
 
     wld_mldLink_t* pLink = pSSID->pMldLink;
@@ -287,5 +287,45 @@ swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
         }
     }
     return SWL_RC_OK;
+}
+
+static void s_updateEpMldLink(wld_mldLink_t* link) {
+    ASSERTS_NOT_NULL(link, , ME, "NULL");
+    T_SSID* pSSID = link->pSSID;
+    ASSERTS_NOT_NULL(link, , ME, "NULL");
+    T_EndPoint* pEP = pSSID->ENDP_HOOK;
+    ASSERTS_NOT_NULL(pEP, , ME, "NULL");
+    SAH_TRACEZ_WARNING(ME, "reconfigure EP %s", pEP->alias);
+    pEP->pFA->mfn_wendpoint_setMldUnit(pEP);
+    wld_autoCommitMgr_notifyEpEdit(pEP);
+}
+
+static swl_rc_ne s_reconfigureNeighLinkEPs(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    T_EndPoint* pEP = pSSID->ENDP_HOOK;
+    ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    wld_mldLink_t* primLink = wld_mld_getPrimaryLink(pSSID->pMldLink);
+    wld_mldLink_t* newLink = wld_mld_firstUsableNeighLinkByFreq(pSSID->pMldLink);
+
+    // Refresh EP config for current primary link
+    s_updateEpMldLink(primLink);
+
+    // Update primary link
+    wld_mld_setPrimaryLink(newLink);
+
+    pEP->pFA->mfn_wendpoint_setMldUnit(pEP);
+
+    return SWL_RC_OK;
+}
+
+swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    if(pSSID->AP_HOOK != NULL) {
+        return s_reconfigureNeighLinkAPs(pSSID);
+    } else if(pSSID->ENDP_HOOK != NULL) {
+        return s_reconfigureNeighLinkEPs(pSSID);
+    }
+    return SWL_RC_INVALID_PARAM;
 }
 

@@ -81,5 +81,17 @@ swl_rc_ne wifiGen_ep_setMacAddress(T_EndPoint* pEP);
 swl_rc_ne wifiGen_ep_update(T_EndPoint* pEP, int set);
 swl_rc_ne wifiGen_ep_connStatus(T_EndPoint* pEP, wld_epConnectionStatus_e* pConnState);
 swl_rc_ne wifiGen_ep_getConnChspec(T_EndPoint* pEP, swl_chanspec_t* pChanSpec);
+/**
+ * @brief Set MLD unit configuration for endpoint
+ *
+ * Configures the MLD unit for the specified endpoint by
+ * triggering the appropriate FSM state changes. Validates that the endpoint's
+ * radio supports MLO capabilities before applying the configuration.
+ *
+ * @param pEP pointer to endpoint to configure MLD unit for
+ *
+ * @return SWL_RC_OK on success, SWL_RC_INVALID_PARAM for invalid parameters
+ */
+swl_rc_ne wifiGen_ep_setMldUnit(T_EndPoint* pEP);
 
 #endif /* INCLUDE_PRIV_PLUGIN_WIFIGEN_EP_H_ */

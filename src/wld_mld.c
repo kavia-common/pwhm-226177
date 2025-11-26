@@ -69,6 +69,7 @@
 #include "wld_chanmgt.h"
 #include "wld_eventing.h"
 #include "wld_apMld.h"
+#include "wld_epMld.h"
 
 #define ME "mld"
 
@@ -583,6 +584,11 @@ swl_mlo_intfMldStatus_e wld_mld_checkMLDStatus(T_SSID* pSSID) {
     }
     if(wld_ssid_getType(pSSID) == WLD_SSID_TYPE_AP) {
         if(!wld_apMld_hasSharedConnectionConf(pSSID->AP_HOOK)) {
+            return SWL_MLO_INTF_MLD_STATUS_INVALID_OTHER_CONFIG;
+        }
+    }
+    if(wld_ssid_getType(pSSID) == WLD_SSID_TYPE_EP) {
+        if(!wld_epMld_isMloReady(pSSID->ENDP_HOOK)) {
             return SWL_MLO_INTF_MLD_STATUS_INVALID_OTHER_CONFIG;
         }
     }

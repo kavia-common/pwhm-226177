@@ -200,6 +200,7 @@ bool wifiGen_init() {
     fta.mfn_wendpoint_sendManagementFrame = wifiGen_ep_sendManagementFrame;
     fta.mfn_wendpoint_set_mac_address = wifiGen_ep_setMacAddress;
     fta.mfn_wendpoint_update = wifiGen_ep_update;
+    fta.mfn_wendpoint_setMldUnit = wifiGen_ep_setMldUnit;
 
     s_vendor = wld_nl80211_registerVendor(&fta);
     ASSERT_NOT_NULL(s_vendor, false, ME, "NULL vendor");

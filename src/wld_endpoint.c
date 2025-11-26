@@ -1961,6 +1961,10 @@ void wld_endpoint_reconfigure(T_EndPoint* pEP) {
         return;
     }
 
+    if(pEP->pSSID != NULL) {
+        wld_mld_setLinkConfigured(pEP->pSSID->pMldLink, false);
+    }
+
     wld_endpoint_performConnectCommit(pEP, false);
 }
 

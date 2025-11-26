@@ -267,6 +267,16 @@ swl_rc_ne wifiGen_ep_connStatus(T_EndPoint* pEP, wld_epConnectionStatus_e* pConn
     return SWL_RC_OK;
 }
 
+swl_rc_ne wifiGen_ep_setMldUnit(T_EndPoint* pEP) {
+    ASSERT_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
+    T_Radio* pRad = pEP->pRadio;
+    ASSERT_NOT_NULL(pRad, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTI_TRUE(wld_rad_isMloCapable(pRad), SWL_RC_OK, ME, "%s: not mlo capable", pRad->Name);
+    SAH_TRACEZ_INFO(ME, "%s: applying MLDUnit %d", pEP->alias, pEP->pSSID->mldUnit);
+    setBitLongArray(pEP->fsm.FSM_BitActionArray, FSM_BW, GEN_FSM_MOD_MLD);
+    return SWL_RC_OK;
+}
+
 /**
  * @brief wifiGen_ep_wpsStart
  *
