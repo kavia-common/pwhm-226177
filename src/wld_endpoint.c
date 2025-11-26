@@ -144,6 +144,39 @@ lbool_t wld_endpoint_isProfileIdentical(T_EndPointProfile* currentProfile, T_End
     return LTRUE;
 }
 
+bool wld_endpoint_isSecurityModeMloCompliant(swl_security_apMode_e secMode) {
+    switch(secMode) {
+    case SWL_SECURITY_APMODE_WPA2_WPA3_P:
+    case SWL_SECURITY_APMODE_WPA3_P:
+    case SWL_SECURITY_APMODE_WPA2_WPA3_E:
+    case SWL_SECURITY_APMODE_WPA3_E:
+        return true;
+        break;
+    default:
+        break;
+    }
+    return false;
+}
+
+bool wld_endpoint_isProfileMloCompliant(T_EndPointProfile* currentProfile, T_EndPointProfile* newProfile) {
+    ASSERTS_NOT_NULL(currentProfile, false, ME, "currentProfile is NULL");
+    ASSERTS_NOT_NULL(newProfile, false, ME, "newProfile is NULL");
+
+    if(memcmp(currentProfile->BSSID, &wld_ether_null, ETHER_ADDR_LEN) != 0) {
+        if(memcmp(currentProfile->BSSID, newProfile->BSSID, ETHER_ADDR_LEN) != 0) {
+            return false;
+        }
+    }
+
+    ASSERT_TRUE(swl_str_matches(currentProfile->SSID, newProfile->SSID), false, ME, "SSID not identical");
+    ASSERT_TRUE(swl_str_matches(currentProfile->keyPassPhrase, newProfile->keyPassPhrase), false, ME, "keyPassPhrase not identical");
+    ASSERT_TRUE(swl_str_matches(currentProfile->saePassphrase, newProfile->saePassphrase), false, ME, "saePassphrase not identical");
+    ASSERT_TRUE(wld_endpoint_isSecurityModeMloCompliant(currentProfile->secModeEnabled), false, ME, "invalid security");
+    ASSERT_TRUE(wld_endpoint_isSecurityModeMloCompliant(newProfile->secModeEnabled), false, ME, "invalid security");
+
+    return true;
+}
+
 /**
  * @brief wld_endpoint_setRadToggleThreshold_pwf
  *

@@ -85,6 +85,32 @@ void wld_endpoint_sync_connection(T_EndPoint* pEP, bool connected, wld_epError_e
 wld_epConnectionStatus_e wld_endpoint_connStatusFromEpError(wld_epError_e error);
 void wld_endpoint_sendPairingNotification(T_EndPoint* pEP, uint32_t type, const char* reason, T_WPSCredentials* credentials);
 
+/**
+ * @brief Check if two endpoint profiles are MLO compliant
+ *
+ * Verifies that two endpoint profiles are compatible for MLO operation by
+ * comparing BSSID, SSID, key passphrases, SAE passphrases, and security modes.
+ * Both profiles must use MLO-compatible security modes.
+ *
+ * @param currentProfile pointer to current endpoint profile
+ * @param newProfile pointer to new endpoint profile to compare
+ *
+ * @return true if profiles are MLO compliant, false otherwise
+ */
+bool wld_endpoint_isProfileMloCompliant(T_EndPointProfile* currentProfile, T_EndPointProfile* newProfile);
+
+/**
+ * @brief Check if security mode is MLO compliant
+ *
+ * Determines whether a given security mode is compatible with MLO operation.
+ * Only WPA3 Personal/Enterprise and WPA2/WPA3 mixed modes are supported.
+ *
+ * @param secMode security mode to check for MLO compatibility
+ *
+ * @return true if security mode supports MLO, false otherwise
+ */
+bool wld_endpoint_isSecurityModeMloCompliant(swl_security_apMode_e secMode);
+
 amxd_status_t _EndPoint_WPS_pushButton(amxd_object_t* obj,
                                        amxd_function_t* func,
                                        amxc_var_t* args,
