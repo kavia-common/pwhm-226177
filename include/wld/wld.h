@@ -1975,7 +1975,7 @@ struct S_ACCESSPOINT {
     uint32_t lastDevIndex;
     wld_extMod_dataList_t extDataList;        /* list of extention data for non-chipset vendor modules */
     amxc_llist_t llIntfWds;                   /* list of wds interface related to this VAP (wld_wds_intf_t) */
-    wld_apMldCfg_t mldCfg;                    /* MLD config options */
+    wld_mldCfg_t mldCfg;                      /* MLD config options */
 };
 
 typedef struct SWL_PACKED {

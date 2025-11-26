@@ -73,7 +73,7 @@ typedef struct {
     swl_trl_e emlsrEnable;
     swl_trl_e strEnable;
     swl_trl_e nstrEnable;
-} wld_apMldCfg_t;
+} wld_mldCfg_t;
 
 /**
  * @brief Group of MLD instances per SSID type.
@@ -101,7 +101,7 @@ typedef struct {
     amxc_llist_t links;           /* List of affiliated links belonging to this MLD */
     wld_mldGroup_t* pGroup;       /* Back pointer to parent group */
     wld_mldLink_t* pPrimLink;     /* Primary link for this MLD */
-    wld_apMldCfg_t Cfg;
+    wld_mldCfg_t Cfg;
 } wld_mld_t;
 
 /**

@@ -227,9 +227,97 @@
 
 				}
 			}
-
 		}
 
-	}
+		/**
+		* bSTAMLD Backhaul STA Multi-Link Device table.
+		*
+		* This table contains Multi-Link Device Instances for WiFi-7 MLO backhaul STA functionality.
+		* Each instance represents a logical MLD that may contain single or multiple SSID links across
+		* different radio bands.
+		*
+		* Instances are created when MLDUnit>=0 is configured on EP SSID's.
+		* Runtime parameters are populated when MLO connections become active
+		*/
+		%persistent object bSTAMLD[] {
 
+			/**
+			* MLD Identifier & matches the MLDUnit value
+			* Set only during instance creation and cannot be modified thereafter.
+			*/
+			%read-only int32 MLDID;
+
+			/**
+			* The MAC address of the MLD, derived from the primary link.
+			* Empty when primary link is not established
+			*/
+			%read-only string MLDMACAddress;
+
+			/**
+			* BSSID of the primary link
+			*/
+			%read-only string BSSID;
+
+			/**
+			* Comma-seperated list of MAC addresses of all active affiliated links in this MLD.
+			* Empty when no links have valid MLDLinkID yet.
+			*/
+			%read-only string AffiliatedbSTAList;
+
+			/**
+			* bSTAMLD Configuration Object
+			* Contains MLO feature enable flags for this MLD
+			*/
+			%persistent object bSTAMLDConfig {
+
+				on event "*" call wld_bSTAMLD_setConf_ocf;
+
+				/**
+				* Configure if the Enhanced Multi-Link Multi-Radio (EMLMR) operation is enabled on this AP MLD.
+				* Note that this shall only be applied if EMLMRSupport is present.
+				* 0 disable.
+				* 1 enable.
+				* -1 driver default.
+				*/
+				%persistent int8 EMLMREnabled {
+					on action validate call check_range { min = -1, max = 1 };
+					default -1;
+				}
+
+				/**
+				* Configure if Enhanced Multi-Link Single-Radio (EMLSR) operation is enabled on this AP MLD.
+				* Note that this shall only be applied if EMLSRSupport is present.
+				* 0 disable.
+				* 1 enable.
+				* -1 driver default.
+				*/
+				%persistent int8 EMLSREnabled {
+					on action validate call check_range { min = -1, max = 1 };
+					default -1;
+				}
+
+				/**
+				* Configure if Simultaneous Transmit and Receive (STR) operation is enabled on this AP MLD.
+				* 0 disable.
+				* 1 enable.
+				* -1 driver default.
+				*/
+				%persistent int8 STREnabled {
+					on action validate call check_range { min = -1, max = 1 };
+					default -1;
+				}
+
+				/**
+				* Configure if Non-Simultaneous Transmit and Receive (NSTR) operation is enabled on this AP MLD.
+				* 0 disable.
+				* 1 enable.
+				* -1 driver default.
+				*/
+				%persistent int8 NSTREnabled {
+					on action validate call check_range { min = -1, max = 1 };
+					default -1;
+				}
+			}
+		}
+	}
 }

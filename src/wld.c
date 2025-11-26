@@ -79,6 +79,7 @@
 #include "wld_rad_stamon.h"
 #include "wld_eventing.h"
 #include "wld_chanmgt.h"
+#include "wld_bStaMld.h"
 #include "Utils/wld_autoCommitMgr.h"
 #include "wld_nl80211_types.h"
 #include "Features/wld_persist.h"
@@ -242,8 +243,8 @@ void wld_cleanup() {
     SAH_TRACEZ_INFO(ME, "Cleaning up wld plugin");
     wld_deleteAllEps();
     wld_deleteAllVaps();
-    wld_deleteAllRadios();
     wld_ssid_cleanAll();
+    wld_deleteAllRadios();
     wld_event_destroy();
     wld_nl80211_cleanupAll();
     wld_channel_cleanAll();
@@ -269,6 +270,7 @@ vendor_t* wld_registerVendor(const char* name, T_CWLD_FUNC_TABLE* fta) {
     SAH_TRACEZ_NOTICE(ME, "register vendor %s", vendor->name);
     wld_dmnMgt_initDmnExecInfo(&vendor->globalHostapd);
     wld_mld_initMgr(&vendor->pMldMgr);
+    wld_bStaMld_init();
     amxc_llist_append(&vendors, &vendor->it);
 
     wld_functionTable_init(vendor, fta);
