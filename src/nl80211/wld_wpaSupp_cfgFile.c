@@ -65,6 +65,7 @@
 #include "wld_wps.h"
 #include "wld_endpoint.h"
 #include "wld_radio.h"
+#include "wld/wld_ssid.h"
 #include "swl/map/swl_mapCharFmt.h"
 #include "wld_wpaSupp_cfgManager.h"
 #include "wld_wpaSupp_cfgManager_priv.h"
@@ -76,6 +77,31 @@ static const char* wld_wpsConfigMethods[] = { "usba", "ethernet", "label", "disp
     "nfc_interface", "push_button", "keypad", "virtual_display", "physical_display", "virtual_push_button",
     "physical_push_button", "PIN",
     0};
+
+static void s_addMLOFreqCandidates(T_EndPoint* pEP, char* freqListStr, size_t freqListStrBufSize, const char* sep, bool onlyPscChannels) {
+    ASSERTS_NOT_NULL(pEP, , ME, "NULL");
+    ASSERTS_NOT_NULL(freqListStr, , ME, "NULL");
+    ASSERTS_NOT_EQUALS(freqListStrBufSize, 0, , ME, "Invalid length");
+
+    T_Radio* pRad = pEP->pRadio;
+    wld_rad_printPossibleFreqsWithSep(pRad, freqListStr, freqListStrBufSize, sep, onlyPscChannels, false);
+
+    T_SSID* pSSID = pEP->pSSID;
+    ASSERTS_NOT_NULL(pSSID, , ME, "NULL");
+    ASSERTS_TRUE(wld_mld_isLinkUsable(pSSID->pMldLink), , ME, "Invalid link");
+
+    wld_mldLink_t* pLink = pSSID->pMldLink;
+    wld_for_eachNeighMldLink_safe(pNgLink, pLink) {
+        if(pLink == pNgLink) {
+            continue;
+        }
+        if(!wld_mld_isLinkUsable(pNgLink)) {
+            continue;
+        }
+        T_SSID* pNgSSID = wld_mld_getLinkSsid(pNgLink);
+        wld_rad_printPossibleFreqsWithSep(pNgSSID->RADIO_PARENT, freqListStr, freqListStrBufSize, sep, onlyPscChannels, false);
+    }
+}
 
 /**
  * @brief set the global configuration of the wpa_supplicant
@@ -120,8 +146,8 @@ static swl_rc_ne s_setWpaSuppGlobalConfig(T_EndPoint* pEP, wld_wpaSupp_config_t*
         swl_mapChar_add(global, "sae_pwe", "2");
     }
 
-    char freqListStr[320] = {'\0'};
-    wld_rad_printPossibleFreqsWithSep(pRad, freqListStr, sizeof(freqListStr), " ");
+    char freqListStr[1024] = {'\0'};
+    s_addMLOFreqCandidates(pEP, freqListStr, sizeof(freqListStr), " ", pRad->scanState.cfg.onlyScanPscChannels);
     if(!swl_str_isEmpty(freqListStr)) {
         swl_mapChar_add(global, "freq_list", freqListStr);
     }
@@ -181,11 +207,7 @@ static swl_rc_ne s_setWpaSuppNetworkConfig(T_EndPoint* pEP, wld_wpaSupp_config_t
     ASSERT_FALSE(ret, SWL_RC_ERROR, ME, "empty SSID");
 
     swl_mapChar_add(network, "scan_ssid", "1");
-    char freqListStr[320] = {'\0'};
-    wld_rad_printScanningFreqsWithSep(pRad, freqListStr, sizeof(freqListStr), " ", pRad->scanState.cfg.onlyScanPscChannels);
-    if(!swl_str_isEmpty(freqListStr)) {
-        swl_mapChar_add(network, "scan_freq", freqListStr);
-    }
+
     char ssid[SSID_NAME_LEN + 2] = {0};
     swl_str_catFormat(ssid, sizeof(ssid), "\"%s\"", epProfile->SSID);
     swl_mapChar_add(network, "ssid", ssid);

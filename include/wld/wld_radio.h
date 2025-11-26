@@ -250,8 +250,23 @@ swl_chanspec_t wld_rad_getSwlChanspec(T_Radio* pRad);
 uint32_t wld_rad_getCurrentFreq(T_Radio* pRad);
 swl_rc_ne wld_rad_getCurrentNoise(T_Radio* pRad, int32_t* pNoise);
 swl_rc_ne wld_rad_printPossibleChansWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep);
-swl_rc_ne wld_rad_printPossibleFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep);
-swl_rc_ne wld_rad_printScanningFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep, bool onlyPscChannels);
+/**
+ * @brief Print radio's possible frequencies to buffer with separator
+ *
+ * Generates a string containing the radio's possible frequencies separated by
+ * the specified separator. Optionally filters to PSC channels only for 6GHz band
+ * and can clear the target buffer before writing.
+ *
+ * @param pRad pointer to radio structure
+ * @param tgtBuf target buffer to write frequencies to
+ * @param tgtBufSize size of target buffer
+ * @param sep separator string between frequencies
+ * @param onlyPscChannels if true, include only PSC channels for 6GHz band
+ * @param flushStr if true, clear target buffer before writing
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
+swl_rc_ne wld_rad_printPossibleFreqsWithSep(T_Radio* pRad, char* tgtBuf, size_t tgtBufSize, const char* sep, bool onlyPscChannels, bool flushStr);
 
 void wld_rad_triggerDelayCommit(T_Radio* pRad, uint32_t delay, bool restartIfActive);
 int wld_rad_doRadioCommit(T_Radio* pR);
