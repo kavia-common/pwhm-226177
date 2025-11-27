@@ -323,7 +323,14 @@ swl_rc_ne wld_rad_hostapd_reconfigure(T_Radio* pR) {
         if(trl == SWL_TRL_FALSE) {
             return rc;
         }
-        rc = wld_wpaCtrl_sendCmdFmtCheckResponseExt(pIface, 100, "OK", "UPDATE ");
+        char reply[128] = {0};
+        if((rc = wld_wpaCtrl_sendCmdFmtGetResponseExt(pIface, reply, sizeof(reply), 100, "UPDATE ")) >= SWL_RC_OK) {
+            if(swl_str_startsWith(reply, "UNKNOWN")) {
+                rc = SWL_RC_NOT_IMPLEMENTED;
+            } else if(!swl_str_matches(reply, "OK")) {
+                rc = SWL_RC_ERROR;
+            }
+        }
         //the call may timeout while being applied, but that only happens on success
         if(rc == SWL_RC_NOT_AVAILABLE) {
             rc = SWL_RC_OK;
