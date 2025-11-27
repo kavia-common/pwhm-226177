@@ -135,7 +135,9 @@ swl_rc_ne wld_wpaCtrlMngr_checkAllIfaces(wld_wpaCtrlMngr_t* pMgr) {
         wld_wpaCtrlGSock_t* pGlSk = wld_wpaCtrlGSock_fetchByGName(sockName);
         if(pGlSk != NULL) {
             pIface = wld_wpaCtrlGSock_getGIface(pGlSk);
-        } else if((pMgr->pSecDmn != NULL) && !swl_str_startsWith(nextSockName, sockName)) {
+        } else if((pMgr->pSecDmn != NULL) &&
+                  !(swl_str_startsWith(nextSockName, sockName) &&
+                    swl_str_startsWith(&nextSockName[swl_str_len(sockName)], "_link"))) {
             /*
              * only fetch linkSSID of effective wpaCtrl sockets, by excluding:
              * - global socket
