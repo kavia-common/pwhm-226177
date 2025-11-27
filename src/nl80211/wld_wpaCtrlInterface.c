@@ -222,6 +222,63 @@ static swl_rc_ne s_sendCmdFmtGetResponseExt(wld_wpaCtrlInterface_t* pIface, char
 }
 
 /**
+ * @brief send formatted command to wpa_ctrl server over established or temporary connection
+ * and get the full received reply, within a provided timeout delay
+ *
+ * @param[in] pIface :the wpa_ctrl interface to which the command is sent
+ * @param[in] reply : buffer where to store the received answer
+ * @param[in] replySize : max length of reply
+ * @param[in] tmOutMSec : timeout in milliseconds waiting for synchronous reply
+ * @param[in] cmdFormat : string command format to be sent
+ *
+ * @return SWL_RC_OK when the command is answered as expected
+ *         SWL_RC_ERROR when the command is rejected
+ *         SWL_RC_INVALID_STATE when the wpactrl iface link is not ready
+ *         SWL_RC_INVALID_PARAM when the command format is not applicable
+ *         SWL_RC_NOT_IMPLEMENTED when the command not supported on server side
+ *         SWL_RC_NOT_AVAILABLE when the command execution timeouted
+ */
+swl_rc_ne wld_wpaCtrl_sendCmdFmtGetResponseExt(wld_wpaCtrlInterface_t* pIface, char* reply, size_t replySize, uint32_t tmOutMSec, const char* cmdFormat, ...) {
+    ASSERTS_STR(cmdFormat, SWL_RC_INVALID_PARAM, ME, "empty cmd");
+    char cmdStr[512] = {0};
+    int32_t ret = 0;
+    va_list args;
+    va_start(args, cmdFormat);
+    ret = vsnprintf(cmdStr, sizeof(cmdStr), cmdFormat, args);
+    va_end(args);
+    ASSERT_FALSE(ret < 0, SWL_RC_INVALID_PARAM, ME, "Fail to format cmd string");
+    return s_sendCmdFmtGetResponseExt(pIface, reply, replySize, tmOutMSec, cmdStr);
+}
+
+/**
+ * @brief send formatted command to wpa_ctrl server over established or temporary connection
+ * and get the full received reply, within a default timeout delay
+ *
+ * @param[in] pIface :the wpa_ctrl interface to which the command is sent
+ * @param[in] reply : buffer where to store the received answer
+ * @param[in] replySize : max length of reply
+ * @param[in] cmdFormat : string command format to be sent
+ *
+ * @return SWL_RC_OK when the command is answered as expected
+ *         SWL_RC_ERROR when the command is rejected
+ *         SWL_RC_INVALID_STATE when the wpactrl iface link is not ready
+ *         SWL_RC_INVALID_PARAM when the command format is not applicable
+ *         SWL_RC_NOT_IMPLEMENTED when the command not supported on server side
+ *         SWL_RC_NOT_AVAILABLE when the command execution timeouted
+ */
+swl_rc_ne wld_wpaCtrl_sendCmdFmtGetResponse(wld_wpaCtrlInterface_t* pIface, char* reply, size_t replySize, const char* cmdFormat, ...) {
+    ASSERTS_STR(cmdFormat, SWL_RC_INVALID_PARAM, ME, "empty cmd");
+    char cmdStr[512] = {0};
+    int32_t ret = 0;
+    va_list args;
+    va_start(args, cmdFormat);
+    ret = vsnprintf(cmdStr, sizeof(cmdStr), cmdFormat, args);
+    va_end(args);
+    ASSERT_FALSE(ret < 0, SWL_RC_INVALID_PARAM, ME, "Fail to format cmd string");
+    return s_sendCmdFmtGetResponseExt(pIface, reply, replySize, DFLT_SYNC_CMD_TMOUT_MS, cmdStr);
+}
+
+/**
  * @brief send command string to wpa_ctrl server over established or temporary connection
  * and check the received reply, within a provided timeout delay
  *
