@@ -507,10 +507,6 @@ swl_rc_ne wld_mld_setLinkId(wld_mldLink_t* pLink, int32_t linkId) {
      * then a notification for MLDPrimaryChange must be sent so that other MLD Links update the primary link
      */
     pLink->linkId = linkId;
-    if(!pLink->AffObj) {
-        pLink->linkId = -1;
-        SAH_TRACEZ_INFO(ME, "%s: Since AffObj null, linkId changed to %d instead of %d", s_getLinkName(pLink), pLink->linkId, linkId);
-    }
     wld_apMld_updateAffAP(pLink);
     return SWL_RC_OK;
 }

@@ -347,7 +347,6 @@ amxd_object_t* wld_apMld_createAffiliatedAPObject(wld_mldLink_t* pLink, uint32_t
     if(CurrObj) {
         SAH_TRACEZ_INFO(ME, "linkId (%d): current Affiliated object exists so deleting all the instances below", dm_instance);
         wld_apMld_deleteAffiliatedAPObjects(pTempLink);
-        pLink->linkId = -1;
     } else {
         SAH_TRACEZ_INFO(ME, "linkId (%d): current Affiliated object don't exists", dm_instance);
     }
@@ -444,7 +443,6 @@ amxd_status_t wld_apMld_deleteAffiliatedAPObjects(wld_mldLink_t* pStartLink) {
             }
 
             pLink->AffObj = NULL;
-            pLink->linkId = -1;
             SAH_TRACEZ_INFO(ME, "DM instance AffiliatedAP.%u deleted successfully", instance_id);
 
         } else {

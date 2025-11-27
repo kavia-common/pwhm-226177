@@ -89,8 +89,14 @@
 				default "00:00:00:00:00:00";
 			}
 
+			/**
+			 * The MLDUnit of the affiliated APs
+			 */
 			%persistent %read-only int32 MLDID;
 
+			/**
+			 * Multi-Link Operation (MLO) configuration of the Access Point Multi-Link Device (AP MLD)
+             */
 			%persistent object APMLDConfig {
 				on event "*" call wld_ap_setMLDConfig_ocf;
 
@@ -141,14 +147,27 @@
 				}
 			}
 
+			/**
+			 * The Access Points (APs) affiliated to the AP MLD.
+			 */
 			%persistent object AffiliatedAP[] {
 				counted with AffiliatedAPNumberOfEntries;
 
+				/**
+				 * [MACAddress] The BSSID of the affiliated AP.
+				 */
 				%persistent %read-only string BSSID {
 					default "";
 				}
+
+				/**
+				 * The Link ID assigned to this affiliated AP
+				 */
 				%persistent %read-only int8 LinkID;
 
+				/**
+				 * The stats of each affiliated AP
+				 */
 				%read-only object Stats {
 					on action read call wld_affAP_getMloStats_orf;
 
