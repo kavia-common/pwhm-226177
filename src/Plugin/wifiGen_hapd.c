@@ -313,9 +313,10 @@ static void s_onStartHapdCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata) {
     const char* mainIface = s_getMainIface(pRad);
     SAH_TRACEZ_WARNING(ME, "%s: hostapd started", mainIface);
     wld_wpaCtrlMngr_t* pMgr = wld_secDmn_getWpaCtrlMgr(pRad->hostapd);
-    if(!wifiGen_hapd_isStartable(pRad)) {
+    bool hapdHasGSock = wld_wpaCtrlGSock_checkGPathInDmnArgs(pRad->hostapd);
+    if(hapdHasGSock && !wifiGen_hapd_isStartable(pRad)) {
         wld_wpaCtrlMngr_disconnect(pMgr);
-    } else if(wld_wpaCtrlMngr_connect(pMgr)) {
+    } else if(wld_wpaCtrlMngr_connect(pMgr) && hapdHasGSock) {
         wld_wpaCtrlGSock_connect(pRad->hostapd->glSk);
     }
 }
