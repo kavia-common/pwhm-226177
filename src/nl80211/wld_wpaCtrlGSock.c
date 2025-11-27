@@ -159,6 +159,89 @@ const char* wld_wpaCtrlGSock_getGName(wld_wpaCtrlGSock_t* pGlSk) {
 }
 
 /**
+ * @brief fetch global socket context matching a provided socket path
+ * (private api)
+ *
+ * @param path full socket path to be fetched
+ *
+ * @return pointer to the global socket context when found (ie valid)
+ *         null otherwise
+ */
+static wld_wpaCtrlGSock_t* s_fetchGSockByPath(const char* path) {
+    ASSERTS_STR(path, NULL, ME, "Null path");
+    amxc_llist_for_each(it, &sGlSkList) {
+        wld_wpaCtrlGSock_t* pCtx = amxc_container_of(it, wld_wpaCtrlGSock_t, it);
+        if(swl_str_matches(wld_wpaCtrlInterface_getPath(pCtx->gIface), path)) {
+            return pCtx;
+        }
+    }
+    SAH_TRACEZ_INFO(ME, "not found gSock having path %s", path);
+    return NULL;
+}
+
+/**
+ * @brief fetch global socket context matching a provided socket path
+ *
+ * @param path full socket path to be fetched
+ *
+ * @return pointer to the global socket context when found (ie valid)
+ *         null otherwise
+ */
+wld_wpaCtrlGSock_t* wld_wpaCtrlGSock_fetchByGPath(const char* path) {
+    return s_fetchGSockByPath(path);
+}
+
+/**
+ * @brief check whether a existing global socket context is matching a provided socket path
+ *
+ * @param path full socket path to be fetched
+ *
+ * @return bool true when global socket context is found
+ *              false otherwise
+ */
+bool wld_wpaCtrlGSock_checkByGPath(const char* path) {
+    return (s_fetchGSockByPath(path) != NULL);
+}
+
+/**
+ * @brief parse security daemon command line, looking for the global socket option arg "-g"
+ * and getting the next string argument indicating the real socket path
+ *
+ * @param pSecDmn pointer to security daemon context
+ *
+ * @return string argument following the option "-g" when found, null otherwise
+ */
+const char* wld_wpaCtrlGSock_fetchGPathInDmnArgs(wld_secDmn_t* pSecDmn) {
+    ASSERTS_NOT_NULL(pSecDmn, NULL, ME, "NULL");
+    wld_process_t* pDmn = pSecDmn->dmnProcess;
+    if(!pDmn || !pDmn->argList || (pDmn->nrArgs < 2)) {
+        return NULL;
+    }
+    //fetch through argList allocated to nrArgs + 2, (first is cmd, last is NULL)
+    ssize_t pos = swl_typeCharPtr_arrayFindOffset(pDmn->argList, pDmn->nrArgs + 1, "-g", 1);
+    if((pos > 1) && ((pos + 1) <= pDmn->nrArgs)) {
+        return pDmn->argList[pos + 1];
+    }
+    return NULL;
+}
+
+/**
+ * @brief check whether a global socket path is indicated in the security daemon command line
+ *
+ * @param pSecDmn pointer to security daemon context
+ *
+ * @return bool true when global socket path argument is found in the daemon command line
+ *              false otherwise
+ */
+bool wld_wpaCtrlGSock_checkGPathInDmnArgs(wld_secDmn_t* pSecDmn) {
+    ASSERTS_NOT_NULL(pSecDmn, false, ME, "NULL");
+    ASSERTS_NOT_NULL(pSecDmn->glSk, false, ME, "NULL");
+    const char* gskPathArg = wld_wpaCtrlGSock_fetchGPathInDmnArgs(pSecDmn);
+    ASSERTS_STR(gskPathArg, false, ME, "No gsock path in args");
+    return (pSecDmn->glSk == wld_wpaCtrlGSock_fetchByGPath(gskPathArg));
+}
+
+/**
  * @brief return the wpactrl interface of a global socket context
  *
  * @param pGlSk pointer to global socket context
@@ -315,6 +398,21 @@ swl_rc_ne wld_wpaCtrlGSock_initWithSecDmnGrp(wld_wpaCtrlGSock_t** ppGlSk, wld_se
 }
 
 /**
+ * @brief check whether a global socket interface is available:
+ * ie the relative server socket is found in the file-system
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return bool true when global socket server path is found
+ *              false otherwise
+ */
+bool wld_wpaCtrlGSock_isAvailable(wld_wpaCtrlGSock_t* pGlSk) {
+    pGlSk = s_fetchGSockByData(pGlSk);
+    ASSERTS_NOT_NULL(pGlSk, false, ME, "NULL");
+    return (wld_wpaCtrlMngr_getFirstAvailableInterface(pGlSk->gMgr) != NULL);
+}
+
+/**
  * @brief check whether a global socket mngr is connected (all interfaces are connected)
  * (ie usable for cmds and events)
  *
@@ -448,6 +546,7 @@ uint32_t wld_wpaCtrlGSock_countUsers(wld_wpaCtrlGSock_t* pGlSk) {
 swl_rc_ne wld_wpaCtrlGSock_disconnectIfUnused(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
+    ASSERTI_TRUE(wld_wpaCtrlGSock_isAvailable(pGlSk), SWL_RC_INVALID_STATE, ME, "glSk %s socket not created", pGlSk->gName);
     ASSERTI_EQUALS(wld_wpaCtrlGSock_countUsers(pGlSk), 0, SWL_RC_INVALID_STATE, ME, "glSk %s still used", pGlSk->gName);
     return wld_wpaCtrlGSock_disconnect(pGlSk);
 }
