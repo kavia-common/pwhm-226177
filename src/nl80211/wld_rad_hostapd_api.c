@@ -530,6 +530,15 @@ swl_trl_e wld_rad_hostapd_getCfgParamSupp(T_Radio* pRad, const char* param) {
     return wld_secDmn_getCfgParamSupp(pRad->hostapd, param);
 }
 
+/**
+ * @brief check whether enabled accesspoint has its config loaded by hostapd
+ *
+ * @param pAP pointer to AccessPoint context
+ *
+ * @return bool true when enabled accesspoint has its relative wpactrl interface
+ *                   already created by hostapd (ie socket found in the file system)
+ *              false otherwise (AP invalid, or disabled, or not yet loaded)
+ */
 static bool s_isApLoaded(T_AccessPoint* pAP) {
     return (pAP && pAP->enable &&
             wld_wpaCtrlInterface_checkConnectionPath(pAP->wpaCtrlInterface));

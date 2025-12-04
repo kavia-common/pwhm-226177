@@ -224,6 +224,14 @@ static wld_mldLink_t* s_getHapdCfgPrimAPMldLink(T_AccessPoint* pAP) {
     return (pPrimSSID ? pPrimSSID->pMldLink : NULL);
 }
 
+/**
+ * @brief schedule needed reconfiguration of neighbor MLD links
+ * when one of the links has been configured
+ *
+ * @param pSSID pointer to SSID context (hosting the configured link)
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
 swl_rc_ne wifiGen_mld_reconfigureNeighLinkSSIDs(T_SSID* pSSID) {
     ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
 

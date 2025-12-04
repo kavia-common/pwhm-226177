@@ -94,6 +94,13 @@ static int s_filterNames(const struct dirent* pEntry) {
     return 1;
 }
 
+/**
+ * @brief return the wpactrl interface socket server directory
+ *
+ * @param pMgr pointer to wpactrl mngr context
+ *
+ * @return string full path of wpactrl interface socket server directory
+ */
 const char* wld_wpaCtrlMngr_getCtrlIfaceDirPath(wld_wpaCtrlMngr_t* pMgr) {
     ASSERTS_NOT_NULL(pMgr, "", ME, "NULL");
     wld_secDmn_t* pSecDmn = NULL;
@@ -104,6 +111,16 @@ const char* wld_wpaCtrlMngr_getCtrlIfaceDirPath(wld_wpaCtrlMngr_t* pMgr) {
     return wld_wpaCtrlInterface_getConnectionDirPath(wld_wpaCtrlMngr_getInterface(pMgr, 0));
 }
 
+/**
+ * @brief check all wpactrl mngr related interfaces server sockets
+ * by fetching socket files in wpactrl server directory
+ * and mapping them to wpactrl interface
+ * (and establishing client connections when needed)
+ *
+ * @param pMgr pointer to wpactrl mngr context
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
 swl_rc_ne wld_wpaCtrlMngr_checkAllIfaces(wld_wpaCtrlMngr_t* pMgr) {
     ASSERTS_NOT_NULL(pMgr, SWL_RC_INVALID_PARAM, ME, "NULL");
     const char* ctrlDirPath = wld_wpaCtrlMngr_getCtrlIfaceDirPath(pMgr);
@@ -494,17 +511,41 @@ wld_secDmn_t* wld_wpaCtrlMngr_getSecDmn(const wld_wpaCtrlMngr_t* pMgr) {
     return pMgr->pSecDmn;
 }
 
+/**
+ * @brief set the secDmn group relative to wpactrl mngr
+ *
+ * @param pMgr pointer to wpactrl mngr context
+ * @param pSecDmnGrp pointer to security daemon group
+ *
+ * @return bool true when the set is done successfully
+ *              false otherwise
+ */
 bool wld_wpaCtrlMngr_setSecDmnGrp(wld_wpaCtrlMngr_t* pMgr, wld_secDmnGrp_t* pSecDmnGrp) {
     ASSERTS_NOT_NULL(pMgr, false, ME, "NULL");
     pMgr->pSecDmnGrp = pSecDmnGrp;
     return true;
 }
 
+/**
+ * @brief get the current secDmn group relative to wpactrl mngr
+ *
+ * @param pMgr pointer to wpactrl mngr context
+ *
+ * @return pointer to security daemon group
+ */
 wld_secDmnGrp_t* wld_wpaCtrlMngr_getSecDmnGrp(const wld_wpaCtrlMngr_t* pMgr) {
     ASSERTS_NOT_NULL(pMgr, NULL, ME, "NULL");
     return pMgr->pSecDmnGrp ? : wld_secDmn_getGrp(pMgr->pSecDmn);
 }
 
+/**
+ * @brief return whether the wpactrl mngr is running through
+ * a daemon process of relative security daemon or relative security daemon group
+ *
+ * @param pMgr pointer to wpactrl mngr context
+ *
+ * @return bool true when wpactrl mngr is used by a running security daemon process
+ */
 bool wld_wpaCtrlMngr_isRunning(const wld_wpaCtrlMngr_t* pMgr) {
     ASSERTS_NOT_NULL(pMgr, false, ME, "NULL");
     if(pMgr->pSecDmn) {

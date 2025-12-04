@@ -190,6 +190,23 @@ bool wld_wpaCtrl_sendCmdCheckResponse(wld_wpaCtrlInterface_t* pIface, char* cmd,
     return swl_rc_isOk(wld_wpaCtrlConnection_sendCmdCheckResponse(pIface->cmdConn, cmd, expectedResponse));
 }
 
+/**
+ * @brief send command string to wpa_ctrl server over established or temporary connection
+ * and get the received reply, within a provided timeout delay
+ *
+ * @param[in] pIface : the wpa_ctrl interface to which the command is sent
+ * @param[in/out] reply : the reply buffer to be filled
+ * @param[in] replySize: the reply buffer size
+ * @param[in] tmOutMSec : timeout in milliseconds waiting for synchronous reply
+ * @param[in] cmdStr : command string to be sent
+ *
+ * @return SWL_RC_OK when the command is answered as expected
+ *         SWL_RC_ERROR when the command is rejected
+ *         SWL_RC_INVALID_STATE when the wpactrl iface link is not ready
+ *         SWL_RC_INVALID_PARAM when the command format is not applicable
+ *         SWL_RC_NOT_IMPLEMENTED when the command not supported on server side
+ *         SWL_RC_NOT_AVAILABLE when the command execution timeouted
+ */
 static swl_rc_ne s_sendCmdFmtGetResponseExt(wld_wpaCtrlInterface_t* pIface, char* reply, size_t replySize, uint32_t tmOutMSec, char* cmdStr) {
     const char* wpaCtrlIfName = wld_wpaCtrlInterface_getName(pIface);
     ASSERTS_TRUE(wld_wpaCtrlInterface_checkConnectionPath(pIface), SWL_RC_INVALID_STATE, ME, "%s: wpactrl link not ready", wpaCtrlIfName);
@@ -204,6 +221,22 @@ static swl_rc_ne s_sendCmdFmtGetResponseExt(wld_wpaCtrlInterface_t* pIface, char
     return rc;
 }
 
+/**
+ * @brief send command string to wpa_ctrl server over established or temporary connection
+ * and check the received reply, within a provided timeout delay
+ *
+ * @param[in] pIface :the wpa_ctrl interface to which the command is sent
+ * @param[in] tmOutMSec : timeout in milliseconds waiting for synchronous reply
+ * @param[in] expectedResponse : string expected in reply
+ * @param[in] cmdStr : command string to be sent
+ *
+ * @return SWL_RC_OK when the command is answered as expected
+ *         SWL_RC_ERROR when the command is rejected
+ *         SWL_RC_INVALID_STATE when the wpactrl iface link is not ready
+ *         SWL_RC_INVALID_PARAM when the command format is not applicable
+ *         SWL_RC_NOT_IMPLEMENTED when the command not supported on server side
+ *         SWL_RC_NOT_AVAILABLE when the command execution timeouted
+ */
 static swl_rc_ne s_sendCmdFmtCheckResponseExt(wld_wpaCtrlInterface_t* pIface, uint32_t tmOutMSec, char* expectedResponse, char* cmdStr) {
     const char* wpaCtrlIfName = wld_wpaCtrlInterface_getName(pIface);
     size_t maxMsgLen = wld_wpaCtrl_getMaxMsgLen();

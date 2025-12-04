@@ -79,6 +79,15 @@
 
 static amxc_llist_t sGlSkList = {NULL, NULL};
 
+/**
+ * @brief fetch global socket context matching a provided ctx pointer
+ * (private api)
+ *
+ * @param pGlSk pointer to global socket context to be fetched
+ *
+ * @return pointer to the global socket context when found (ie valid)
+ *         null otherwise
+ */
 static wld_wpaCtrlGSock_t* s_fetchGSockByData(wld_wpaCtrlGSock_t* pGlSk) {
     ASSERTS_NOT_NULL(pGlSk, NULL, ME, "Null Data");
     amxc_llist_for_each(it, &sGlSkList) {
@@ -91,6 +100,15 @@ static wld_wpaCtrlGSock_t* s_fetchGSockByData(wld_wpaCtrlGSock_t* pGlSk) {
     return NULL;
 }
 
+/**
+ * @brief fetch global socket context matching a provided socket name
+ * (private api)
+ *
+ * @param name socket name to be fetched
+ *
+ * @return pointer to the global socket context when found
+ *         null otherwise
+ */
 static wld_wpaCtrlGSock_t* s_fetchGSockByName(const char* name) {
     ASSERTS_TRUE(swl_str_startsWith(name, GSOCK_PFX), NULL, ME, "unmatch prefix in gock name (%s)", name ? : "");
     amxc_llist_for_each(it, &sGlSkList) {
@@ -103,36 +121,87 @@ static wld_wpaCtrlGSock_t* s_fetchGSockByName(const char* name) {
     return NULL;
 }
 
+/**
+ * @brief check whether a existing global socket context is matching a provided socket name
+ *
+ * @param name socket name to be checked
+ *
+ * @return bool true when global socket context is found
+ *              false otherwise
+ */
 bool wld_wpaCtrlGSock_checkByGName(const char* name) {
     return (s_fetchGSockByName(name) != NULL);
 }
 
+/**
+ * @brief fetch global socket context matching a provided socket name
+ *
+ * @param name socket name to be fetched
+ *
+ * @return pointer to the global socket context when found
+ *         null otherwise
+ */
 wld_wpaCtrlGSock_t* wld_wpaCtrlGSock_fetchByGName(const char* name) {
     return s_fetchGSockByName(name);
 }
 
+/**
+ * @brief get socket name of a global socket context
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return the global socket name (when found) or empty string
+ */
 const char* wld_wpaCtrlGSock_getGName(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, "", ME, "NULL");
     return pGlSk->gName;
 }
 
+/**
+ * @brief return the wpactrl interface of a global socket context
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return pointer to wpactrl interface of the global socket context
+ */
 wld_wpaCtrlInterface_t* wld_wpaCtrlGSock_getGIface(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, NULL, ME, "NULL");
     return pGlSk->gIface;
 }
 
+/**
+ * @brief return the wpactrl interface server path of a global socket context
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return string the wpactrl interface server path of the global socket context
+ */
 const char* wld_wpaCtrlGSock_getGIfacePath(wld_wpaCtrlGSock_t* pGlSk) {
     return wld_wpaCtrlInterface_getPath(wld_wpaCtrlGSock_getGIface(pGlSk));
 }
 
+/**
+ * @brief return the wpactrl manager of a global socket context
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return pointer to wpactrl mngr of the global socket context
+ */
 wld_wpaCtrlMngr_t* wld_wpaCtrlGSock_getGMgr(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, NULL, ME, "NULL");
     return pGlSk->gMgr;
 }
 
+/**
+ * @brief cleanup the global socket ressources and free context
+ *
+ * @param ppGlSk address of global socket context pointer
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
 swl_rc_ne wld_wpaCtrlGSock_cleanup(wld_wpaCtrlGSock_t** ppGlSk) {
     ASSERTS_NOT_NULL(ppGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_wpaCtrlGSock_t* pGlSk = s_fetchGSockByData(*ppGlSk);
@@ -151,6 +220,15 @@ swl_rc_ne wld_wpaCtrlGSock_cleanup(wld_wpaCtrlGSock_t** ppGlSk) {
     return SWL_RC_OK;
 }
 
+/**
+ * @brief set the wpactrl server path of a global socket context
+ * This api is needed to point to global socket server directory used by the secDmnGroup members
+ *
+ * @param pGlSk pointer to global socket context
+ * @param serverPath string indicating full wpactrl server sock path (eg: /var/run/hostapd)
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
 swl_rc_ne wld_wpaCtrlGSock_setServerPath(wld_wpaCtrlGSock_t* pGlSk, const char* serverPath) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
@@ -171,6 +249,19 @@ swl_rc_ne wld_wpaCtrlGSock_setServerPath(wld_wpaCtrlGSock_t* pGlSk, const char* 
     return rc;
 }
 
+/**
+ * @brief intialize a global socket context: (private api)
+ * - allocation
+ * - linking to standalone secDmn or a secDmn group
+ * - option to initialize the wpactrl server directory path
+ *
+ * @param ppGlSk address of global socket context pointer
+ * @param pSecDmn pointer to secDmn context when global socket is used for a standalone security daemon
+ * @param pSecDmnGrp pointer to secDmn group context, when global socket is used for a group security daemon (eg single hostapd)
+ * @param serverPath string optional argument to initialize the global socket server directory path
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
 static swl_rc_ne s_initGSock(wld_wpaCtrlGSock_t** ppGlSk, wld_secDmn_t* pSecDmn, wld_secDmnGrp_t* pSecDmnGrp, const char* serverPath) {
     ASSERTS_NOT_NULL(ppGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
     wld_wpaCtrlGSock_t* pGlSk = *ppGlSk;
@@ -194,36 +285,89 @@ static swl_rc_ne s_initGSock(wld_wpaCtrlGSock_t** ppGlSk, wld_secDmn_t* pSecDmn,
     return SWL_RC_OK;
 }
 
+/**
+ * @brief intialize a global socket context, for standalone secDmn
+ *
+ * @param ppGlSk address of global socket context pointer
+ * @param pSecDmn pointer to secDmn context when global socket is used for a standalone security daemon
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
 swl_rc_ne wld_wpaCtrlGSock_initWithSecDmn(wld_wpaCtrlGSock_t** ppGlSk, wld_secDmn_t* pSecDmn) {
     ASSERTS_NOT_NULL(ppGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pSecDmn, SWL_RC_INVALID_PARAM, ME, "Missing secDmn");
     return s_initGSock(ppGlSk, pSecDmn, wld_secDmn_getGrp(pSecDmn), wld_secDmn_getCtrlIfaceDirPath(pSecDmn));
 }
 
+/**
+ * @brief intialize a global socket context, for a security dameon group  (eg single hostapd)
+ *
+ * @param ppGlSk address of global socket context pointer
+ * @param pSecDmnGrp pointer to secDmn group context
+ * @param serverPath string optional argument to initialize the global socket server directory path
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
 swl_rc_ne wld_wpaCtrlGSock_initWithSecDmnGrp(wld_wpaCtrlGSock_t** ppGlSk, wld_secDmnGrp_t* pSecDmnGrp, const char* serverPath) {
     ASSERTS_NOT_NULL(ppGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pSecDmnGrp, SWL_RC_INVALID_PARAM, ME, "Missing secDmnGrp");
     return s_initGSock(ppGlSk, NULL, pSecDmnGrp, serverPath);
 }
 
+/**
+ * @brief check whether a global socket mngr is connected (all interfaces are connected)
+ * (ie usable for cmds and events)
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return bool true when global socket is connected to server side
+ *              false otherwise
+ */
 bool wld_wpaCtrlGSock_isReady(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, false, ME, "NULL");
     return wld_wpaCtrlMngr_isReady(pGlSk->gMgr);
 }
 
+/**
+ * @brief check whether the global socket interfaceis connected
+ * (same as wld_wpaCtrlGSock_isReady, as global socket wpactrl mngr only monitors ONE socket)
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return bool true when global socket is connected to server side
+ *              false otherwise
+ */
 bool wld_wpaCtrlGSock_isConnected(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, false, ME, "NULL");
     return wld_wpaCtrlMngr_isConnected(pGlSk->gMgr);
 }
 
+/**
+ * @brief check whether a global socket interface is connecting
+ * (ie connection timer running)
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return bool true when global socket is connecting (
+ *              false otherwise
+ */
 bool wld_wpaCtrlGSock_isConnecting(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, false, ME, "NULL");
     return wld_wpaCtrlMngr_isConnecting(pGlSk->gMgr);
 }
 
+/**
+ * @brief start connecting the global socket interface to server side
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return SWL_RC_OK when connection timer is started
+ *         SWL_RC_DONE when global socket interface is already connected
+ *         error code otherwise
+ */
 swl_rc_ne wld_wpaCtrlGSock_connect(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
@@ -236,12 +380,29 @@ swl_rc_ne wld_wpaCtrlGSock_connect(wld_wpaCtrlGSock_t* pGlSk) {
     return SWL_RC_OK;
 }
 
+/**
+ * @brief stop connecting the global socket interface to server side
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return SWL_RC_OK when connection timer is stopped
+ *         SWL_RC_ERROR otherwise
+ */
 swl_rc_ne wld_wpaCtrlGSock_stopConnecting(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
     return (wld_wpaCtrlMngr_stopConnecting(pGlSk->gMgr) ? SWL_RC_OK : SWL_RC_ERROR);
 }
 
+/**
+ * @brief disconnect the global socket interface from the server side
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return SWL_RC_OK when connection timer is stopped
+ *         SWL_RC_DONE when global socket interface is already disconnected
+ *         error code otherwise
+ */
 swl_rc_ne wld_wpaCtrlGSock_disconnect(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");
@@ -251,6 +412,14 @@ swl_rc_ne wld_wpaCtrlGSock_disconnect(wld_wpaCtrlGSock_t* pGlSk) {
     return (wld_wpaCtrlMngr_disconnect(pGlSk->gMgr) ? SWL_RC_OK : SWL_RC_ERROR);
 }
 
+/**
+ * @brief count the number of active users (secDmn or secDmnGroup members)
+ * still subscribed to use the global socket
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return number of active secDmn context still susbcribed to use the global socket
+ */
 uint32_t wld_wpaCtrlGSock_countUsers(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, 0, ME, "NULL");
@@ -267,6 +436,15 @@ uint32_t wld_wpaCtrlGSock_countUsers(wld_wpaCtrlGSock_t* pGlSk) {
     return wld_secDmn_isAlive(pSecDmn);
 }
 
+/**
+ * @brief disconnect the global socket interface from the server side
+ * if no active users are subscribed to use it
+ *
+ * @param pGlSk pointer to global socket context
+ *
+ * @return SWL_RC_OK when connection timer is stopped
+ *         error code otherwise
+ */
 swl_rc_ne wld_wpaCtrlGSock_disconnectIfUnused(wld_wpaCtrlGSock_t* pGlSk) {
     pGlSk = s_fetchGSockByData(pGlSk);
     ASSERTS_NOT_NULL(pGlSk, SWL_RC_INVALID_PARAM, ME, "NULL");

@@ -280,14 +280,45 @@ static void s_clearRadDynConfActions(T_Radio* pRad) {
     }
 }
 
+/**
+ * @brief check whether a radio has a number of usable(being configured)
+ * or active(already running) apmld links
+ *
+ * @param pRad pointer to radio context
+ * @param minNLinks minimum number of mlo links required in the check
+ *
+ * @return bool true when radio has at least minNLinks mlo links usable or active
+ *              false otherwise (no mlo support or less links that requested)
+ */
 static bool s_checkApMld(T_Radio* pRad, uint32_t minNLinks) {
     return (wld_rad_isMloCapable(pRad) &&
             (wld_rad_hasUsableApMld(pRad, minNLinks) ||
              wld_rad_hostapd_hasActiveApMld(pRad, minNLinks)));
 }
+
+/**
+ * @brief check whether a radio has a bss involved in multi-link apmld (ie at least 2 links)
+ * This allows to detect whether a radio reconf may concern mlo neighbor links on other radios
+ *
+ * @param pRad pointer to radio context
+ *
+ * @return bool true when radio has at least 2 mlo links usable or active
+ *              false otherwise (no mlo support or less links that requested)
+ */
 static bool s_hasMultiLinkApMld(T_Radio* pRad) {
     return s_checkApMld(pRad, 2);
 }
+
+/**
+ * @brief check whether the radio AND one of its APs have a provided scheduled action
+ * in their ACtive bitmaps (ie actions up to be executed)
+ *
+ * @param pRad pointer to radio context
+ * @param action id of action to checked in the ACtive bitmap
+ *
+ * @return bool true when action is found in ACtive bitmaps
+ *              false otherwise
+ */
 static bool s_checkApAcAction(T_Radio* pRad, wifiGen_fsmStates_e action) {
     if(isBitSetLongArray(pRad->fsmRad.FSM_AC_BitActionArray, FSM_BW, action)) {
         T_AccessPoint* pAP = NULL;
@@ -299,6 +330,15 @@ static bool s_checkApAcAction(T_Radio* pRad, wifiGen_fsmStates_e action) {
     }
     return false;
 }
+
+/**
+ * @brief clear a provided action from all radio's APs ACtive bitmaps
+ *
+ * @param pRad pointer to radio context
+ * @param action id of action to be cleared
+ *
+ * @return void
+ */
 static void s_clearApAcAction(T_Radio* pRad, wifiGen_fsmStates_e action) {
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRad) {
@@ -306,6 +346,15 @@ static void s_clearApAcAction(T_Radio* pRad, wifiGen_fsmStates_e action) {
     }
 }
 
+/**
+ * @brief check whether wpactrl cmd "LINK_REMOVE" is supported by radio's hostapd instance:
+ * when not yet learned, the checking is done in the hostapd help output message
+ *
+ * @param pRad pointer to radio context
+ *
+ * @return bool true when wpactrl cmd "LINK_REMOVE" is supported
+ *              false otherwise
+ */
 static bool s_isLinkRemoveSupported(T_Radio* pRad) {
     swl_trl_e supp = wld_secDmn_getCmdSupp(pRad->hostapd, "LINK_REMOVE");
     if(supp == SWL_TRL_UNKNOWN) {
@@ -724,6 +773,14 @@ static bool s_doStartHostapd(T_Radio* pRad) {
     return true;
 }
 
+/**
+ * @brief fsm execution handler for action GEN_FSM_ADD_HOSTAPD
+ *
+ * @param pRad pointer to radio context
+ *
+ * @param bool true when action is handled
+ *             false when action is not handled and needs to be retried later
+ */
 static bool s_doAddHostapd(T_Radio* pRad) {
     ASSERTS_TRUE(wifiGen_hapd_isRunning(pRad), true, ME, "%s: hostapd stopped", pRad->Name);
     ASSERTI_TRUE(wifiGen_hapd_isStartable(pRad), true, ME, "%s: missing enabling conds", pRad->Name);
@@ -746,6 +803,14 @@ static bool s_doAddHostapd(T_Radio* pRad) {
     return true;
 }
 
+/**
+ * @brief fsm execution handler for action GEN_FSM_REMOVE_HOSTAPD
+ *
+ * @param pRad pointer to radio context
+ *
+ * @param bool true when action is handled
+ *             false when action is not handled and needs to be retried later
+ */
 static bool s_doRemoveHostapd(T_Radio* pRad) {
     ASSERTS_TRUE(wifiGen_hapd_isRunning(pRad), true, ME, "%s: hostapd stopped", pRad->Name);
     if(wld_secDmn_isGrpRestarting(pRad->hostapd)) {
@@ -1232,6 +1297,16 @@ static void s_writeHapdConfFileCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata)
     wifiGen_hapd_writeConfig(pRad);
 }
 
+/**
+ * @brief hostapd process pre start handler:
+ * called just before forking to run hostapd process
+ * This allows to take imminent actions required for a proper startup
+ *
+ * @param pSecDmn pointer to security daemon context
+ * @param userdata pointer to registered userData
+ *
+ * @return void
+ */
 static void s_preStartHapdCb(wld_secDmn_t* pSecDmn _UNUSED, void* userdata) {
     T_Radio* pRad = (T_Radio*) userdata;
     ASSERT_NOT_NULL(pRad, , ME, "NULL");

@@ -202,6 +202,16 @@ static void s_restoreMainAp(T_AccessPoint* pMainAP) {
     }
 }
 
+/**
+ * @brief prepare hostapd interface before startup, adding/updating conf
+ * this allows to pre-create main netdev interface,
+ * and optionnally remove passive BSS's netdev iface (shall be created by hostapd)
+ *
+ * @param pRad pointer to radio context
+ * @param clean bool optional flag indication whether to clear passive BSS's netdev iface
+ *
+ * @return void
+ */
 void wifiGen_hapd_prepareIfaces(T_Radio* pRad, bool clean) {
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
     ASSERT_NOT_NULL(pRad->hostapd, , ME, "NULL");
@@ -421,6 +431,14 @@ void wifiGen_hapd_enableVapWpaCtrlIface(T_AccessPoint* pAP) {
     wld_wpaCtrlInterface_setEnable(pAP->wpaCtrlInterface, ena);
 }
 
+/**
+ * @brief mark as enabled all required radio AP's wpactrl interfaces
+ * (so that wpactrl mngr will check their establishment)
+ *
+ * @param pRad pointer to radio context
+ *
+ * @return void
+ */
 void wifiGen_hapd_enableWpaCtrlIfaces(T_Radio* pRad) {
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRad) {
@@ -580,6 +598,15 @@ uint32_t wifiGen_hapd_countGrpMembers(T_Radio* pRad) {
     return 1;
 }
 
+/**
+ * @brief return valid radio context registered as secDmn userdata
+ * (or security dameon group member)
+ *
+ * @param pGmb pointer to security daemon context
+ *
+ * @return pointer to valid radio context used by the security daemon
+ *                 null otherwise
+ */
 static T_Radio* s_getGrpMemberRadObj(wld_secDmn_t* pGmb) {
     return (pGmb && debugIsRadPointer(pGmb->userData)) ? (T_Radio*) pGmb->userData : NULL;
 }
@@ -685,6 +712,13 @@ static swl_rc_ne s_initGlobalHapdGrp(vendor_t* pVdr, bool forceGlob) {
     return rc;
 }
 
+/**
+ * @brief schedule restarting hostapd instance used by the radio context
+ *
+ * @param pRad pointer to radio context
+ *
+ * @return void
+ */
 void wifiGen_hapd_restartDaemon(T_Radio* pRad) {
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
     SAH_TRACEZ_INFO(ME, "restart %s", pRad->Name);
@@ -697,6 +731,14 @@ void wifiGen_hapd_restartDaemon(T_Radio* pRad) {
     }
 }
 
+/**
+ * @brief schedule restarting hostapd instances used by all the radio
+ * registered by a specific vendor
+ *
+ * @param pVdr pointer to vendor context
+ *
+ * @return void
+ */
 void wifiGen_hapd_restartAllDaemons(vendor_t* pVdr) {
     T_Radio* pRad;
     wld_for_eachRad(pRad) {
@@ -708,8 +750,12 @@ void wifiGen_hapd_restartAllDaemons(vendor_t* pVdr) {
 }
 
 /**
- * Handle the change of UseGlobalInstance field, switching from single or multiple instance
- * Return true when a restart is needed to apply change
+ * @brief handle the change of UseGlobalInstance field, switching from single or multiple instance
+ *
+ * @param pVdr pointer to vendor context
+ * @param pCfg pointer to daemon execution settings
+ *
+ * @return true when a restart is needed to apply change
  */
 static bool s_handleUseGlobalInstance(vendor_t* pVdr, wld_dmnMgt_dmnExecSettings_t* pCfg) {
     ASSERT_NOT_NULL(pVdr, SWL_RC_INVALID_PARAM, ME, "NULL");
@@ -747,6 +793,14 @@ static bool s_handleUseGlobalInstance(vendor_t* pVdr, wld_dmnMgt_dmnExecSettings
     return restartNeeded;
 }
 
+/**
+ * @brief handle the conf changes of daemon execution settings, switching from single or multiple instance
+ *
+ * @param pVdr pointer to vendor context
+ * @param pCfg pointer to daemon exection settings
+ *
+ * @return SWL_RC_OK on success, error code otherwise
+ */
 swl_rc_ne wifiGen_hapd_setGlobDmnSettings(vendor_t* pVdr, wld_dmnMgt_dmnExecSettings_t* pCfg) {
     ASSERT_NOT_NULL(pVdr, SWL_RC_INVALID_PARAM, ME, "NULL");
     ASSERT_NOT_NULL(pCfg, SWL_RC_INVALID_PARAM, ME, "NULL");

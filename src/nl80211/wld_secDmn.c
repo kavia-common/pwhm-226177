@@ -127,6 +127,16 @@ static bool s_stopProcCb(wld_process_t* pProc _UNUSED, void* userdata) {
     return false;
 }
 
+/**
+ * @brief daemon process's pre start handler:
+ * called just before forking to run secDmn relative process
+ * This allows to take imminent actions required for a proper startup
+ *
+ * @param pProc pointer to process daemon context
+ * @param userdata pointer to registered userData
+ *
+ * @return void
+ */
 static void s_preStartProcCb(wld_process_t* pProc _UNUSED, void* userdata) {
     wld_secDmn_t* pSecDmn = (wld_secDmn_t*) userdata;
     ASSERT_NOT_NULL(pSecDmn, , ME, "NULL");
@@ -333,15 +343,37 @@ bool wld_secDmn_hasAvailableCtrlIface(wld_secDmn_t* pSecDmn) {
     return (wld_wpaCtrlMngr_getFirstAvailableInterface(pSecDmn->wpaCtrlMngr) != NULL);
 }
 
+/**
+ * @brief return the wpactrl interface of the global socket used by the security daemon
+ *
+ * @param pSecDmn pointer to security daemon
+ *
+ * @return pointer global socket's wpactrl interface
+ */
 wld_wpaCtrlInterface_t* wld_secDmn_getGlobalCtrlIface(wld_secDmn_t* pSecDmn) {
     ASSERTS_NOT_NULL(pSecDmn, NULL, ME, "NULL");
     return wld_wpaCtrlGSock_getGIface(pSecDmn->glSk);
 }
 
+/**
+ * @brief check whether a security daemon has available global wpactrl interface
+ *
+ * @param pSecDmn pointer to security daemon
+ *
+ * @return bool true when the security daemon has existing global wpactrl interface
+ */
 bool wld_secDmn_hasGlobalCtrlIface(wld_secDmn_t* pSecDmn) {
     return wld_wpaCtrlInterface_checkConnectionPath(wld_secDmn_getGlobalCtrlIface(pSecDmn));
 }
 
+/**
+ * @brief check whether a security daemon has connected global wpactrl interface
+ * (ie usable for cmds and events)
+ *
+ * @param pSecDmn pointer to security daemon
+ *
+ * @return bool true when the security daemon has connected global wpactrl interface
+ */
 bool wld_secDmn_hasReadyGlobalCtrlIface(wld_secDmn_t* pSecDmn) {
     return wld_wpaCtrlInterface_isReady(wld_secDmn_getGlobalCtrlIface(pSecDmn));
 }

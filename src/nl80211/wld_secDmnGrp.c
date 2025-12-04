@@ -173,6 +173,16 @@ static bool s_stopProcCb(wld_process_t* pProc, void* userdata) {
     return ret;
 }
 
+/**
+ * @brief daemon process's pre start handler:
+ * called just before forking to run secDmn group relative process
+ * This allows to take imminent actions required for a proper startup
+ *
+ * @param pProc pointer to process daemon context
+ * @param userdata pointer to registered userData
+ *
+ * @return void
+ */
 static void s_preStartProcCb(wld_process_t* pProc, void* userdata) {
     wld_secDmnGrp_t* pSecDmnGrp = (wld_secDmnGrp_t*) userdata;
     ASSERT_NOT_NULL(pSecDmnGrp, , ME, "NULL");
@@ -249,6 +259,13 @@ wld_process_t* wld_secDmnGrp_getProc(wld_secDmnGrp_t* pSecDmnGrp) {
     return pSecDmnGrp->dmnProcess;
 }
 
+/**
+ * @brief return wpactrl global socket context used by the security daemon group
+ *
+ * @param pSecDmnGrp pointer to security daemon group
+ *
+ * @return pointer to relative wpactrl global socket context
+ */
 wld_wpaCtrlGSock_t* wld_secDmnGrp_getGlSk(wld_secDmnGrp_t* pSecDmnGrp) {
     ASSERTS_NOT_NULL(pSecDmnGrp, NULL, ME, "NULL");
     return pSecDmnGrp->grGlSk;

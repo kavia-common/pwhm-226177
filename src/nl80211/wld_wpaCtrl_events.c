@@ -955,6 +955,16 @@ static void s_processStdEvent(wld_wpaCtrlInterface_t* pInterface, char* msgData)
     W_SWL_FREE(pParams);
 }
 
+/**
+ * @brief process wpactrl event message referencing a different interface
+ * This allows to handle some events received on global socket
+ * and require to be redirected or triggering action on the referenced interfaces
+ *
+ * @param pInterface pointer to wpactrl interface receiving the message
+ * @param msgData received message string
+ *
+ * @return void
+ */
 static void s_processRefEvent(wld_wpaCtrlInterface_t* pInterface, char* msgData) {
     ASSERTS_NOT_NULL(pInterface, , ME, "NULL");
     ASSERTS_STR(msgData, , ME, "Empty msg");
