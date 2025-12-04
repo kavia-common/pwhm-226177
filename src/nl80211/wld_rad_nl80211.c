@@ -414,7 +414,13 @@ swl_rc_ne wld_rad_nl80211_getAirStatsFromSurveyInfo(T_Radio* pRadio, wld_airStat
     pStats->total_time = base; // eqv. all pChanSurveyInfo->timeOn;
     pStats->bss_transmit_time = (pChanSurveyInfo->timeTx * base) / pChanSurveyInfo->timeOn;
     pStats->bss_receive_time = (pChanSurveyInfo->timeRxInBss * base) / pChanSurveyInfo->timeOn;
-    pStats->other_bss_time = ((pChanSurveyInfo->timeRx - pChanSurveyInfo->timeRxInBss) * base) / pChanSurveyInfo->timeOn;
+    if(pChanSurveyInfo->timeRx >= pChanSurveyInfo->timeRxInBss) {
+        pStats->other_bss_time = ((pChanSurveyInfo->timeRx - pChanSurveyInfo->timeRxInBss) * base) / pChanSurveyInfo->timeOn;
+    } else {
+        pStats->other_bss_time = 0;
+        SAH_TRACEZ_ERROR(ME, "%s: timeRx(diff) %d < timeRxInBss(diff) %d",
+                         pRadio->Name, pChanSurveyInfo->timeRx, pChanSurveyInfo->timeRxInBss);
+    }
     uint64_t wifiTime = pChanSurveyInfo->timeTx + pChanSurveyInfo->timeRx + pChanSurveyInfo->timeScan;
     if(pChanSurveyInfo->timeBusy > wifiTime) {
         pStats->other_time = ((pChanSurveyInfo->timeBusy - wifiTime) * base) / pChanSurveyInfo->timeOn;
