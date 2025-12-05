@@ -439,9 +439,7 @@ bool wld_mld_isLinkEnabled(wld_mldLink_t* pLink) {
     ASSERTS_TRUE(s_isTypedLink(pLink), false, ME, "NULL");
     T_SSID* pSSID = pLink->pSSID;
     ASSERTS_NOT_NULL(pSSID, false, ME, "NULL");
-    T_Radio* pRad = pSSID->RADIO_PARENT;
-    ASSERTS_NOT_NULL(pRad, false, ME, "NULL");
-    return (pSSID->enable && pRad->enable);
+    return wld_ssid_hasStackEnabled(pSSID);
 }
 
 uint32_t wld_mld_countNeighLinks(wld_mldLink_t* pLink) {

@@ -1573,7 +1573,7 @@ bool wld_hostapd_ap_needWpaCtrlIface(T_AccessPoint* pAP) {
     ASSERT_NOT_NULL(pAP, false, ME, "NULL");
     T_Radio* pRad = pAP->pRadio;
     ASSERT_NOT_NULL(pRad, false, ME, "NULL");
-    if((pAP->enable && pRad->enable) || (pAP == wld_rad_hostapd_getCfgMainVap(pRad))) {
+    if((wld_ap_hasStackEnabled(pAP)) || (pAP == wld_rad_hostapd_getCfgMainVap(pRad))) {
         return true;
     }
     if(wld_rad_hasMloSupport(pRad) || wld_rad_hasMbssidAds(pRad)) {

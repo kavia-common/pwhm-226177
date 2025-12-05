@@ -164,7 +164,7 @@ T_AccessPoint* wld_th_vap_createVap(amxb_bus_ctx_t* const bus_ctx, wld_th_mockVe
 
 int wld_th_vap_status(T_AccessPoint* pAP) {
     assert_non_null(pAP);
-    return pAP->enable;
+    return wld_ap_hasStackEnabled(pAP);
 }
 
 swl_rc_ne wld_th_vap_getStationStats(T_AccessPoint* pAP) {

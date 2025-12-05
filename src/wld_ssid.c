@@ -106,6 +106,7 @@ static void s_setEnable_internal(T_SSID* pSSID, bool enable) {
 
 
 bool wld_ssid_getIntfEnable(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, false, ME, "NULL");
     if(pSSID->AP_HOOK != NULL) {
         T_AccessPoint* pAP = pSSID->AP_HOOK;
         return pAP->enable;
@@ -121,6 +122,7 @@ bool wld_ssid_getIntfEnable(T_SSID* pSSID) {
 
 
 amxd_object_t* wld_ssid_getIntfObject(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, NULL, ME, "NULL");
     if(pSSID->AP_HOOK != NULL) {
         T_AccessPoint* pAP = pSSID->AP_HOOK;
         return pAP->pBus;
@@ -161,6 +163,60 @@ static void s_syncEnable (amxp_timer_t* timer _UNUSED, void* priv) {
     }
 
     SAH_TRACEZ_OUT(ME);
+}
+
+/*
+ * @brief checks whether SSID and referencing AP/EP will be both enabled
+ * @param pSSID SSID context
+ * @param enable New SSID enabling value
+ * @return bool true when SSID and AP/EP will be both enabled
+ */
+static bool s_checkEnableWithRef(T_SSID* pSSID, bool enable) {
+    return (enable && wld_ssid_getIntfEnable(pSSID));
+}
+
+/*
+ * @brief returns whether SSID and referencing AP/EP are currently both enabled
+ * @param pSSID SSID context
+ * @return bool true when SSID and AP/EP are both enabled
+ */
+bool wld_ssid_isEnabledWithRef(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, false, ME, "NULL");
+    return (pSSID->enable && wld_ssid_getIntfEnable(pSSID));
+}
+
+/*
+ * @brief returns whether whole SSID stack ((AP/EP)+SSID+Radio) is enabled
+ * @param pSSID SSID context
+ * @return bool true when SSID stack is enabled
+ */
+bool wld_ssid_hasStackEnabled(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, false, ME, "NULL");
+    T_Radio* pRad = (T_Radio*) pSSID->RADIO_PARENT;
+    ASSERTI_NOT_NULL(pRad, false, ME, "%s: No referenced radio", pSSID->Name);
+    return (pRad->enable && wld_ssid_isEnabledWithRef(pSSID));
+}
+
+/*
+ * @brief apply ssid enable to referencing AP/EP
+ * @param bool combEnable Combined enabling value
+ * @param bool enable SSID's own enabling value
+ * @return - SWL_RC_OK on success, error code otherwise
+ */
+swl_rc_ne wld_ssid_applyEnable(T_SSID* pSSID, bool combEnable, bool enable) {
+    ASSERTS_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
+    T_AccessPoint* pAP = pSSID->AP_HOOK;
+    T_EndPoint* pEP = pSSID->ENDP_HOOK;
+    swl_rc_ne rc = SWL_RC_ERROR;
+    if(pAP != NULL) {
+        rc = wld_ap_applyEnable(pAP, combEnable, pAP->enable);
+    } else if(pEP != NULL) {
+        rc = wld_endpoint_applyEnable(pEP, combEnable, pEP->enable);
+    }
+
+    pSSID->enable = enable;
+
+    return rc;
 }
 
 // Manually trigger the enable sync. This allows for easier direct testing so loops or accidental ping pong does not occur.
@@ -639,9 +695,17 @@ bool wld_ssid_hasMloSupport(T_SSID* pSSID) {
     return false;
 }
 
+bool wld_ssid_isSyncEnablePending(T_SSID* pSSID) {
+    ASSERTS_NOT_NULL(pSSID, false, ME, "NULL");
+    if((amxp_timer_get_state(pSSID->enableSyncTimer) == amxp_timer_started) ||
+       (amxp_timer_get_state(pSSID->enableSyncTimer) == amxp_timer_running)) {
+        return true;
+    }
+    return false;
+}
 
-void wld_ssid_syncEnable(T_SSID* pSSID, bool toIntf) {
-    ASSERT_NOT_NULL(pSSID, , ME, "NULL");
+swl_rc_ne wld_ssid_syncEnable(T_SSID* pSSID, bool toIntf) {
+    ASSERT_NOT_NULL(pSSID, SWL_RC_INVALID_PARAM, ME, "NULL");
     bool otherEnable = wld_ssid_getIntfEnable(pSSID);
 
     SAH_TRACEZ_INFO(ME, "%s: check do sync to SSID %u %u - %s",
@@ -649,22 +713,22 @@ void wld_ssid_syncEnable(T_SSID* pSSID, bool toIntf) {
 
     if(otherEnable == pSSID->enable) {
         amxp_timer_stop(pSSID->enableSyncTimer);
-        return;
+        return SWL_RC_DONE;
     }
 
     if(!wld_config_isEnableSyncNeeded(toIntf)) {
-        return;
+        return SWL_RC_NOT_AVAILABLE;
     }
 
     pSSID->syncEnableToIntf = toIntf;
 
     SAH_TRACEZ_INFO(ME, "%s: do sync to SSID %u", pSSID->Name, otherEnable);
-    if((amxp_timer_get_state(pSSID->enableSyncTimer) == amxp_timer_started) ||
-       (amxp_timer_get_state(pSSID->enableSyncTimer) == amxp_timer_running)) {
-        return;
+    if(wld_ssid_isSyncEnablePending(pSSID)) {
+        return SWL_RC_CONTINUE;
     }
 
     amxp_timer_start(pSSID->enableSyncTimer, 1);
+    return SWL_RC_OK;
 }
 
 
@@ -697,9 +761,19 @@ static void s_setEnable_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_para
     ASSERTI_NOT_EQUALS(newEnable, pSSID->enable, , ME, "%s: set to same enable %d", pSSID->Name, newEnable);
 
 
-    SAH_TRACEZ_INFO(ME, "%s set SSID Enable %u", pSSID->Name, newEnable);
+    bool newCombEna = s_checkEnableWithRef(pSSID, newEnable);
+    SAH_TRACEZ_INFO(ME, "%s set SSID Enable %u (comb %u)", pSSID->Name, newEnable, newCombEna);
     s_setEnable_internal(pSSID, newEnable);
-    wld_ssid_syncEnable(pSSID, true);
+    swl_rc_ne rc = wld_ssid_syncEnable(pSSID, true);
+
+    /*
+     * if sync is not supported, or already happened,
+     * then apply combined enable immediately
+     * otherwise, wait for sync to be done
+     */
+    if((rc == SWL_RC_NOT_AVAILABLE) || (rc == SWL_RC_DONE)) {
+        wld_ssid_applyEnable(pSSID, newCombEna, newEnable);
+    }
 
     SAH_TRACEZ_OUT(ME);
 }
@@ -1132,8 +1206,7 @@ void syncData_SSID2OBJ(amxd_object_t* object, T_SSID* pS, int set) {
                                 savedMacVar);
         }
 
-        if((amxp_timer_get_state(pS->enableSyncTimer) != amxp_timer_started) &&
-           (amxp_timer_get_state(pS->enableSyncTimer) != amxp_timer_running)) {
+        if(!wld_ssid_isSyncEnablePending(pS)) {
             s_setEnable_pwf(NULL, object,
                             amxd_object_get_param_def(object, "Enable"),
                             amxd_object_get_param_value(object, "Enable"));

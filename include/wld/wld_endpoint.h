@@ -73,6 +73,9 @@ void wld_endpoint_setProfile_ocf(void* priv, amxd_object_t* object, const amxc_v
 void wld_endpoint_setCurrentProfile(amxd_object_t* endpointObject, T_EndPointProfile* Profile);
 void wld_endpoint_setProfileSecurity_ocf(void* priv, amxd_object_t* object, const amxc_var_t* const newParamValues);
 
+bool wld_endpoint_isEnabledWithRef(T_EndPoint* pEP);
+bool wld_endpoint_hasStackEnabled(T_EndPoint* pEP);
+swl_rc_ne wld_endpoint_applyEnable(T_EndPoint* pEP, bool combEnable, bool enable);
 bool wld_endpoint_isReady(T_EndPoint* pEP);
 bool wld_endpoint_updateStats(amxd_object_t* obj, T_EndPointStats* stats);
 void wld_endpoint_resetStats(T_EndPoint* pEP);

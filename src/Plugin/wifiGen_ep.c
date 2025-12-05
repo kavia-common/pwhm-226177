@@ -94,7 +94,7 @@ static void s_updateStaMode(T_EndPoint* pEP) {
     ASSERT_NOT_NULL(pEP, , ME, "NULL");
     T_Radio* pRad = pEP->pRadio;
     ASSERT_NOT_NULL(pRad, , ME, "NULL");
-    bool isRadSTA = (pRad->isSTASup && pEP->enable);
+    bool isRadSTA = (pRad->isSTASup && wld_endpoint_isEnabledWithRef(pEP));
     swl_typeBool_commitObjectParam(pRad->pBus, "STA_Mode", isRadSTA);
 }
 

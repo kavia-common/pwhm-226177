@@ -686,7 +686,7 @@ static amxd_status_t s_initiateWPS(T_AccessPoint* pAP, amxc_var_t* retval, swl_r
         *pRc = SWL_RC_INVALID_STATE;
         return s_setCommandReply(retval, SWL_USP_CMD_STATUS_ERROR_NOT_READY, amxd_status_unknown_error);
     }
-    if(!(pAP->enable && pAP->SSIDAdvertisementEnabled && pAP->WPS_Enable)) {
+    if(!(wld_ap_hasStackEnabled(pAP) && pAP->SSIDAdvertisementEnabled && pAP->WPS_Enable)) {
         SAH_TRACEZ_ERROR(ME, "%s VAP, SSIDADV or WPS enable are NOT TRUE (%d,%d,%d)",
                          pAP->alias,
                          pAP->enable,

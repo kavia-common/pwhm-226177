@@ -555,23 +555,24 @@ swl_rc_ne wifiGen_hapd_syncVapStates(T_Radio* pRad) {
         if(!wld_wpaCtrlInterface_isReady(pAP->wpaCtrlInterface) || (pAP->index <= 0) || (pAP->pBus == NULL)) {
             continue;
         }
-        if((!pAP->enable) &&
-           (pAP->pFA->mfn_wvap_enable(pAP, pAP->enable, GET | DIRECT) > 0)) {
-            if(pAP->pFA->mfn_wvap_enable(pAP, pAP->enable, SET | DIRECT) == 0) {
+        bool enable = wld_ap_isEnabledWithRef(pAP);
+        if((!enable) &&
+           (pAP->pFA->mfn_wvap_enable(pAP, enable, GET | DIRECT) > 0)) {
+            if(pAP->pFA->mfn_wvap_enable(pAP, enable, SET | DIRECT) == 0) {
                 SAH_TRACEZ_INFO(ME, "%s: sync disable vap", pAP->alias);
             }
-        } else if((pAP->enable) &&
+        } else if((enable) &&
                   (pAP->pFA->mfn_wvap_status(pAP) == 0) && (detRadState == CM_RAD_UP)) {
             //need to restart broadcasting the enabled bss,
             //that were potentially stopped by hapd when disabling one AP
             SAH_TRACEZ_INFO(ME, "%s: sync enable vap", pAP->alias);
-            pAP->pFA->mfn_wvap_enable(pAP, pAP->enable, SET | DIRECT);
+            pAP->pFA->mfn_wvap_enable(pAP, enable, SET | DIRECT);
             wld_secDmn_action_rc_ne rc;
             /*
              * first, set dyn ena/disabling vap params, before applying any action
              */
-            if((rc = wld_ap_hostapd_setEnableVap(pAP, pAP->enable)) < SECDMN_ACTION_OK_DONE) {
-                SAH_TRACEZ_ERROR(ME, "%s: fail to save enable %d rc %d", pAP->alias, pAP->enable, rc);
+            if((rc = wld_ap_hostapd_setEnableVap(pAP, enable)) < SECDMN_ACTION_OK_DONE) {
+                SAH_TRACEZ_ERROR(ME, "%s: fail to save enable %d rc %d", pAP->alias, enable, rc);
             }
 
             if(!wld_ap_hostapd_updateBeacon(pAP, "syncAp")) {

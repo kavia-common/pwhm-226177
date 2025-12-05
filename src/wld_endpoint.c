@@ -978,6 +978,59 @@ void _wld_ep_setWpsConf_ocf(const char* const sig_name,
     swla_dm_procObjEvtOfLocalDm(&sEpWpsDmHdlrs, sig_name, data, priv);
 }
 
+/*
+ * @brief checks whether EP and referenced ssid will be both enabled
+ * @param pEP EndPoint context
+ * @param enable New EP enabling value
+ * @return bool true when EP and refSSID will be both enabled
+ */
+static bool s_checkEnableWithRef(T_EndPoint* pEP, bool enable) {
+    ASSERTS_NOT_NULL(pEP, false, ME, "NULL");
+    return (enable && pEP->pSSID && pEP->pSSID->enable);
+}
+
+/*
+ * @brief returns whether EP and reference ssid are currently both enabled
+ * @param pEP EndPoint context
+ * @return bool true when EP and refSSID are both enabled
+ */
+bool wld_endpoint_isEnabledWithRef(T_EndPoint* pEP) {
+    ASSERTS_NOT_NULL(pEP, false, ME, "NULL");
+    return wld_ssid_isEnabledWithRef(pEP->pSSID);
+}
+
+/*
+ * @brief returns whether whole EP stack (EP+SSID+Radio) is enabled
+ * @param pEP EndPoint context
+ * @return bool true when EP stack is enabled
+ */
+bool wld_endpoint_hasStackEnabled(T_EndPoint* pEP) {
+    ASSERTS_NOT_NULL(pEP, false, ME, "NULL");
+    return wld_ssid_hasStackEnabled(pEP->pSSID);
+}
+
+/*
+ * @brief apply endpoint enable (combined EP+SSID), and save it (intf EP)
+ * @param bool combEnable Combined enabling value of EP and referenced SSID
+ * @param bool enable EP's own enabling value
+ * @return - SWL_RC_OK on success, error code otherwise
+ */
+swl_rc_ne wld_endpoint_applyEnable(T_EndPoint* pEP, bool combEnable, bool enable) {
+    ASSERTS_NOT_NULL(pEP, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    /* set enable flag */
+    pEP->pFA->mfn_wendpoint_enable(pEP, combEnable);
+
+    wld_endpoint_reconfigure(pEP);
+
+    /* when idle : kick the FSM state machine to handle the new state */
+    wld_autoCommitMgr_notifyEpEdit(pEP);
+
+    //restore ap ena value, in case it was overwritten with comb ena
+    pEP->enable = enable;
+
+    return SWL_RC_OK;
+}
 
 /**
  * Check whether endpoint is ready for enable.
@@ -991,9 +1044,8 @@ void _wld_ep_setWpsConf_ocf(const char* const sig_name,
 bool wld_endpoint_isReady(T_EndPoint* pEP) {
     ASSERT_NOT_NULL(pEP, false, ME, "NULL");
     uint32_t mask = 0;
-    T_Radio* pRad = pEP->pRadio;
     W_SWL_BIT_WRITE(mask, 0, !pEP->enable);
-    W_SWL_BIT_WRITE(mask, 1, !pRad->enable);
+    W_SWL_BIT_WRITE(mask, 1, !wld_endpoint_hasStackEnabled(pEP));
     W_SWL_BIT_WRITE(mask, 2, pEP->currentProfile == NULL);
     if(pEP->currentProfile != NULL) {
         W_SWL_BIT_WRITE(mask, 3, !pEP->currentProfile->enable);
@@ -1034,16 +1086,20 @@ static void s_setEnable_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_para
     if(newEnable) {
         syncData_OBJ2EndPoint(object);
     }
+    bool newCombEna = s_checkEnableWithRef(pEP, newEnable);
+    SAH_TRACEZ_INFO(ME, "%s set EP Enable %u (comb %u)", pEP->alias, newEnable, newCombEna);
     pEP->enable = newEnable;
 
-    /* set enable flag */
-    pRad->pFA->mfn_wendpoint_enable(pEP, newEnable);
+    swl_rc_ne rc = wld_ssid_syncEnable(pEP->pSSID, false);
 
-    wld_endpoint_reconfigure(pEP);
-
-    /* when idle : kick the FSM state machine to handle the new state */
-    wld_autoCommitMgr_notifyEpEdit(pEP);
-    wld_ssid_syncEnable(pEP->pSSID, false);
+    /*
+     * if sync is not supported, or already happened,
+     * then apply combined enable immediately
+     * otherwise, wait for sync to be done
+     */
+    if((rc == SWL_RC_NOT_AVAILABLE) || (rc == SWL_RC_DONE)) {
+        wld_endpoint_applyEnable(pEP, newCombEna, newEnable);
+    }
 
     SAH_TRACEZ_OUT(ME);
 }
@@ -1301,9 +1357,7 @@ void wld_endpoint_sync_connection(T_EndPoint* pEP, bool connected, wld_epError_e
     SAH_TRACEZ_INFO(ME, "%s: enable %d; connected; %d error %d",
                     pEP->alias, pEP->enable, connected, error);
 
-    T_Radio* pR = pEP->pRadio;
-
-    if(!pEP->enable || !pR->enable) {
+    if(!wld_endpoint_hasStackEnabled(pEP)) {
         connectionStatus = EPCS_DISABLED;
     } else if(error) {
         connectionStatus = (error == EPE_SSID_NOT_FOUND) || (error == EPE_ERROR_MISCONFIGURED) ? EPCS_IDLE : EPCS_ERROR;
@@ -1344,7 +1398,7 @@ amxd_status_t _pushButton(amxd_object_t* obj,
     SAH_TRACEZ_INFO(ME, "pushButton called for EP %s", pEP->Name);
 
     T_Radio* pR = pEP->pRadio;
-    if(!(pEP->enable && pEP->WPS_Enable && (wld_rad_hasOnlyActiveEP(pR) || (pR->status == RST_UP)))) {
+    if(!(wld_endpoint_hasStackEnabled(pEP) && pEP->WPS_Enable && (wld_rad_hasOnlyActiveEP(pR) || (pR->status == RST_UP)))) {
         SAH_TRACEZ_ERROR(ME, "Radio not up, endpoint not enabled or WPS not enabled %u %u %u %u",
                          pEP->enable, pEP->WPS_Enable, wld_rad_hasOnlyActiveEP(pR), pR->status);
         return amxd_status_unknown_error;
@@ -1882,7 +1936,7 @@ static void endpoint_wps_pbc_delayed_time_handler(amxp_timer_t* timer, void* use
 
     // In case we're enrollee (STA mode and no AP active) we accept Radio RST_DORMANT status.
     // As the Radio is UP but passively on a DFS channel.
-    if(pEP->enable && pEP->WPS_Enable && (wld_rad_hasOnlyActiveEP(pR) || (pR->status == RST_UP))) {
+    if(wld_endpoint_hasStackEnabled(pEP) && pEP->WPS_Enable && (wld_rad_hasOnlyActiveEP(pR) || (pR->status == RST_UP))) {
         swl_rc_ne ret = endpoint_wps_start(pEP, pEP->WPS_PBC_Delay.call_id, pEP->WPS_PBC_Delay.args);
         if(swl_rc_isOk(ret)) {
             cmdStatus = SWL_USP_CMD_STATUS_SUCCESS;

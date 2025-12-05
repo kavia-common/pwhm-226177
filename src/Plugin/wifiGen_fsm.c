@@ -444,11 +444,8 @@ static bool s_doEnableAp(T_AccessPoint* pAP, T_Radio* pRad) {
     ASSERTI_TRUE(pRad->enable, true, ME, "%s: radio disabled", pRad->Name);
     ASSERTI_TRUE(wifiGen_hapd_isAlive(pRad), true, ME, "%s: hostapd stopped", pRad->Name);
     T_AccessPoint* pMainAPCur = wld_rad_hostapd_getRunMainVap(pRad);
-    if(pMainAPCur == NULL) {
-        SAH_TRACEZ_WARNING(ME, "%s: no main vap iface for rad %s", pAP->alias, pRad->Name);
-    }
-
-    bool enable = pAP->enable;
+    ASSERT_NOT_NULL(pMainAPCur, true, ME, "%s: no main vap iface for rad %s", pAP->alias, pRad->Name);
+    bool enable = wld_ap_isEnabledWithRef(pAP);
     SAH_TRACEZ_INFO(ME, "%s: enable vap %d", pAP->alias, enable);
     wld_secDmn_action_rc_ne rc;
     T_AccessPoint* pMainAPCfg = wld_rad_hostapd_getCfgMainVap(pRad);
@@ -990,8 +987,9 @@ static bool s_doUpdateBeacon(T_AccessPoint* pAP, T_Radio* pRad _UNUSED) {
     ASSERTS_NOT_NULL(pAP, true, ME, "NULL");
     ASSERTI_TRUE(wld_wpaCtrlInterface_isReady(pAP->wpaCtrlInterface), true, ME, "%s: wpaCtrl disconnected", pAP->alias);
     chanmgt_rad_state detRadState = CM_RAD_UNKNOWN;
-    if((!pAP->enable) || (wifiGen_hapd_getRadState(pRad, &detRadState) < SWL_RC_OK) || (detRadState != CM_RAD_UP)) {
-        SAH_TRACEZ_INFO(ME, "%s: missing enable conds apE:%d radDetS:%d", pAP->alias, pAP->enable, detRadState);
+    bool apStackEna = wld_ap_hasStackEnabled(pAP);
+    if((!apStackEna) || (wifiGen_hapd_getRadState(pRad, &detRadState) < SWL_RC_OK) || (detRadState != CM_RAD_UP)) {
+        SAH_TRACEZ_INFO(ME, "%s: missing enable conds apE:%d stackE:%d radDetS:%d", pAP->alias, pAP->enable, apStackEna, detRadState);
         return true;
     }
     SAH_TRACEZ_INFO(ME, "%s: start/update beaconing", pAP->alias);
@@ -1037,8 +1035,8 @@ static bool s_doSyncState(T_Radio* pRad) {
     return true;
 }
 
-static bool s_doEnableEp(T_EndPoint* pEP, T_Radio* pRad) {
-    bool enaConds = (pRad->enable && pEP->enable && (pEP->index > 0));
+static bool s_doEnableEp(T_EndPoint* pEP, T_Radio* pRad _UNUSED) {
+    bool enaConds = (wld_endpoint_hasStackEnabled(pEP) && (pEP->index > 0));
     wld_endpoint_setConnectionStatus(pEP, enaConds ? EPCS_IDLE : EPCS_DISABLED, pEP->error);
     ASSERTS_TRUE(enaConds, true, ME, "%d: ep not ready", pEP->Name);
     wld_endpoint_resetStats(pEP);

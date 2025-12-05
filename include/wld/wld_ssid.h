@@ -69,7 +69,12 @@ void wld_ssid_setStatus(T_SSID* pSSID, wld_status_e status, bool commit);
 void syncData_SSID2OBJ(amxd_object_t* object, T_SSID* pR, int set);
 
 void wld_ssid_cleanAll();
-void wld_ssid_syncEnable(T_SSID* pSSID, bool syncToIntf);
+swl_rc_ne wld_ssid_syncEnable(T_SSID* pSSID, bool syncToIntf);
+bool wld_ssid_isSyncEnablePending(T_SSID* pSSID);
+bool wld_ssid_getIntfEnable(T_SSID* pSSID);
+amxd_object_t* wld_ssid_getIntfObject(T_SSID* pSSID);
+bool wld_ssid_isEnabledWithRef(T_SSID* pSSID);
+bool wld_ssid_hasStackEnabled(T_SSID* pSSID);
 bool wld_ssid_isSSIDConfigured(T_SSID* pSSID);
 void wld_ssid_generateBssid(T_Radio* pRad, T_AccessPoint* pAP, uint32_t apIndex, swl_macBin_t* macBin);
 void wld_ssid_setBssid(T_SSID* pSSID, swl_macBin_t* macBin);

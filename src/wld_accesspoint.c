@@ -1892,6 +1892,57 @@ static void s_setDiscoveryMethod_pwf(void* priv _UNUSED, amxd_object_t* object, 
     SAH_TRACEZ_OUT(ME);
 }
 
+/*
+ * @brief checks whether AP and referenced ssid will be both enabled
+ * @param pAP AccessPoint context
+ * @param enable New AP enabling value
+ * @return bool true when AP and refSSID will be both enabled
+ */
+static bool s_checkEnableWithRef(T_AccessPoint* pAP, bool enable) {
+    ASSERTS_NOT_NULL(pAP, false, ME, "NULL");
+    return (enable && pAP->pSSID && pAP->pSSID->enable);
+}
+
+/*
+ * @brief returns whether AP and reference ssid are currently both enabled
+ * @param pAP AccessPoint context
+ * @return bool true when AP and refSSID are both enabled
+ */
+bool wld_ap_isEnabledWithRef(T_AccessPoint* pAP) {
+    ASSERTS_NOT_NULL(pAP, false, ME, "NULL");
+    return wld_ssid_isEnabledWithRef(pAP->pSSID);
+}
+
+/*
+ * @brief returns whether whole AP stack (AP+SSID+Radio) is enabled
+ * @param pAP AccessPoint context
+ * @return bool true when AP stack is enabled
+ */
+bool wld_ap_hasStackEnabled(T_AccessPoint* pAP) {
+    ASSERTS_NOT_NULL(pAP, false, ME, "NULL");
+    return wld_ssid_hasStackEnabled(pAP->pSSID);
+}
+
+/*
+ * @brief apply ap enable (combined AP+SSID), and save it (intf AP)
+ * @param bool combEnable Combined enabling value of AP and referenced SSID
+ * @param bool enable AP's own enabling value
+ * @return - SWL_RC_OK on success, error code otherwise
+ */
+swl_rc_ne wld_ap_applyEnable(T_AccessPoint* pAP, bool combEnable, bool enable) {
+    ASSERTS_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
+
+    SAH_TRACEZ_INFO(ME, "%s: apply AP enable (combE: %d, apE:%d)", pAP->alias, combEnable, enable);
+
+    pAP->pFA->mfn_wvap_enable(pAP, combEnable, SET);
+    wld_autoCommitMgr_notifyVapEdit(pAP);
+
+    //restore ap ena value, in case it was overwritten with comb ena
+    pAP->enable = enable;
+
+    return SWL_RC_OK;
+}
+
 static void s_setApEnable_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_param_t* param, const amxc_var_t* const newValue _UNUSED) {
     SAH_TRACEZ_IN(ME);
 
@@ -1911,10 +1962,19 @@ static void s_setApEnable_pwf(void* priv _UNUSED, amxd_object_t* object, amxd_pa
     ASSERTI_NOT_EQUALS(newEnable, pAP->enable, , ME, "%s: set to same enable %d", pAP->alias, newEnable);
 
 
-    pAP->pFA->mfn_wvap_enable(pAP, newEnable, SET);
+    bool newCombEna = s_checkEnableWithRef(pAP, newEnable);
+    SAH_TRACEZ_INFO(ME, "%s set AP Enable %u (comb %u)", pAP->alias, newEnable, newCombEna);
     pAP->enable = newEnable;
-    wld_autoCommitMgr_notifyVapEdit(pAP);
-    wld_ssid_syncEnable(pAP->pSSID, false);
+    swl_rc_ne rc = wld_ssid_syncEnable(pAP->pSSID, false);
+
+    /*
+     * if sync is not supported, or already happened,
+     * then apply combined enable immediately
+     * otherwise, wait for sync to be done
+     */
+    if((rc == SWL_RC_NOT_AVAILABLE) || (rc == SWL_RC_DONE)) {
+        wld_ap_applyEnable(pAP, newCombEna, newEnable);
+    }
 
     SAH_TRACEZ_OUT(ME);
 }
@@ -2544,7 +2604,7 @@ bool wld_ap_getDesiredState(T_AccessPoint* pAp) {
     ASSERT_NOT_NULL(pAp, false, ME, "Null AP");
     T_Radio* pR = pAp->pRadio;
     ASSERT_NOT_NULL(pR, false, ME, "Null radio");
-    if(!pAp->enable) {
+    if(!wld_ap_isEnabledWithRef(pAp)) {
         return false;
     }
     if(!wld_rad_isUpExt(pR)) {

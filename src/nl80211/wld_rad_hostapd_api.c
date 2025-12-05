@@ -547,7 +547,7 @@ swl_trl_e wld_rad_hostapd_getCfgParamSupp(T_Radio* pRad, const char* param) {
  *              false otherwise (AP invalid, or disabled, or not yet loaded)
  */
 static bool s_isApLoaded(T_AccessPoint* pAP) {
-    return (pAP && pAP->enable &&
+    return (pAP && wld_ap_isEnabledWithRef(pAP) &&
             wld_wpaCtrlInterface_checkConnectionPath(pAP->wpaCtrlInterface));
 }
 

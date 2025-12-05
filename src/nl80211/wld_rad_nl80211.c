@@ -655,7 +655,7 @@ swl_rc_ne wld_rad_nl80211_getChannel(T_Radio* pRadio, swl_chanspec_t* pChanSpec)
      */
     T_AccessPoint* pAP = NULL;
     wld_rad_forEachAp(pAP, pRadio) {
-        if((pAP->enable) &&
+        if((wld_ssid_isEnabledWithRef(pAP->pSSID)) &&
            (wld_ap_nl80211_getInterfaceInfo(pAP, &ifaceInfo) >= SWL_RC_OK) &&
            ((rc = wld_nl80211_getChanSpecFromIfaceInfo(pChanSpec, &ifaceInfo)) >= SWL_RC_OK)) {
             return rc;
@@ -663,7 +663,7 @@ swl_rc_ne wld_rad_nl80211_getChannel(T_Radio* pRadio, swl_chanspec_t* pChanSpec)
     }
     T_EndPoint* pEP;
     wld_rad_forEachEp(pEP, pRadio) {
-        if((pEP->enable) &&
+        if((wld_ssid_isEnabledWithRef(pEP->pSSID)) &&
            (wld_ep_nl80211_getInterfaceInfo(pEP, &ifaceInfo) >= SWL_RC_OK) &&
            ((rc = wld_nl80211_getChanSpecFromIfaceInfo(pChanSpec, &ifaceInfo)) >= SWL_RC_OK)) {
             return rc;

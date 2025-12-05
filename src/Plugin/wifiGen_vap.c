@@ -805,7 +805,7 @@ static swl_rc_ne s_reloadApNeighbors(T_AccessPoint* pAP) {
 swl_rc_ne wifiGen_vap_postUpActions(T_AccessPoint* pAP) {
     ASSERTS_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
 
-    if(!swl_rc_isOk(wld_autoNeighAdd_vapSetDelNeighbourAP(pAP, pAP->enable))) {
+    if(!swl_rc_isOk(wld_autoNeighAdd_vapSetDelNeighbourAP(pAP, wld_ap_isEnabledWithRef(pAP)))) {
         SAH_TRACEZ_NOTICE(ME, "failed setting AP to neighbor list of other APs");
     }
     if(!swl_rc_isOk(s_reloadApNeighbors(pAP))) {
@@ -828,7 +828,7 @@ swl_rc_ne wifiGen_vap_postUpActions(T_AccessPoint* pAP) {
 swl_rc_ne wifiGen_vap_postDownActions(T_AccessPoint* pAP) {
     ASSERTS_NOT_NULL(pAP, SWL_RC_INVALID_PARAM, ME, "NULL");
 
-    if(!swl_rc_isOk(wld_autoNeighAdd_vapSetDelNeighbourAP(pAP, pAP->enable))) {
+    if(!swl_rc_isOk(wld_autoNeighAdd_vapSetDelNeighbourAP(pAP, wld_ap_isEnabledWithRef(pAP)))) {
         SAH_TRACEZ_NOTICE(ME, "failed deleting AP from neighbor list of other APs");
     }
     return SWL_RC_OK;
