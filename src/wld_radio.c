@@ -4562,7 +4562,17 @@ amxd_status_t _getMaxTransmitPowerdBm(amxd_object_t* object,
     ASSERT_TRUE(wld_rad_hasChannel(pR, channel), amxd_status_invalid_arg, ME, "%s : invalid chan %d", pR->Name, channel);
 
     int32_t dbm;
-    int rc = pR->pFA->mfn_wrad_getMaxTxPow_dBm(pR, channel, &dbm);
+    swl_rc_ne rc;
+    /*
+     * PPW-1278: provisory workaround for MxL kernel crash:
+     * force using default implem to getMaxTxPow_dBm per channel
+     */
+    if(pR->vendor && swl_str_matches(pR->vendor->name, "whm-mxl")) {
+        CALL_NL80211_FTA_RET(rc, mfn_wrad_getMaxTxPow_dBm, pR, channel, &dbm);
+    } else {
+        rc = pR->pFA->mfn_wrad_getMaxTxPow_dBm(pR, channel, &dbm);
+    }
+
     if(rc != SWL_RC_OK) {
         SAH_TRACEZ_ERROR(ME, "Failed to get max txpower");
         return amxd_status_unknown_error;
