@@ -2528,8 +2528,9 @@ swl_rc_ne wld_util_copyScanInfoFromIEs(wld_scanResultSSID_t* pResult, swl_wirele
     }
     if(pWirelessDevIE->operChanInfo.bandwidth != SWL_BW_AUTO) {
         pResult->bandwidth = swl_chanspec_bwToInt(pWirelessDevIE->operChanInfo.bandwidth);
+        pResult->extensionChannel = pWirelessDevIE->operChanInfo.extensionHigh;
     }
-    swl_chanspec_t chanSpec = SWL_CHANSPEC_NEW(pResult->channel, pWirelessDevIE->operChanInfo.bandwidth, pWirelessDevIE->operChanInfo.band);
+    swl_chanspec_t chanSpec = SWL_CHANSPEC_NEW_EXT(pResult->channel, pWirelessDevIE->operChanInfo.bandwidth, pWirelessDevIE->operChanInfo.band, pResult->extensionChannel, 0);
     pResult->centreChannel = swl_chanspec_getCentreChannel(&chanSpec);
     swl_operatingClass_t operClass = swl_chanspec_getOperClass(&chanSpec);
     if(operClass > 0) {
@@ -2538,8 +2539,18 @@ swl_rc_ne wld_util_copyScanInfoFromIEs(wld_scanResultSSID_t* pResult, swl_wirele
     pResult->ssidLen = SWL_MIN((uint8_t) sizeof(pResult->ssid), pWirelessDevIE->ssidLen);
     memcpy(pResult->ssid, pWirelessDevIE->ssid, pResult->ssidLen);
     pResult->operatingStandards = pWirelessDevIE->operatingStandards;
+    pResult->supportedStandards = pWirelessDevIE->supportedStandards;
     pResult->secModeEnabled = pWirelessDevIE->secModeEnabled;
     pResult->WPS_ConfigMethodsEnabled = pWirelessDevIE->WPS_ConfigMethodsEnabled;
+    pResult->dtimPeriod = pWirelessDevIE->dtimPeriod;
+    pResult->basicDataTransferRates = pWirelessDevIE->basicDataTransferRates;
+    pResult->supportedDataTransferRates = pWirelessDevIE->supportedDataTransferRates;
+
+    if((pWirelessDevIE->channelUtilization != 0) || (pWirelessDevIE->stationCount != 0)) {
+        //IE has BSSLOAD element
+        pResult->channelUtilization = pWirelessDevIE->channelUtilization;
+        pResult->stationCount = pWirelessDevIE->stationCount;
+    }
 
     // NSS (Number of Spatial Streams)
     pResult->supportedNss = SWL_MAX(1, SWL_MAX(pWirelessDevIE->maxRxSpatialStreamsSupported, pWirelessDevIE->maxTxSpatialStreamsSupported));
