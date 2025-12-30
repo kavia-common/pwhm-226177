@@ -1,0 +1,1464 @@
+2025-12-30 03:48:28,046 - Knowledge - INFO - Created shared MongoDB connection pool
+2025-12-30 03:48:28,401 - Knowledge - INFO - Starting Knowledge Graph processing with 20 threads
+2025-12-30 03:48:28,620 - Knowledge - INFO - Initial configuration: chunk_size=65536, max_cache_size=500
+2025-12-30 03:48:28,793 - Knowledge - INFO - Knowledge Graph concurrency configuration: workers=20, max_batch_size=10, max_concurrent_llm_calls=50
+2025-12-30 03:48:30,443 - Knowledge - INFO - 🔍 _load_persisted_knowledge called - checking for Redis optimization
+2025-12-30 03:48:30,667 - Knowledge - WARNING - ❌ load_from_redis method not found - Redis support not attached
+2025-12-30 03:48:30,829 - Knowledge - INFO - load persisted knowledge: begin
+2025-12-30 03:48:31,005 - Knowledge - INFO - Loaded 0 files from persisted knowledge
+2025-12-30 03:48:31,184 - Knowledge - INFO - load persisted knowledge: end
+2025-12-30 03:48:31,402 - Knowledge - WARNING - No persisted knowledge found. Files will be queued during start()
+2025-12-30 03:48:31,606 - Knowledge - INFO - Redis support added with prefix knowledge:b05376m:
+2025-12-30 03:48:32,152 - Knowledge - INFO - Starting knowledge initialization for ID: l3h7Ad-b05376m
+2025-12-30 03:48:32,336 - Knowledge - INFO - 🔍 Checking Redis for build_id: b05376m
+2025-12-30 03:48:32,555 - Knowledge - INFO - 🔍 Full session ID: l3h7Ad-b05376m
+2025-12-30 03:48:32,717 - Knowledge - INFO - 🔍 Redis prefix will be: knowledge:b05376m:
+2025-12-30 03:48:32,893 - Knowledge - INFO - 🔍 Using attached load_from_redis() method
+2025-12-30 03:48:33,075 - Knowledge - INFO - 🔍 Attempting to load knowledge from Redis...
+2025-12-30 03:48:33,240 - Knowledge - INFO - 🔍 Using derived instance_id for Redis lookup: b05376m
+2025-12-30 03:48:33,449 - Knowledge - WARNING - ❌ No Redis cache found
+2025-12-30 03:48:33,663 - Knowledge - INFO - 📁 Loading knowledge from disk...
+2025-12-30 03:48:33,878 - Knowledge - INFO - load persisted docinfo: begin
+2025-12-30 03:48:34,070 - Knowledge - INFO - load persisted docinfo: end
+2025-12-30 03:48:34,305 - Knowledge - INFO - 🔍 _load_persisted_knowledge called - checking for Redis optimization
+2025-12-30 03:48:34,540 - Knowledge - INFO - ✅ load_from_redis method found - attempting Redis load
+2025-12-30 03:48:34,717 - Knowledge - INFO - 🔍 Attempting to load knowledge from Redis...
+2025-12-30 03:48:34,898 - Knowledge - INFO - 🔍 Using derived instance_id for Redis lookup: b05376m
+2025-12-30 03:48:35,081 - Knowledge - WARNING - ❌ No Redis cache found
+2025-12-30 03:48:35,268 - Knowledge - INFO - ❌ Redis load returned False - falling back to file loading
+2025-12-30 03:48:35,472 - Knowledge - INFO - load persisted knowledge: begin
+2025-12-30 03:48:35,638 - Knowledge - INFO - Loaded 0 files from persisted knowledge
+2025-12-30 03:48:35,805 - Knowledge - INFO - load persisted knowledge: end
+2025-12-30 03:48:36,027 - Knowledge - INFO - 📁 Disk load complete in 2.20s
+2025-12-30 03:48:36,240 - Knowledge - INFO - Populating ingest queue with source files...
+2025-12-30 03:48:36,636 - Knowledge - INFO - Added 303 files from /app/data/b2c/226177/b05376m/pwhm-226177 to ingest queue
+2025-12-30 03:48:36,807 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 160, Duration: 0ms
+2025-12-30 03:48:37,011 - Knowledge - INFO - Worker kw1 created using shared MongoDB connection pool
+2025-12-30 03:48:37,195 - Knowledge - INFO - knowledge worker kw1 start
+2025-12-30 03:48:37,196 - Knowledge - INFO - Worker kw2 created using shared MongoDB connection pool
+2025-12-30 03:48:37,387 - Knowledge - INFO - [kw1] Queue=303, InProgress=0, PendingWorkers=0/1, Completed=0/303 (0.0%)
+2025-12-30 03:48:37,507 - Knowledge - INFO - knowledge worker kw2 start
+2025-12-30 03:48:37,507 - Knowledge - INFO - Worker kw3 created using shared MongoDB connection pool
+2025-12-30 03:48:37,589 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=303, active_workers=0/2
+2025-12-30 03:48:37,680 - Knowledge - INFO - [kw2] Queue=303, InProgress=0, PendingWorkers=0/2, Completed=0/303 (0.0%)
+2025-12-30 03:48:37,811 - Knowledge - INFO - knowledge worker kw3 start
+2025-12-30 03:48:37,811 - Knowledge - INFO - Worker kw4 created using shared MongoDB connection pool
+2025-12-30 03:48:37,905 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/acl/admin/pwhm.json
+2025-12-30 03:48:37,994 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=303, active_workers=1/3
+2025-12-30 03:48:38,136 - Knowledge - INFO - [kw3] Queue=297, InProgress=0, PendingWorkers=1/3, Completed=0/303 (0.0%)
+2025-12-30 03:48:38,230 - Knowledge - INFO - knowledge worker kw4 start
+2025-12-30 03:48:38,231 - Knowledge - INFO - Worker kw5 created using shared MongoDB connection pool
+2025-12-30 03:48:38,314 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/acl/admin/pwhm.json (ext=.json, size=1552)
+2025-12-30 03:48:38,401 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_mockVendor.c
+2025-12-30 03:48:38,491 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=297, active_workers=2/4
+2025-12-30 03:48:38,619 - Knowledge - INFO - [kw4] Queue=291, InProgress=0, PendingWorkers=2/4, Completed=0/303 (0.0%)
+2025-12-30 03:48:38,717 - Knowledge - INFO - knowledge worker kw5 start
+2025-12-30 03:48:38,717 - Knowledge - INFO - Worker kw6 created using shared MongoDB connection pool
+2025-12-30 03:48:38,808 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/acl/admin/pwhm-internal.json
+2025-12-30 03:48:38,937 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_mockVendor.c (ext=.c, size=6284)
+2025-12-30 03:48:39,019 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_sensing.c
+2025-12-30 03:48:39,105 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=291, active_workers=3/5
+2025-12-30 03:48:39,219 - Knowledge - INFO - [kw5] Queue=285, InProgress=0, PendingWorkers=3/5, Completed=0/303 (0.0%)
+2025-12-30 03:48:39,319 - Knowledge - INFO - knowledge worker kw6 start
+2025-12-30 03:48:39,319 - Knowledge - INFO - Worker kw7 created using shared MongoDB connection pool
+2025-12-30 03:48:39,409 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/acl/admin/pwhm-internal.json (ext=.json, size=331)
+2025-12-30 03:48:39,530 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_radio.h
+2025-12-30 03:48:39,624 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_sensing.c (ext=.c, size=5958)
+2025-12-30 03:48:39,725 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/test_scanSsid.c
+2025-12-30 03:48:39,806 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=285, active_workers=4/6
+2025-12-30 03:48:39,888 - Knowledge - INFO - [kw6] Queue=279, InProgress=0, PendingWorkers=4/6, Completed=0/303 (0.0%)
+2025-12-30 03:48:39,967 - Knowledge - INFO - knowledge worker kw7 start
+2025-12-30 03:48:39,967 - Knowledge - INFO - Worker kw8 created using shared MongoDB connection pool
+2025-12-30 03:48:40,051 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_fsm.c
+2025-12-30 03:48:40,138 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_radio.h (ext=.h, size=5950)
+2025-12-30 03:48:40,251 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_fsm.h
+2025-12-30 03:48:40,345 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/test_scanSsid.c (ext=.c, size=20408)
+2025-12-30 03:48:40,459 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_chanMgt/test_wld_rad_chanMgt.c
+2025-12-30 03:48:40,555 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=279, active_workers=5/7
+2025-12-30 03:48:40,633 - Knowledge - INFO - [kw7] Queue=273, InProgress=0, PendingWorkers=5/7, Completed=0/303 (0.0%)
+2025-12-30 03:48:40,767 - Knowledge - INFO - knowledge worker kw8 start
+2025-12-30 03:48:40,767 - Knowledge - INFO - Worker kw9 created using shared MongoDB connection pool
+2025-12-30 03:48:40,909 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_fsm.c (ext=.c, size=7194)
+2025-12-30 03:48:40,982 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_vap.h
+2025-12-30 03:48:41,106 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_fsm.h (ext=.h, size=4256)
+2025-12-30 03:48:41,201 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-1.txt
+2025-12-30 03:48:41,283 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_chanMgt/test_wld_rad_chanMgt.c (ext=.c, size=39575)
+2025-12-30 03:48:41,392 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad2_base.txt
+2025-12-30 03:48:41,523 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=273, active_workers=6/8
+2025-12-30 03:48:41,615 - Knowledge - INFO - [kw8] Queue=267, InProgress=0, PendingWorkers=6/8, Completed=0/303 (0.0%)
+2025-12-30 03:48:41,694 - Knowledge - INFO - knowledge worker kw9 start
+2025-12-30 03:48:41,694 - Knowledge - INFO - Worker kw10 created using shared MongoDB connection pool
+2025-12-30 03:48:41,805 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_dm.h
+2025-12-30 03:48:41,878 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_vap.h (ext=.h, size=4886)
+2025-12-30 03:48:41,959 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_dm.c
+2025-12-30 03:48:42,071 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-1.txt (ext=.txt, size=9047)
+2025-12-30 03:48:42,192 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testFullScan/test_fullScan.c
+2025-12-30 03:48:42,310 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad2_base.txt (ext=.txt, size=3972)
+2025-12-30 03:48:42,424 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_util/test_wld_util.c
+2025-12-30 03:48:42,505 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=267, active_workers=7/9
+2025-12-30 03:48:42,592 - Knowledge - INFO - [kw9] Queue=261, InProgress=0, PendingWorkers=7/9, Completed=0/303 (0.0%)
+2025-12-30 03:48:42,678 - Knowledge - INFO - knowledge worker kw10 start
+2025-12-30 03:48:42,679 - Knowledge - INFO - Worker kw11 created using shared MongoDB connection pool
+2025-12-30 03:48:42,761 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_dm.h (ext=.h, size=4129)
+2025-12-30 03:48:42,839 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_sensing.h
+2025-12-30 03:48:42,956 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_dm.c (ext=.c, size=7706)
+2025-12-30 03:48:43,072 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-3.txt
+2025-12-30 03:48:43,167 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testFullScan/test_fullScan.c (ext=.c, size=27147)
+2025-12-30 03:48:43,255 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad6_base.txt
+2025-12-30 03:48:43,373 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_util/test_wld_util.c (ext=.c, size=24828)
+2025-12-30 03:48:43,469 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/test_wpaSupp_cfgFile/test_wpaSupp_cfgFile.c
+2025-12-30 03:48:43,550 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=261, active_workers=8/10
+2025-12-30 03:48:43,630 - Knowledge - INFO - [kw10] Queue=255, InProgress=0, PendingWorkers=8/10, Completed=0/303 (0.0%)
+2025-12-30 03:48:43,709 - Knowledge - INFO - knowledge worker kw11 start
+2025-12-30 03:48:43,710 - Knowledge - INFO - Worker kw12 created using shared MongoDB connection pool
+2025-12-30 03:48:43,825 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_ep.h
+2025-12-30 03:48:43,905 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_sensing.h (ext=.h, size=3528)
+2025-12-30 03:48:43,988 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_ep.c
+2025-12-30 03:48:44,069 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-3.txt (ext=.txt, size=10475)
+2025-12-30 03:48:44,166 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/test_radio11be.c
+2025-12-30 03:48:44,255 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad6_base.txt (ext=.txt, size=4242)
+2025-12-30 03:48:44,358 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_fsm/test_wld_fsm.c
+2025-12-30 03:48:44,441 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/test_wpaSupp_cfgFile/test_wpaSupp_cfgFile.c (ext=.c, size=6658)
+2025-12-30 03:48:44,542 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test4.txt
+2025-12-30 03:48:44,667 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=255, active_workers=9/11
+2025-12-30 03:48:44,762 - Knowledge - INFO - [kw11] Queue=249, InProgress=0, PendingWorkers=9/11, Completed=0/303 (0.0%)
+2025-12-30 03:48:44,869 - Knowledge - INFO - knowledge worker kw12 start
+2025-12-30 03:48:44,870 - Knowledge - INFO - Worker kw13 created using shared MongoDB connection pool
+2025-12-30 03:48:44,970 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_ep.h (ext=.h, size=3937)
+2025-12-30 03:48:45,052 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_radio.c
+2025-12-30 03:48:45,131 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_ep.c (ext=.c, size=6117)
+2025-12-30 03:48:45,220 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-6.txt
+2025-12-30 03:48:45,313 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/test_radio11be.c (ext=.c, size=19404)
+2025-12-30 03:48:45,398 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad5_cap.txt
+2025-12-30 03:48:45,481 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_fsm/test_wld_fsm.c (ext=.c, size=10900)
+2025-12-30 03:48:45,582 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testapMLD/test_apmld.c
+2025-12-30 03:48:45,665 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test4.txt (ext=.txt, size=5158)
+2025-12-30 03:48:45,744 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_staticPuncturing/test_wld_staticPuncturing.c
+2025-12-30 03:48:45,867 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=249, active_workers=10/12
+2025-12-30 03:48:45,955 - Knowledge - INFO - [kw12] Queue=243, InProgress=0, PendingWorkers=10/12, Completed=0/303 (0.0%)
+2025-12-30 03:48:46,041 - Knowledge - INFO - knowledge worker kw13 start
+2025-12-30 03:48:46,042 - Knowledge - INFO - Worker kw14 created using shared MongoDB connection pool
+2025-12-30 03:48:46,154 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_types.h
+2025-12-30 03:48:46,261 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_radio.c (ext=.c, size=16510)
+2025-12-30 03:48:46,341 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_mockVendor.h
+2025-12-30 03:48:46,425 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-6.txt (ext=.txt, size=3673)
+2025-12-30 03:48:46,549 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad5_base.txt
+2025-12-30 03:48:46,639 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad5_cap.txt (ext=.txt, size=296)
+2025-12-30 03:48:46,711 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_nl80211/test_wld_nl80211.c
+2025-12-30 03:48:46,797 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testapMLD/test_apmld.c (ext=.c, size=15060)
+2025-12-30 03:48:46,890 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test2.txt
+2025-12-30 03:48:47,010 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_staticPuncturing/test_wld_staticPuncturing.c (ext=.c, size=6052)
+2025-12-30 03:48:47,089 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history4.txt
+2025-12-30 03:48:47,180 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=243, active_workers=11/13
+2025-12-30 03:48:47,261 - Knowledge - INFO - [kw13] Queue=237, InProgress=0, PendingWorkers=11/13, Completed=0/303 (0.0%)
+2025-12-30 03:48:47,354 - Knowledge - INFO - knowledge worker kw14 start
+2025-12-30 03:48:47,354 - Knowledge - INFO - Worker kw15 created using shared MongoDB connection pool
+2025-12-30 03:48:47,433 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_types.h (ext=.h, size=3085)
+2025-12-30 03:48:47,546 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_vap.c
+2025-12-30 03:48:47,638 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_mockVendor.h (ext=.h, size=3434)
+2025-12-30 03:48:47,764 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-2.txt
+2025-12-30 03:48:47,861 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad5_base.txt (ext=.txt, size=4033)
+2025-12-30 03:48:47,969 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testEnableSync/test_enableSync.c
+2025-12-30 03:48:48,067 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_nl80211/test_wld_nl80211.c (ext=.c, size=60093)
+2025-12-30 03:48:48,146 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testWiFiObjReference/test_wifiObjReference.c
+2025-12-30 03:48:48,265 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test2.txt (ext=.txt, size=5093)
+2025-12-30 03:48:48,357 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadioStatus/test_radioStatus.c
+2025-12-30 03:48:48,482 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history4.txt (ext=.txt, size=17)
+2025-12-30 03:48:48,588 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_1.txt
+2025-12-30 03:48:48,663 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=237, active_workers=12/14
+2025-12-30 03:48:48,748 - Knowledge - INFO - [kw14] Queue=231, InProgress=0, PendingWorkers=12/14, Completed=0/303 (0.0%)
+2025-12-30 03:48:48,880 - Knowledge - INFO - knowledge worker kw15 start
+2025-12-30 03:48:48,880 - Knowledge - INFO - Worker kw16 created using shared MongoDB connection pool
+2025-12-30 03:48:48,988 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:48:49,074 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_vap.c (ext=.c, size=12547)
+2025-12-30 03:48:49,158 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-5.txt
+2025-12-30 03:48:49,282 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-2.txt (ext=.txt, size=9047)
+2025-12-30 03:48:49,390 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad2_cap.txt
+2025-12-30 03:48:49,510 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testEnableSync/test_enableSync.c (ext=.c, size=14085)
+2025-12-30 03:48:49,597 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/epMld/test_epMld.c
+2025-12-30 03:48:49,706 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testWiFiObjReference/test_wifiObjReference.c (ext=.c, size=11892)
+2025-12-30 03:48:49,833 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test5.txt
+2025-12-30 03:48:49,924 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadioStatus/test_radioStatus.c (ext=.c, size=10942)
+2025-12-30 03:48:50,033 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_12.txt
+2025-12-30 03:48:50,125 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_1.txt (ext=.txt, size=2445)
+2025-12-30 03:48:50,243 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_2.txt
+2025-12-30 03:48:50,353 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=231, active_workers=13/15
+2025-12-30 03:48:50,460 - Knowledge - INFO - [kw15] Queue=225, InProgress=0, PendingWorkers=13/15, Completed=6/303 (2.0%)
+2025-12-30 03:48:50,545 - Knowledge - INFO - knowledge worker kw16 start
+2025-12-30 03:48:50,546 - Knowledge - INFO - Worker kw17 created using shared MongoDB connection pool
+2025-12-30 03:48:50,625 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/acl/admin/pwhm.json
+2025-12-30 03:48:50,759 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:48:50,808 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-5.txt (ext=.txt, size=10754)
+2025-12-30 03:48:50,915 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-4.txt
+2025-12-30 03:48:50,994 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad2_cap.txt (ext=.txt, size=294)
+2025-12-30 03:48:51,085 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/startStop/test_startStop.c
+2025-12-30 03:48:51,198 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/epMld/test_epMld.c (ext=.c, size=6687)
+2025-12-30 03:48:51,292 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_hostapd/test_wld_hostapd.c
+2025-12-30 03:48:51,417 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test5.txt (ext=.txt, size=5162)
+2025-12-30 03:48:51,500 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/test_defines.mk
+2025-12-30 03:48:51,629 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_12.txt (ext=.txt, size=470)
+2025-12-30 03:48:51,715 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_10.txt
+2025-12-30 03:48:51,804 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_2.txt (ext=.txt, size=379)
+2025-12-30 03:48:51,881 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_8.txt
+2025-12-30 03:48:51,970 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=225, active_workers=14/16
+2025-12-30 03:48:52,043 - Knowledge - INFO - [kw16] Queue=219, InProgress=0, PendingWorkers=14/16, Completed=12/303 (4.0%)
+2025-12-30 03:48:52,132 - Knowledge - INFO - knowledge worker kw17 start
+2025-12-30 03:48:52,132 - Knowledge - INFO - Worker kw18 created using shared MongoDB connection pool
+2025-12-30 03:48:52,225 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/acl/admin/pwhm-internal.json
+2025-12-30 03:48:52,350 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_mockVendor.c
+2025-12-30 03:48:52,468 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:48:52,525 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-4.txt (ext=.txt, size=10748)
+2025-12-30 03:48:52,608 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad6_cap.txt
+2025-12-30 03:48:52,709 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/startStop/test_startStop.c (ext=.c, size=12025)
+2025-12-30 03:48:52,835 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_daemon/test_wld_daemon.c
+2025-12-30 03:48:52,918 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_hostapd/test_wld_hostapd.c (ext=.c, size=12970)
+2025-12-30 03:48:53,015 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test3.txt
+2025-12-30 03:48:53,122 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/test_defines.mk (ext=.mk, size=1919)
+2025-12-30 03:48:53,244 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_3.txt
+2025-12-30 03:48:53,345 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_10.txt (ext=.txt, size=503)
+2025-12-30 03:48:53,436 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_11.txt
+2025-12-30 03:48:53,522 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_8.txt (ext=.txt, size=885)
+2025-12-30 03:48:53,603 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_1.txt
+2025-12-30 03:48:53,678 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=219, active_workers=15/17
+2025-12-30 03:48:53,762 - Knowledge - INFO - [kw17] Queue=213, InProgress=0, PendingWorkers=15/17, Completed=18/303 (5.9%)
+2025-12-30 03:48:53,849 - Knowledge - INFO - knowledge worker kw18 start
+2025-12-30 03:48:53,851 - Knowledge - INFO - Worker kw19 created using shared MongoDB connection pool
+2025-12-30 03:48:53,971 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_fsm.c
+2025-12-30 03:48:54,072 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_radio.h
+2025-12-30 03:48:54,156 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_sensing.c
+2025-12-30 03:48:54,287 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:48:54,358 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad6_cap.txt (ext=.txt, size=296)
+2025-12-30 03:48:54,438 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/test_channel5G/test_channel5G.c
+2025-12-30 03:48:54,532 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_daemon/test_wld_daemon.c (ext=.c, size=9453)
+2025-12-30 03:48:54,621 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testMacFiltering/test_macFiltering.c
+2025-12-30 03:48:54,704 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test3.txt (ext=.txt, size=5153)
+2025-12-30 03:48:54,823 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/fta/test_fta.c
+2025-12-30 03:48:54,963 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_3.txt (ext=.txt, size=785)
+2025-12-30 03:48:55,069 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_4.txt
+2025-12-30 03:48:55,158 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_11.txt (ext=.txt, size=344)
+2025-12-30 03:48:55,258 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_0.txt
+2025-12-30 03:48:55,356 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_1.txt (ext=.txt, size=1157)
+2025-12-30 03:48:55,451 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/probeUpdate.txt
+2025-12-30 03:48:55,573 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=213, active_workers=16/18
+2025-12-30 03:48:55,657 - Knowledge - INFO - [kw18] Queue=207, InProgress=0, PendingWorkers=16/18, Completed=24/303 (7.9%)
+2025-12-30 03:48:55,736 - Knowledge - INFO - knowledge worker kw19 start
+2025-12-30 03:48:55,737 - Knowledge - INFO - Worker kw20 created using shared MongoDB connection pool
+2025-12-30 03:48:55,814 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_dm.h
+2025-12-30 03:48:55,916 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_vap.h
+2025-12-30 03:48:56,045 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_fsm.h
+2025-12-30 03:48:56,148 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/test_scanSsid.c
+2025-12-30 03:48:56,251 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:48:56,370 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/test_channel5G/test_channel5G.c (ext=.c, size=7358)
+2025-12-30 03:48:56,475 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testBgDfs/test_BgDfs.c
+2025-12-30 03:48:56,579 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testMacFiltering/test_macFiltering.c (ext=.c, size=17330)
+2025-12-30 03:48:56,688 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/test_staStatsWiFi7.c
+2025-12-30 03:48:56,778 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/fta/test_fta.c (ext=.c, size=5359)
+2025-12-30 03:48:56,867 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_7.txt
+2025-12-30 03:48:56,961 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_4.txt (ext=.txt, size=355)
+2025-12-30 03:48:57,064 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history2.txt
+2025-12-30 03:48:57,146 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_0.txt (ext=.txt, size=342)
+2025-12-30 03:48:57,236 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data2.txt
+2025-12-30 03:48:57,351 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/probeUpdate.txt (ext=.txt, size=686)
+2025-12-30 03:48:57,432 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testNeighborAp/test_neighborAp.c
+2025-12-30 03:48:57,523 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=207, active_workers=17/19
+2025-12-30 03:48:57,623 - Knowledge - INFO - [kw19] Queue=201, InProgress=0, PendingWorkers=17/19, Completed=30/303 (9.9%)
+2025-12-30 03:48:57,708 - Knowledge - INFO - knowledge worker kw20 start
+2025-12-30 03:48:57,793 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_ep.h
+2025-12-30 03:48:57,924 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_sensing.h
+2025-12-30 03:48:58,043 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_dm.c
+2025-12-30 03:48:58,124 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-1.txt
+2025-12-30 03:48:58,216 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_chanMgt/test_wld_rad_chanMgt.c
+2025-12-30 03:48:58,328 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:48:58,397 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testBgDfs/test_BgDfs.c (ext=.c, size=17903)
+2025-12-30 03:48:58,507 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_sensing/test_wld_sensing.c
+2025-12-30 03:48:58,594 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/test_staStatsWiFi7.c (ext=.c, size=11138)
+2025-12-30 03:48:58,671 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history0.txt
+2025-12-30 03:48:58,790 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_7.txt (ext=.txt, size=379)
+2025-12-30 03:48:58,884 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_8.txt
+2025-12-30 03:48:58,966 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history2.txt (ext=.txt, size=3265)
+2025-12-30 03:48:59,045 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_3.txt
+2025-12-30 03:48:59,155 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data2.txt (ext=.txt, size=3374)
+2025-12-30 03:48:59,246 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data1.txt
+2025-12-30 03:48:59,369 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testNeighborAp/test_neighborAp.c (ext=.c, size=14435)
+2025-12-30 03:48:59,474 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/scripts/Plugin/wld_gen.sh
+2025-12-30 03:48:59,574 - Knowledge - INFO - Batch sizing: calculated=6, max_allowed=10, queue=201, active_workers=18/20
+2025-12-30 03:48:59,674 - Knowledge - INFO - [kw20] Queue=195, InProgress=0, PendingWorkers=18/20, Completed=36/303 (11.9%)
+2025-12-30 03:48:59,752 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_types.h
+2025-12-30 03:48:59,877 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_radio.c
+2025-12-30 03:48:59,974 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_ep.c
+2025-12-30 03:49:00,065 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-3.txt
+2025-12-30 03:49:00,164 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testFullScan/test_fullScan.c
+2025-12-30 03:49:00,270 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad2_base.txt
+2025-12-30 03:49:00,433 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:00,485 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_sensing/test_wld_sensing.c (ext=.c, size=15844)
+2025-12-30 03:49:00,591 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/test_securityConfig/test_securityConfig.c
+2025-12-30 03:49:00,690 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history0.txt (ext=.txt, size=2731)
+2025-12-30 03:49:00,761 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_5.txt
+2025-12-30 03:49:00,845 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_8.txt (ext=.txt, size=785)
+2025-12-30 03:49:00,924 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_2.txt
+2025-12-30 03:49:01,063 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_3.txt (ext=.txt, size=885)
+2025-12-30 03:49:01,152 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/stationStats/stats_data4.txt
+2025-12-30 03:49:01,280 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data1.txt (ext=.txt, size=3366)
+2025-12-30 03:49:01,371 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_channel/test_wld_channel_info.c
+2025-12-30 03:49:01,475 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_statsmon.c
+2025-12-30 03:49:01,564 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/VendorModule/wld_vendorModule.c
+2025-12-30 03:49:01,679 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=195, active_workers=19/20
+2025-12-30 03:49:02,152 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_vap.c
+2025-12-30 03:49:02,153 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-6.txt
+2025-12-30 03:49:02,154 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testHelper/wld_th_mockVendor.h
+2025-12-30 03:49:02,183 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/test_radio11be.c
+2025-12-30 03:49:02,368 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_util/test_wld_util.c
+2025-12-30 03:49:02,433 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad6_base.txt
+2025-12-30 03:49:02,603 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/test_securityConfig/test_securityConfig.c (ext=.c, size=15700)
+2025-12-30 03:49:02,667 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:02,697 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data0.txt
+2025-12-30 03:49:02,776 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_5.txt (ext=.txt, size=2052)
+2025-12-30 03:49:02,874 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_0.txt
+2025-12-30 03:49:02,965 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_2.txt (ext=.txt, size=501)
+2025-12-30 03:49:03,073 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_7.txt
+2025-12-30 03:49:03,152 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 288, Duration: 0ms
+2025-12-30 03:49:03,166 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/stationStats/stats_data4.txt (ext=.txt, size=3133)
+2025-12-30 03:49:03,276 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history3.txt
+2025-12-30 03:49:03,395 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_channel/test_wld_channel_info.c (ext=.c, size=10197)
+2025-12-30 03:49:03,490 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_endpoint.c
+2025-12-30 03:49:03,602 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_ssid.c
+2025-12-30 03:49:03,911 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-2.txt
+2025-12-30 03:49:04,041 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-5.txt
+2025-12-30 03:49:04,203 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad5_base.txt
+2025-12-30 03:49:04,235 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_fsm/test_wld_fsm.c
+2025-12-30 03:49:04,355 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad5_cap.txt
+2025-12-30 03:49:04,607 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/test_wpaSupp_cfgFile/test_wpaSupp_cfgFile.c
+2025-12-30 03:49:04,694 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data0.txt (ext=.txt, size=3361)
+2025-12-30 03:49:04,777 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_9.txt
+2025-12-30 03:49:04,903 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_0.txt (ext=.txt, size=2052)
+2025-12-30 03:49:04,998 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_6.txt
+2025-12-30 03:49:05,094 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_7.txt (ext=.txt, size=501)
+2025-12-30 03:49:05,212 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_ep_api.c
+2025-12-30 03:49:05,212 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 2061ms
+2025-12-30 03:49:05,304 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/stationStats/stats_data3.txt
+2025-12-30 03:49:05,405 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history3.txt (ext=.txt, size=3281)
+2025-12-30 03:49:05,515 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/test_targets.mk
+2025-12-30 03:49:05,608 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_endpoint.c (ext=.c, size=103999)
+2025-12-30 03:49:05,727 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlMngr.c
+2025-12-30 03:49:05,800 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testScanSsid/ScanResults-5g-4.txt
+2025-12-30 03:49:06,030 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad2_cap.txt
+2025-12-30 03:49:06,092 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_nl80211/test_wld_nl80211.c
+2025-12-30 03:49:06,213 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testEnableSync/test_enableSync.c
+2025-12-30 03:49:06,359 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testapMLD/test_apmld.c
+2025-12-30 03:49:06,502 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_9.txt (ext=.txt, size=1187)
+2025-12-30 03:49:06,606 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_6.txt
+2025-12-30 03:49:06,704 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_6.txt (ext=.txt, size=1157)
+2025-12-30 03:49:06,781 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_5.txt
+2025-12-30 03:49:06,875 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_secDmnGrp.c
+2025-12-30 03:49:06,950 - Knowledge - INFO - Progress: 15.8% | Files: 54/303 | Rate: 1.53 files/sec | Queue: 184
+2025-12-30 03:49:06,952 - Knowledge - INFO - [kw2] Queue=184, InProgress=0, PendingWorkers=20/20, Completed=54/303 (17.8%)
+2025-12-30 03:49:06,953 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 287, Duration: 0ms
+2025-12-30 03:49:07,046 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/stationStats/stats_data3.txt (ext=.txt, size=6262)
+2025-12-30 03:49:07,136 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data3.txt
+2025-12-30 03:49:07,252 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/test_targets.mk (ext=.mk, size=1220)
+2025-12-30 03:49:07,364 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld.c
+2025-12-30 03:49:07,461 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrl_events.c
+2025-12-30 03:49:07,644 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadio11be/rad6_cap.txt
+2025-12-30 03:49:07,746 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/epMld/test_epMld.c
+2025-12-30 03:49:07,880 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/startStop/test_startStop.c
+2025-12-30 03:49:07,992 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testWiFiObjReference/test_wifiObjReference.c
+2025-12-30 03:49:08,139 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_6.txt (ext=.txt, size=2444)
+2025-12-30 03:49:08,230 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_4.txt
+2025-12-30 03:49:08,352 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_5.txt (ext=.txt, size=342)
+2025-12-30 03:49:08,447 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_cfgFile.c
+2025-12-30 03:49:08,527 - Knowledge - INFO - [kw1] Queue=184, InProgress=0, PendingWorkers=20/20, Completed=61/303 (20.1%)
+2025-12-30 03:49:08,644 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=184, active_workers=20/20
+2025-12-30 03:49:08,735 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:08,735 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:08,736 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 1783ms
+2025-12-30 03:49:08,836 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history1.txt
+2025-12-30 03:49:08,929 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data3.txt (ext=.txt, size=3375)
+2025-12-30 03:49:09,012 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/scripts/wld.sh
+2025-12-30 03:49:09,107 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_mld.c
+2025-12-30 03:49:09,201 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_cfgManager.c
+2025-12-30 03:49:09,385 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_daemon/test_wld_daemon.c
+2025-12-30 03:49:09,544 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/test_channel5G/test_channel5G.c
+2025-12-30 03:49:09,562 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_hostapd/test_wld_hostapd.c
+2025-12-30 03:49:09,772 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_4.txt (ext=.txt, size=528)
+2025-12-30 03:49:09,851 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_9.txt
+2025-12-30 03:49:09,949 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_api.c
+2025-12-30 03:49:10,032 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=184, active_workers=20/20
+2025-12-30 03:49:10,247 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test4.txt
+2025-12-30 03:49:10,355 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history4.txt
+2025-12-30 03:49:10,451 - Knowledge - INFO - Progress: 18.2% | Files: 67/303 | Rate: 1.72 files/sec | Queue: 179
+2025-12-30 03:49:10,453 - Knowledge - INFO - [kw5] Queue=179, InProgress=0, PendingWorkers=20/20, Completed=68/303 (22.4%)
+2025-12-30 03:49:10,453 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 291, Duration: 1ms
+2025-12-30 03:49:10,540 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history1.txt (ext=.txt, size=2995)
+2025-12-30 03:49:10,620 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/test_staStats.c
+2025-12-30 03:49:10,714 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/scripts/wld.sh (ext=.sh, size=602)
+2025-12-30 03:49:10,837 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/VendorModule/wld_vendorModule_mgr.c
+2025-12-30 03:49:10,957 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlConnection.c
+2025-12-30 03:49:11,069 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testBgDfs/test_BgDfs.c
+2025-12-30 03:49:11,253 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testMacFiltering/test_macFiltering.c
+2025-12-30 03:49:11,467 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_9.txt (ext=.txt, size=528)
+2025-12-30 03:49:11,566 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_events.c
+2025-12-30 03:49:11,812 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test2.txt
+2025-12-30 03:49:11,814 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_12.txt
+2025-12-30 03:49:11,966 - Knowledge - INFO - [kw3] Queue=174, InProgress=0, PendingWorkers=20/20, Completed=74/303 (24.4%)
+2025-12-30 03:49:11,991 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=179, active_workers=20/20
+2025-12-30 03:49:12,088 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:12,088 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:12,089 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:12,089 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:12,089 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 1637ms
+2025-12-30 03:49:12,204 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/staUpdate.txt
+2025-12-30 03:49:12,296 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/test_staStats.c (ext=.c, size=10497)
+2025-12-30 03:49:12,368 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/scripts/debugInfo.sh
+2025-12-30 03:49:12,487 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/scripts/Plugin/wld_gen.sh (small file (2338 bytes))
+2025-12-30 03:49:12,748 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_sensing/test_wld_sensing.c
+2025-12-30 03:49:13,032 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test5.txt
+2025-12-30 03:49:13,164 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_3.txt
+2025-12-30 03:49:13,195 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=174, active_workers=20/20
+2025-12-30 03:49:13,383 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ep_nl80211.c
+2025-12-30 03:49:13,481 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_1.txt
+2025-12-30 03:49:13,562 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_2.txt
+2025-12-30 03:49:13,666 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_rad_hostapd_api.c
+2025-12-30 03:49:13,747 - Knowledge - INFO - Progress: 22.4% | Files: 82/303 | Rate: 1.93 files/sec | Queue: 169
+2025-12-30 03:49:13,748 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:13,749 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:13,750 - Knowledge - INFO - [kw7] Queue=169, InProgress=0, PendingWorkers=20/20, Completed=82/303 (27.1%)
+2025-12-30 03:49:13,750 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 291, Duration: 3ms
+2025-12-30 03:49:13,848 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/staUpdate.txt (ext=.txt, size=398)
+2025-12-30 03:49:13,958 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/test/bStaMLD/test_bStaMLD.c
+2025-12-30 03:49:14,050 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/scripts/debugInfo.sh (ext=.sh, size=1762)
+2025-12-30 03:49:14,367 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/stationStats/stats_test3.txt
+2025-12-30 03:49:14,542 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_7.txt
+2025-12-30 03:49:14,628 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_cfgManager.c
+2025-12-30 03:49:14,783 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_10.txt
+2025-12-30 03:49:14,812 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_11.txt
+2025-12-30 03:49:14,916 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_cfgFile.c
+2025-12-30 03:49:15,078 - Knowledge - INFO - [kw4] Queue=164, InProgress=0, PendingWorkers=20/20, Completed=82/303 (27.1%)
+2025-12-30 03:49:15,113 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_8.txt
+2025-12-30 03:49:15,210 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ap_nl80211.c
+2025-12-30 03:49:15,286 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=169, active_workers=20/20
+2025-12-30 03:49:15,375 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:15,376 - Knowledge - INFO - [kw8] Queue=164, InProgress=0, PendingWorkers=20/20, Completed=84/303 (27.7%)
+2025-12-30 03:49:15,376 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 1628ms
+2025-12-30 03:49:15,621 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/test/bStaMLD/test_bStaMLD.c (ext=.c, size=5431)
+2025-12-30 03:49:15,741 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/scripts/debug_wifi.sh
+2025-12-30 03:49:15,821 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStatsWiFi7/test_staStatsWiFi7.c
+2025-12-30 03:49:15,911 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_5.txt
+2025-12-30 03:49:16,024 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_secDmn.c
+2025-12-30 03:49:16,108 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_4.txt
+2025-12-30 03:49:16,185 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history2.txt
+2025-12-30 03:49:16,524 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_parser.c
+2025-12-30 03:49:16,340 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=164, active_workers=20/20
+2025-12-30 03:49:16,438 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_0.txt
+2025-12-30 03:49:16,262 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_core.c
+2025-12-30 03:49:16,700 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlGSock.c
+2025-12-30 03:49:16,795 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=164, active_workers=20/20
+2025-12-30 03:49:16,889 - Knowledge - INFO - Progress: 27.1% | Files: 90/303 | Rate: 1.97 files/sec | Queue: 159
+2025-12-30 03:49:16,889 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:16,890 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:16,897 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:17,029 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:17,114 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/scripts/debug_wifi.sh (ext=.sh, size=132)
+2025-12-30 03:49:17,226 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/test_securityConfig/test_securityConfig.c
+2025-12-30 03:49:17,339 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_9.txt
+2025-12-30 03:49:17,440 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_scan.c
+2025-12-30 03:49:17,516 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_8.txt
+2025-12-30 03:49:17,637 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_2.txt
+2025-12-30 03:49:17,727 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_debug.c
+2025-12-30 03:49:17,827 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:17,915 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_3.txt
+2025-12-30 03:49:17,999 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlInterface.c
+2025-12-30 03:49:18,088 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_attr.c
+2025-12-30 03:49:18,171 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:18,252 - Knowledge - INFO - [kw6] Queue=149, InProgress=0, PendingWorkers=20/20, Completed=96/303 (31.7%)
+2025-12-30 03:49:18,340 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_staticPuncturing/test_wld_staticPuncturing.c
+2025-12-30 03:49:18,448 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_1.txt
+2025-12-30 03:49:18,546 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_zwdfs.c
+2025-12-30 03:49:18,650 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/probeUpdate.txt
+2025-12-30 03:49:18,782 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:49:19,029 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_parser.c
+2025-12-30 03:49:19,236 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_0.txt
+2025-12-30 03:49:19,316 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_6.txt
+2025-12-30 03:49:19,329 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_rad_nl80211.c
+2025-12-30 03:49:19,423 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_sensing.c
+2025-12-30 03:49:19,596 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_utils.c
+2025-12-30 03:49:19,615 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_7.txt
+2025-12-30 03:49:19,673 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ssid_nl80211.c
+2025-12-30 03:49:19,756 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_dmnMgt.c
+2025-12-30 03:49:19,838 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=149, active_workers=20/20
+2025-12-30 03:49:19,967 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 291, Duration: 0ms
+2025-12-30 03:49:19,968 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testRadioStatus/test_radioStatus.c
+2025-12-30 03:49:20,023 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data2.txt
+2025-12-30 03:49:20,111 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_bgdfs.c
+2025-12-30 03:49:20,208 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data1.txt
+2025-12-30 03:49:20,300 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testNeighborAp/test_neighborAp.c
+2025-12-30 03:49:20,420 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:20,512 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/deauthNot/notif_6.txt
+2025-12-30 03:49:20,614 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_4.txt
+2025-12-30 03:49:20,706 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_ap_api.c
+2025-12-30 03:49:20,830 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_wps.c
+2025-12-30 03:49:20,938 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:21,028 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_5.txt
+2025-12-30 03:49:21,120 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_channel.c
+2025-12-30 03:49:21,234 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxIfStats.c
+2025-12-30 03:49:21,425 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:21,426 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 1459ms
+2025-12-30 03:49:21,537 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/test_defines.mk
+2025-12-30 03:49:21,662 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/stationStats/stats_data4.txt
+2025-12-30 03:49:21,756 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_channel_info.c
+2025-12-30 03:49:21,839 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history3.txt
+2025-12-30 03:49:21,926 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/wld_channel/test_wld_channel_info.c
+2025-12-30 03:49:22,287 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:22,383 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxWExtUtils.c
+2025-12-30 03:49:22,692 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_chanmgt.c
+2025-12-30 03:49:22,710 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/assocNot/not_9.txt
+2025-12-30 03:49:22,776 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_config.c
+2025-12-30 03:49:22,894 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxIfUtils.c
+2025-12-30 03:49:22,970 - Knowledge - INFO - Progress: 33.7% | Files: 102/303 | Rate: 1.96 files/sec | Queue: 144
+2025-12-30 03:49:23,053 - Knowledge - INFO - [kw11] Queue=144, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:23,174 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/fta/test_fta.c
+2025-12-30 03:49:23,263 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/stationStats/stats_data3.txt
+2025-12-30 03:49:23,272 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_radio.c
+2025-12-30 03:49:23,354 - Knowledge - INFO - [kw12] Queue=144, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:23,385 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data3.txt
+2025-12-30 03:49:23,389 - Knowledge - INFO - [kw13] Queue=144, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:23,502 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/test_targets.mk
+2025-12-30 03:49:23,697 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_extMod.c
+2025-12-30 03:49:23,777 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:23,974 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_daemon.c
+2025-12-30 03:49:24,061 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_autoCommitMgr.c
+2025-12-30 03:49:24,246 - Knowledge - INFO - [kw9] Queue=144, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:24,267 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=144, active_workers=20/20
+2025-12-30 03:49:24,386 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history0.txt
+2025-12-30 03:49:24,545 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/history1.txt
+2025-12-30 03:49:24,556 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_radio.c (ext=.c, size=223136)
+2025-12-30 03:49:24,643 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=144, active_workers=20/20
+2025-12-30 03:49:24,721 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/test_staStats.c
+2025-12-30 03:49:24,735 - Knowledge - INFO - [kw14] Queue=144, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:24,803 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=144, active_workers=20/20
+2025-12-30 03:49:24,896 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/scripts/wld.sh
+2025-12-30 03:49:24,973 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_autoNeighAdd.c
+2025-12-30 03:49:25,155 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_eventing.c
+2025-12-30 03:49:25,237 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_monitor.c
+2025-12-30 03:49:25,348 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=144, active_workers=20/20
+2025-12-30 03:49:25,444 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:25,535 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/data0.txt
+2025-12-30 03:49:25,606 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/testStaStats/staUpdate.txt
+2025-12-30 03:49:25,727 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_bStaMld.c
+2025-12-30 03:49:25,821 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:25,929 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/test/bStaMLD/test_bStaMLD.c
+2025-12-30 03:49:26,012 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=144, active_workers=20/20
+2025-12-30 03:49:26,115 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:26,193 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/scripts/debugInfo.sh
+2025-12-30 03:49:26,298 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:26,408 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:26,494 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_rssiMonitor.c
+2025-12-30 03:49:26,579 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:26,661 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_mldConfig.c
+2025-12-30 03:49:26,932 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:27,012 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_security.c
+2025-12-30 03:49:27,284 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_tinyRoam.c
+2025-12-30 03:49:27,397 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:27,527 - Knowledge - INFO - Split /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_cfgFile.c (66075 bytes) into 3 chunks of ~32KB
+2025-12-30 03:49:27,606 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/scripts/debug_wifi.sh
+2025-12-30 03:49:27,662 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_rrm.c
+2025-12-30 03:49:27,772 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_radioOperatingStandards.c
+2025-12-30 03:49:27,859 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_macfilter.c
+2025-12-30 03:49:28,021 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_epMld.c
+2025-12-30 03:49:28,104 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_epMgmt.c
+2025-12-30 03:49:28,195 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_eventHandlers.c
+2025-12-30 03:49:28,446 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:28,463 - Knowledge - INFO - [kw10] Queue=119, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:28,562 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Features/persist/wld_persist_on.c
+2025-12-30 03:49:28,664 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_neighbours.c
+2025-12-30 03:49:28,742 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_util.c
+2025-12-30 03:49:28,842 - Knowledge - INFO - [kw15] Queue=119, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:28,845 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_epProfile.c
+2025-12-30 03:49:28,975 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen.c
+2025-12-30 03:49:29,086 - Knowledge - INFO - [kw16] Queue=119, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:29,158 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=119, active_workers=20/20
+2025-12-30 03:49:29,249 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Features/persist/wld_persist_off.c
+2025-12-30 03:49:29,348 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_apMgmt.c
+2025-12-30 03:49:29,422 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_apMld.c
+2025-12-30 03:49:29,520 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=119, active_workers=20/20
+2025-12-30 03:49:29,537 - Knowledge - INFO - [kw17] Queue=119, InProgress=0, PendingWorkers=20/20, Completed=102/303 (33.7%)
+2025-12-30 03:49:29,877 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_tinyRoam_bus.c
+2025-12-30 03:49:29,972 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_hapd.c
+2025-12-30 03:49:30,050 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=119, active_workers=20/20
+2025-12-30 03:49:30,139 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:30,240 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_rad.c
+2025-12-30 03:49:30,370 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_bss_transfer.c
+2025-12-30 03:49:30,452 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_functionTable.c
+2025-12-30 03:49:30,544 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:30,621 - Knowledge - INFO - Batch sizing: calculated=5, max_allowed=10, queue=119, active_workers=20/20
+2025-12-30 03:49:30,720 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_accesspoint.c
+2025-12-30 03:49:30,821 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_mld.c
+2025-12-30 03:49:30,905 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:31,000 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_ep.c
+2025-12-30 03:49:31,081 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_vap.c
+2025-12-30 03:49:31,194 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:31,306 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:31,385 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_ifMgt.c
+2025-12-30 03:49:31,463 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:49:31,569 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_accesspoint.c (ext=.c, size=122908)
+2025-12-30 03:49:31,671 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wld_plugin.c
+2025-12-30 03:49:31,871 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_macCfg.c
+2025-12-30 03:49:31,987 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_wpaSupp.c
+2025-12-30 03:49:32,087 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:32,368 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_caps.c
+2025-12-30 03:49:32,469 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlGSock.h
+2025-12-30 03:49:32,583 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:32,678 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:32,791 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_fsm.c
+2025-12-30 03:49:32,883 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_zwdfs.c
+2025-12-30 03:49:33,132 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_scan.c
+2025-12-30 03:49:33,280 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_daemon.h
+2025-12-30 03:49:33,495 - Knowledge - INFO - Split /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_eventHandlers.c (74561 bytes) into 3 chunks of ~32KB
+2025-12-30 03:49:33,581 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_stamon.c
+2025-12-30 03:49:33,662 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_radIfMgt.c
+2025-12-30 03:49:33,744 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_delayMgr.c
+2025-12-30 03:49:33,829 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_accesspoint.h
+2025-12-30 03:49:34,006 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_assocdev.c
+2025-12-30 03:49:34,100 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_fsm.c
+2025-12-30 03:49:34,188 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_evtHandler.c
+2025-12-30 03:49:34,283 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_parser.h
+2025-12-30 03:49:34,404 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_vendorModule.h
+2025-12-30 03:49:34,489 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:34,654 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:34,722 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_debug.h
+2025-12-30 03:49:34,878 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:35,171 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:49:39,044 - Knowledge - INFO - [LLM_CALL] Completed: wld_statsmon.c:chunk1, Duration: 23669ms, PromptTokens: 6302, CompletionTokens: 531, Cost: $0.00084
+2025-12-30 03:49:39,240 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_statsmon.c
+2025-12-30 03:49:48,460 - Knowledge - INFO - [LLM_CALL] Completed: wld_vendorModule_mgr.c:chunk1, Duration: 25487ms, PromptTokens: 8020, CompletionTokens: 1289, Cost: $0.00132
+2025-12-30 03:49:48,635 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/VendorModule/wld_vendorModule_mgr.c
+2025-12-30 03:49:59,671 - Knowledge - INFO - [LLM_CALL] Completed: wld.c:chunk1, Duration: 42073ms, PromptTokens: 19212, CompletionTokens: 2647, Cost: $0.00298
+2025-12-30 03:49:59,861 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld.c
+2025-12-30 03:50:09,500 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaSupp_cfgFile.c:chunk1, Duration: 49669ms, PromptTokens: 11304, CompletionTokens: 1160, Cost: $0.00159
+2025-12-30 03:50:09,772 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_cfgFile.c
+2025-12-30 03:50:17,557 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211_events.c:chunk1, Duration: 49910ms, PromptTokens: 15584, CompletionTokens: 1177, Cost: $0.00203
+2025-12-30 03:50:17,928 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_events.c
+2025-12-30 03:50:22,274 - Knowledge - INFO - Split /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_scan.c (75036 bytes) into 3 chunks of ~32KB
+2025-12-30 03:50:23,447 - Knowledge - INFO - Split /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_parser.c (74517 bytes) into 3 chunks of ~32KB
+2025-12-30 03:50:26,677 - Knowledge - INFO - Split /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_util.c (95050 bytes) into 3 chunks of ~32KB
+2025-12-30 03:50:26,905 - Knowledge - INFO - [LLM_CALL] Completed: wld_mld.c:chunk1, Duration: 66996ms, PromptTokens: 17582, CompletionTokens: 8000, Cost: $0.00496
+2025-12-30 03:50:27,140 - Knowledge - ERROR - Failed to parse LLM response as JSON for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_mld.c, chunk 1
+2025-12-30 03:50:27,405 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_mld.c
+2025-12-30 03:50:29,464 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:50:29,714 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/scripts/Plugin/wld_gen.sh
+2025-12-30 03:50:30,006 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_statsmon.c
+2025-12-30 03:50:30,364 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_endpoint.c
+2025-12-30 03:50:30,560 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld.c
+2025-12-30 03:50:30,833 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_mld.c
+2025-12-30 03:50:31,125 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/VendorModule/wld_vendorModule_mgr.c
+2025-12-30 03:50:33,145 - Knowledge - INFO - [LLM_CALL] Completed: wld_secDmnGrp.c:chunk1, Duration: 75450ms, PromptTokens: 22716, CompletionTokens: 2242, Cost: $0.00317
+2025-12-30 03:50:33,412 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_secDmnGrp.c
+2025-12-30 03:50:33,948 - Knowledge - INFO - [kw18] Queue=99, InProgress=0, PendingWorkers=20/20, Completed=108/303 (35.6%)
+2025-12-30 03:50:34,191 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=99, active_workers=20/20
+2025-12-30 03:50:34,441 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:50:34,673 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_radioOperatingStandards.h
+2025-12-30 03:50:34,921 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_nl80211.h
+2025-12-30 03:50:35,205 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_ap_api.h
+2025-12-30 03:50:35,575 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_stamon.h
+2025-12-30 03:50:38,063 - Knowledge - INFO - [LLM_CALL] Completed: wld_vendorModule.c:chunk1, Duration: 84313ms, PromptTokens: 8408, CompletionTokens: 1187, Cost: $0.00132
+2025-12-30 03:50:38,362 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/VendorModule/wld_vendorModule.c
+2025-12-30 03:50:40,905 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaCtrlConnection.c:chunk1, Duration: 73786ms, PromptTokens: 11036, CompletionTokens: 803, Cost: $0.00142
+2025-12-30 03:50:41,326 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlConnection.c
+2025-12-30 03:50:41,866 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaSupp_ep_api.c:chunk1, Duration: 86493ms, PromptTokens: 14092, CompletionTokens: 1763, Cost: $0.00211
+2025-12-30 03:50:42,174 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_ep_api.c
+2025-12-30 03:50:42,884 - Knowledge - INFO - [LLM_CALL] Completed: wld_hostapd_cfgManager.c:chunk1, Duration: 79910ms, PromptTokens: 11080, CompletionTokens: 1274, Cost: $0.00162
+2025-12-30 03:50:43,159 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_cfgManager.c
+2025-12-30 03:50:43,224 - Knowledge - INFO - Split /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_ap_api.c (75023 bytes) into 3 chunks of ~32KB
+2025-12-30 03:50:52,941 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_parser.c after 90s - using fallback metadata
+2025-12-30 03:50:53,210 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ep_nl80211.c after 90s - using fallback metadata
+2025-12-30 03:50:53,465 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_cfgManager.c after 90s - using fallback metadata
+2025-12-30 03:50:53,715 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_secDmn.c after 90s - using fallback metadata
+2025-12-30 03:50:54,016 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_scan.c after 90s - using fallback metadata
+2025-12-30 03:50:54,493 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_api.c after 90s - using fallback metadata
+2025-12-30 03:50:54,720 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:50:54,929 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:50:55,013 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ep_nl80211.c
+2025-12-30 03:50:55,117 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_ep_api.c
+2025-12-30 03:50:55,321 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_cfgManager.c
+2025-12-30 03:50:55,559 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_secDmnGrp.c
+2025-12-30 03:50:55,674 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_secDmn.c
+2025-12-30 03:50:55,801 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_cfgFile.c
+2025-12-30 03:50:56,285 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_scan.c
+2025-12-30 03:50:56,391 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_api.c
+2025-12-30 03:50:56,517 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_parser.c
+2025-12-30 03:50:56,626 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_events.c
+2025-12-30 03:50:59,345 - Knowledge - INFO - Split /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_assocdev.c (98540 bytes) into 4 chunks of ~32KB
+2025-12-30 03:50:59,389 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaCtrl_events.c:chunk1, Duration: 97964ms, PromptTokens: 30962, CompletionTokens: 1496, Cost: $0.00369
+2025-12-30 03:50:59,637 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrl_events.c
+2025-12-30 03:50:59,637 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 292, Duration: 0ms
+2025-12-30 03:50:59,806 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_bStaMld.c after 90s - using fallback metadata
+2025-12-30 03:50:59,885 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_ssid.c after 90s - using fallback metadata
+2025-12-30 03:50:59,934 - Knowledge - INFO - [kw20] Queue=95, InProgress=0, PendingWorkers=20/20, Completed=118/303 (38.9%)
+2025-12-30 03:50:59,935 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 298ms
+2025-12-30 03:51:00,019 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_zwdfs.c after 90s - using fallback metadata
+2025-12-30 03:51:00,153 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlMngr.c after 90s - using fallback metadata
+2025-12-30 03:51:00,232 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=95, active_workers=20/20
+2025-12-30 03:51:00,356 - Knowledge - INFO - Progress: 38.9% | Files: 118/303 | Rate: 0.78 files/sec | Queue: 95
+2025-12-30 03:51:00,437 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_bgdfs.c after 90s - using fallback metadata
+2025-12-30 03:51:00,612 - Knowledge - INFO - Processing batch of 6 files
+2025-12-30 03:51:00,617 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:00,719 - Knowledge - INFO - [kw2] Queue=91, InProgress=0, PendingWorkers=20/20, Completed=124/303 (40.9%)
+2025-12-30 03:51:00,810 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_channel_info.c after 90s - using fallback metadata
+2025-12-30 03:51:00,911 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/VendorModule/wld_vendorModule.c
+2025-12-30 03:51:00,992 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_monitor.h
+2025-12-30 03:51:01,092 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=91, active_workers=20/20
+2025-12-30 03:51:01,233 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:01,270 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_ssid.c
+2025-12-30 03:51:01,362 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_assocdev.h
+2025-12-30 03:51:01,436 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:01,578 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_zwdfs.c
+2025-12-30 03:51:01,670 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlMngr.c
+2025-12-30 03:51:01,764 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_dm_trans.h
+2025-12-30 03:51:01,851 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxIfUtils.h
+2025-12-30 03:51:01,972 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_bgdfs.c
+2025-12-30 03:51:02,067 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrl_events.c
+2025-12-30 03:51:02,208 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_eventing.h
+2025-12-30 03:51:02,295 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_attr.h
+2025-12-30 03:51:02,418 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_channel_info.c
+2025-12-30 03:51:02,493 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_cfgManager.c
+2025-12-30 03:51:02,676 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_fsm.h
+2025-12-30 03:51:02,762 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_radio.c
+2025-12-30 03:51:02,904 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlConnection.c
+2025-12-30 03:51:03,020 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_api.h
+2025-12-30 03:51:03,134 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_bStaMld.c
+2025-12-30 03:51:03,363 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_utils.c after 90s - using fallback metadata
+2025-12-30 03:51:03,577 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_rad_hostapd_api.c after 90s - using fallback metadata
+2025-12-30 03:51:03,733 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_cfgFile.c after 90s - using fallback metadata
+2025-12-30 03:51:03,898 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_core.c after 90s - using fallback metadata
+2025-12-30 03:51:04,088 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlInterface.c after 90s - using fallback metadata
+2025-12-30 03:51:04,151 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 291, Duration: 0ms
+2025-12-30 03:51:04,425 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 274ms
+2025-12-30 03:51:04,603 - Knowledge - INFO - Progress: 42.6% | Files: 130/303 | Rate: 0.83 files/sec | Queue: 87
+2025-12-30 03:51:04,603 - Knowledge - INFO - [kw7] Queue=87, InProgress=0, PendingWorkers=20/20, Completed=130/303 (42.9%)
+2025-12-30 03:51:04,650 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:04,765 - Knowledge - INFO - [kw19] Queue=87, InProgress=0, PendingWorkers=20/20, Completed=134/303 (44.2%)
+2025-12-30 03:51:04,884 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=87, active_workers=20/20
+2025-12-30 03:51:04,972 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_rad_hostapd_api.c
+2025-12-30 03:51:05,108 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=87, active_workers=20/20
+2025-12-30 03:51:05,190 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:05,288 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_cfgFile.c
+2025-12-30 03:51:05,372 - Knowledge - INFO - Async storing batch of 6 embeddings
+2025-12-30 03:51:05,425 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlGSock.c after 90s - using fallback metadata
+2025-12-30 03:51:05,449 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_bgdfs.h
+2025-12-30 03:51:05,537 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_core.c
+2025-12-30 03:51:05,659 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_epProfile.h
+2025-12-30 03:51:05,747 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_attr.c after 90s - using fallback metadata
+2025-12-30 03:51:05,870 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ap_nl80211.h
+2025-12-30 03:51:05,958 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlInterface.c
+2025-12-30 03:51:06,080 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211.h
+2025-12-30 03:51:06,197 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ssid_nl80211.c after 90s - using fallback metadata
+2025-12-30 03:51:06,295 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_chaninfo.h
+2025-12-30 03:51:06,370 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_utils.c
+2025-12-30 03:51:06,487 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_core.h
+2025-12-30 03:51:06,576 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_channel.c after 90s - using fallback metadata
+2025-12-30 03:51:06,715 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_utils.h
+2025-12-30 03:51:06,880 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_zwdfs.h
+2025-12-30 03:51:06,964 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_chanmgt.c after 90s - using fallback metadata
+2025-12-30 03:51:07,328 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:07,334 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 290, Duration: 0ms
+2025-12-30 03:51:07,505 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaCtrlGSock.c
+2025-12-30 03:51:07,602 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 267ms
+2025-12-30 03:51:07,716 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_attr.c
+2025-12-30 03:51:07,813 - Knowledge - INFO - Split /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_fsm.c (89596 bytes) into 3 chunks of ~32KB
+2025-12-30 03:51:07,871 - Knowledge - INFO - Progress: 45.9% | Files: 139/303 | Rate: 0.87 files/sec | Queue: 79
+2025-12-30 03:51:07,957 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ssid_nl80211.c
+2025-12-30 03:51:08,150 - Knowledge - INFO - [kw1] Queue=79, InProgress=0, PendingWorkers=20/20, Completed=139/303 (45.9%)
+2025-12-30 03:51:08,213 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_dmnMgt.c after 90s - using fallback metadata
+2025-12-30 03:51:08,272 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_channel.c
+2025-12-30 03:51:08,377 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=79, active_workers=20/20
+2025-12-30 03:51:08,458 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxIfStats.c after 90s - using fallback metadata
+2025-12-30 03:51:08,548 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ChannelManagement/wld_chanmgt.c
+2025-12-30 03:51:08,640 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:08,722 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_config.c after 90s - using fallback metadata
+2025-12-30 03:51:08,896 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_util.h
+2025-12-30 03:51:08,987 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_daemon.c after 90s - using fallback metadata
+2025-12-30 03:51:09,010 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ap_nl80211.c after 90s - using fallback metadata
+2025-12-30 03:51:09,135 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_apMld.h
+2025-12-30 03:51:09,236 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_eventing.c after 90s - using fallback metadata
+2025-12-30 03:51:09,334 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_parser.c after 90s - using fallback metadata
+2025-12-30 03:51:09,358 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_tinyRoam.c after 90s - using fallback metadata
+2025-12-30 03:51:09,446 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlInterface.h
+2025-12-30 03:51:09,665 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_debug.c after 90s - using fallback metadata
+2025-12-30 03:51:09,716 - Knowledge - INFO - [kw3] Queue=75, InProgress=0, PendingWorkers=20/20, Completed=141/303 (46.5%)
+2025-12-30 03:51:09,742 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:09,774 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_epMgmt.c after 90s - using fallback metadata
+2025-12-30 03:51:09,929 - Knowledge - INFO - Worker kw1 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmn_types.h
+2025-12-30 03:51:10,007 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_rad_nl80211.c after 90s - using fallback metadata
+2025-12-30 03:51:10,098 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=75, active_workers=20/20
+2025-12-30 03:51:10,173 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_dmnMgt.c
+2025-12-30 03:51:10,251 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_epProfile.c after 90s - using fallback metadata
+2025-12-30 03:51:10,490 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_ap_api.c after 90s - using fallback metadata
+2025-12-30 03:51:10,605 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:10,692 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxIfStats.c
+2025-12-30 03:51:10,780 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_tinyRoam_bus.c after 90s - using fallback metadata
+2025-12-30 03:51:10,928 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:10,963 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxIfStats.h
+2025-12-30 03:51:11,079 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_config.c
+2025-12-30 03:51:11,235 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:11,306 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_ap_nl80211.c
+2025-12-30 03:51:11,415 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wps.h
+2025-12-30 03:51:11,492 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_daemon.c
+2025-12-30 03:51:11,617 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_tinyRoam.c
+2025-12-30 03:51:11,714 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_wpaSupp_parser.c
+2025-12-30 03:51:11,793 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_events.h
+2025-12-30 03:51:11,882 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_eventing.c
+2025-12-30 03:51:11,994 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_epMgmt.c
+2025-12-30 03:51:12,074 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_nl80211_debug.c
+2025-12-30 03:51:12,173 - Knowledge - INFO - Worker kw3 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ep_nl80211.h
+2025-12-30 03:51:12,352 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_epProfile.c
+2025-12-30 03:51:12,592 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_rad_nl80211.c
+2025-12-30 03:51:12,606 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/EpMgt/wld_tinyRoam_bus.c
+2025-12-30 03:51:12,757 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/nl80211/wld_hostapd_ap_api.c
+2025-12-30 03:51:12,924 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_accesspoint.c
+2025-12-30 03:51:13,170 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 292, Duration: 0ms
+2025-12-30 03:51:13,330 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 159ms
+2025-12-30 03:51:13,526 - Knowledge - INFO - Progress: 50.8% | Files: 154/303 | Rate: 0.93 files/sec | Queue: 71
+2025-12-30 03:51:13,702 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxIfUtils.c after 90s - using fallback metadata
+2025-12-30 03:51:13,865 - Knowledge - INFO - [kw8] Queue=71, InProgress=0, PendingWorkers=20/20, Completed=154/303 (50.8%)
+2025-12-30 03:51:13,900 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_autoCommitMgr.c after 90s - using fallback metadata
+2025-12-30 03:51:13,965 - Knowledge - INFO - [kw5] Queue=71, InProgress=0, PendingWorkers=20/20, Completed=154/303 (50.8%)
+2025-12-30 03:51:14,003 - Knowledge - INFO - [kw13] Queue=71, InProgress=0, PendingWorkers=20/20, Completed=154/303 (50.8%)
+2025-12-30 03:51:14,068 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=71, active_workers=20/20
+2025-12-30 03:51:14,233 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_monitor.c after 90s - using fallback metadata
+2025-12-30 03:51:14,346 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=71, active_workers=20/20
+2025-12-30 03:51:14,476 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=71, active_workers=20/20
+2025-12-30 03:51:14,578 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:14,670 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_rssiMonitor.c after 90s - using fallback metadata
+2025-12-30 03:51:14,750 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:14,837 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:14,928 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_cfgManager.h
+2025-12-30 03:51:15,028 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_rrm.c after 90s - using fallback metadata
+2025-12-30 03:51:15,107 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_cfgFile.h
+2025-12-30 03:51:15,209 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoCommitMgr.h
+2025-12-30 03:51:15,341 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmn.h
+2025-12-30 03:51:15,464 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:15,535 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_epMld.h
+2025-12-30 03:51:15,653 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_config.h
+2025-12-30 03:51:15,741 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_types.h
+2025-12-30 03:51:15,826 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxIfUtils.c
+2025-12-30 03:51:15,952 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_chanmgt.h
+2025-12-30 03:51:16,070 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoNeighAdd.h
+2025-12-30 03:51:16,188 - Knowledge - INFO - Worker kw8 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_hostapd_api.h
+2025-12-30 03:51:16,280 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_autoCommitMgr.c
+2025-12-30 03:51:16,394 - Knowledge - INFO - Worker kw5 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_types.h
+2025-12-30 03:51:16,473 - Knowledge - INFO - Worker kw13 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_dmnMgt.h
+2025-12-30 03:51:16,668 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_monitor.c
+2025-12-30 03:51:16,924 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_rssiMonitor.c
+2025-12-30 03:51:17,136 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_rrm.c
+2025-12-30 03:51:17,979 - Knowledge - INFO - [kw6] Queue=59, InProgress=0, PendingWorkers=20/20, Completed=159/303 (52.5%)
+2025-12-30 03:51:18,141 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=59, active_workers=20/20
+2025-12-30 03:51:18,312 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:18,432 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_vap.c after 90s - using fallback metadata
+2025-12-30 03:51:18,495 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoCommitRadData.h
+2025-12-30 03:51:18,641 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_radioOperatingStandards.c after 90s - using fallback metadata
+2025-12-30 03:51:18,770 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_mld.h
+2025-12-30 03:51:18,854 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Features/persist/wld_persist_on.c after 90s - using fallback metadata
+2025-12-30 03:51:18,973 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_cfgManager.h
+2025-12-30 03:51:19,071 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Features/persist/wld_persist_off.c after 90s - using fallback metadata
+2025-12-30 03:51:19,166 - Knowledge - INFO - Worker kw6 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_ep_api.h
+2025-12-30 03:51:19,256 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_rad.c after 90s - using fallback metadata
+2025-12-30 03:51:19,490 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:19,685 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_radioOperatingStandards.c
+2025-12-30 03:51:19,856 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Features/persist/wld_persist_on.c
+2025-12-30 03:51:20,057 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Features/persist/wld_persist_off.c
+2025-12-30 03:51:20,309 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_rad.c
+2025-12-30 03:51:20,529 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_vap.c
+2025-12-30 03:51:20,819 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_security.c after 90s - using fallback metadata
+2025-12-30 03:51:20,996 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_epMld.c after 90s - using fallback metadata
+2025-12-30 03:51:21,199 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_util.c after 90s - using fallback metadata
+2025-12-30 03:51:21,404 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_apMld.c after 90s - using fallback metadata
+2025-12-30 03:51:21,426 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 292, Duration: 0ms
+2025-12-30 03:51:21,586 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_functionTable.c after 90s - using fallback metadata
+2025-12-30 03:51:21,704 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 278ms
+2025-12-30 03:51:21,908 - Knowledge - INFO - Progress: 54.1% | Files: 165/303 | Rate: 0.95 files/sec | Queue: 55
+2025-12-30 03:51:21,963 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:22,130 - Knowledge - INFO - [kw9] Queue=55, InProgress=0, PendingWorkers=20/20, Completed=169/303 (55.8%)
+2025-12-30 03:51:22,251 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_security.c
+2025-12-30 03:51:22,340 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=55, active_workers=20/20
+2025-12-30 03:51:22,475 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_epMld.c
+2025-12-30 03:51:22,568 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:22,640 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlGSock.h after 90s - using fallback metadata
+2025-12-30 03:51:22,697 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_util.c
+2025-12-30 03:51:22,787 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel_types.h
+2025-12-30 03:51:22,868 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_daemon.h after 90s - using fallback metadata
+2025-12-30 03:51:22,957 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_apMld.c
+2025-12-30 03:51:23,076 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_common.h
+2025-12-30 03:51:23,175 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_accesspoint.h after 90s - using fallback metadata
+2025-12-30 03:51:23,260 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_functionTable.c
+2025-12-30 03:51:23,382 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_statsmon.h
+2025-12-30 03:51:23,452 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_parser.h after 90s - using fallback metadata
+2025-12-30 03:51:23,673 - Knowledge - INFO - Worker kw9 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_compat.h
+2025-12-30 03:51:23,760 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_debug.h after 90s - using fallback metadata
+2025-12-30 03:51:24,009 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_sensing.c after 90s - using fallback metadata
+2025-12-30 03:51:24,101 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:24,232 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_wps.c after 90s - using fallback metadata
+2025-12-30 03:51:24,240 - Knowledge - INFO - [kw12] Queue=51, InProgress=0, PendingWorkers=20/20, Completed=174/303 (57.4%)
+2025-12-30 03:51:24,311 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlGSock.h
+2025-12-30 03:51:24,406 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxWExtUtils.c after 90s - using fallback metadata
+2025-12-30 03:51:24,513 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=51, active_workers=20/20
+2025-12-30 03:51:24,624 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_daemon.h
+2025-12-30 03:51:24,716 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_extMod.c after 90s - using fallback metadata
+2025-12-30 03:51:24,796 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:24,890 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_accesspoint.h
+2025-12-30 03:51:25,009 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_autoNeighAdd.c after 90s - using fallback metadata
+2025-12-30 03:51:25,107 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxWExtUtils.h
+2025-12-30 03:51:25,182 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_parser.h
+2025-12-30 03:51:25,204 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_ep.c after 90s - using fallback metadata
+2025-12-30 03:51:25,329 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:25,395 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_vendorModule_mgr.h
+2025-12-30 03:51:25,516 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_debug.h
+2025-12-30 03:51:25,600 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_wpaSupp.c after 90s - using fallback metadata
+2025-12-30 03:51:25,740 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_sensing.c
+2025-12-30 03:51:25,842 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel.h
+2025-12-30 03:51:26,021 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_zwdfs.c after 90s - using fallback metadata
+2025-12-30 03:51:26,159 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_wps.c
+2025-12-30 03:51:26,256 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_ifMgt.c after 90s - using fallback metadata
+2025-12-30 03:51:26,258 - Knowledge - INFO - Worker kw12 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ap_rssiMonitor.h
+2025-12-30 03:51:26,335 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_radIfMgt.c after 90s - using fallback metadata
+2025-12-30 03:51:26,445 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_macCfg.c after 90s - using fallback metadata
+2025-12-30 03:51:26,548 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_caps.c after 90s - using fallback metadata
+2025-12-30 03:51:26,551 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_linuxWExtUtils.c
+2025-12-30 03:51:26,709 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_fsm.c after 90s - using fallback metadata
+2025-12-30 03:51:26,791 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_fsm.c after 90s - using fallback metadata
+2025-12-30 03:51:26,819 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 292, Duration: 0ms
+2025-12-30 03:51:26,872 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_scan.c after 90s - using fallback metadata
+2025-12-30 03:51:26,972 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_extMod.c
+2025-12-30 03:51:27,168 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_eventHandlers.c after 90s - using fallback metadata
+2025-12-30 03:51:27,169 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_stamon.c after 90s - using fallback metadata
+2025-12-30 03:51:27,284 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 465ms
+2025-12-30 03:51:27,410 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_delayMgr.c after 90s - using fallback metadata
+2025-12-30 03:51:27,489 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Utils/wld_autoNeighAdd.c
+2025-12-30 03:51:27,596 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen.c after 90s - using fallback metadata
+2025-12-30 03:51:27,605 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_mldConfig.c after 90s - using fallback metadata
+2025-12-30 03:51:27,677 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_assocdev.c after 90s - using fallback metadata
+2025-12-30 03:51:27,773 - Knowledge - INFO - Progress: 59.1% | Files: 180/303 | Rate: 1.01 files/sec | Queue: 47
+2025-12-30 03:51:27,809 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:27,854 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_evtHandler.c after 90s - using fallback metadata
+2025-12-30 03:51:28,037 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_hapd.c after 90s - using fallback metadata
+2025-12-30 03:51:28,131 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_macfilter.c after 90s - using fallback metadata
+2025-12-30 03:51:28,218 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_vendorModule.h after 90s - using fallback metadata
+2025-12-30 03:51:28,363 - Knowledge - INFO - [kw17] Queue=47, InProgress=0, PendingWorkers=20/20, Completed=184/303 (60.7%)
+2025-12-30 03:51:28,400 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_ep.c
+2025-12-30 03:51:28,581 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:28,613 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_mld.c after 90s - using fallback metadata
+2025-12-30 03:51:28,718 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_neighbours.c after 90s - using fallback metadata
+2025-12-30 03:51:28,744 - Knowledge - INFO - [kw4] Queue=47, InProgress=0, PendingWorkers=20/20, Completed=189/303 (62.4%)
+2025-12-30 03:51:28,843 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:28,877 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=47, active_workers=20/20
+2025-12-30 03:51:28,975 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_wpaSupp.c
+2025-12-30 03:51:29,078 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_ifMgt.c
+2025-12-30 03:51:29,159 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wld_plugin.c after 90s - using fallback metadata
+2025-12-30 03:51:29,259 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_apMgmt.c after 90s - using fallback metadata
+2025-12-30 03:51:29,350 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=47, active_workers=20/20
+2025-12-30 03:51:29,464 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_macCfg.c
+2025-12-30 03:51:29,537 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:29,650 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_zwdfs.c
+2025-12-30 03:51:29,767 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_caps.c
+2025-12-30 03:51:29,921 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:29,991 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_bss_transfer.c after 90s - using fallback metadata
+2025-12-30 03:51:30,089 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:30,156 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_fsm.c
+2025-12-30 03:51:30,263 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlMngr.h
+2025-12-30 03:51:30,368 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_radIfMgt.c
+2025-12-30 03:51:30,441 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_scan.c
+2025-12-30 03:51:30,525 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_eventHandlers.c
+2025-12-30 03:51:30,643 - Knowledge - INFO - Processing batch of 5 files
+2025-12-30 03:51:30,682 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_events.h
+2025-12-30 03:51:30,766 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_stamon.c
+2025-12-30 03:51:30,850 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_endpoint.h
+2025-12-30 03:51:30,928 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_fsm.c
+2025-12-30 03:51:31,045 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_delayMgr.c
+2025-12-30 03:51:31,160 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen.c
+2025-12-30 03:51:31,288 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_mldConfig.c
+2025-12-30 03:51:31,395 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_types.h
+2025-12-30 03:51:31,486 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/wld_assocdev.c
+2025-12-30 03:51:31,585 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_extMod.h
+2025-12-30 03:51:31,772 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/RadMgt/wld_rad_evtHandler.c
+2025-12-30 03:51:31,916 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_hapd.c
+2025-12-30 03:51:31,941 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_macfilter.c
+2025-12-30 03:51:32,018 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_macCfg.h
+2025-12-30 03:51:32,184 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_vendorModule.h
+2025-12-30 03:51:32,226 - Knowledge - INFO - Worker kw17 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld.h
+2025-12-30 03:51:32,408 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 290, Duration: 0ms
+2025-12-30 03:51:32,566 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wifiGen_mld.c
+2025-12-30 03:51:32,566 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_neighbours.c
+2025-12-30 03:51:32,629 - Knowledge - INFO - Worker kw4 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_sensing.h
+2025-12-30 03:51:32,831 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld.h (ext=.h, size=129182)
+2025-12-30 03:51:32,931 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 523ms
+2025-12-30 03:51:33,166 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/Plugin/wld_plugin.c
+2025-12-30 03:51:33,167 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_apMgmt.c
+2025-12-30 03:51:33,445 - Knowledge - INFO - Progress: 67.3% | Files: 204/303 | Rate: 1.11 files/sec | Queue: 39
+2025-12-30 03:51:33,445 - Knowledge - INFO - [kw15] Queue=39, InProgress=0, PendingWorkers=20/20, Completed=204/303 (67.3%)
+2025-12-30 03:51:33,448 - Knowledge - INFO - [kw16] Queue=39, InProgress=0, PendingWorkers=20/20, Completed=204/303 (67.3%)
+2025-12-30 03:51:33,602 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/src/ApMgt/wld_ap_bss_transfer.c
+2025-12-30 03:51:33,753 - Knowledge - INFO - [kw10] Queue=39, InProgress=0, PendingWorkers=20/20, Completed=204/303 (67.3%)
+2025-12-30 03:51:33,773 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=39, active_workers=20/20
+2025-12-30 03:51:33,881 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=39, active_workers=20/20
+2025-12-30 03:51:34,039 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=39, active_workers=20/20
+2025-12-30 03:51:34,241 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:34,242 - Knowledge - INFO - [kw14] Queue=35, InProgress=0, PendingWorkers=20/20, Completed=204/303 (67.3%)
+2025-12-30 03:51:34,278 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:34,365 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:34,482 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_bStaMld.h
+2025-12-30 03:51:34,575 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=35, active_workers=20/20
+2025-12-30 03:51:34,677 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_radio.h
+2025-12-30 03:51:34,679 - Knowledge - INFO - [kw11] Queue=27, InProgress=0, PendingWorkers=20/20, Completed=204/303 (67.3%)
+2025-12-30 03:51:34,764 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmnGrp.h
+2025-12-30 03:51:34,852 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel_lib.h
+2025-12-30 03:51:34,932 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:35,026 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_delayMgr.h
+2025-12-30 03:51:35,153 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=27, active_workers=20/20
+2025-12-30 03:51:35,266 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_evtHandler.h
+2025-12-30 03:51:35,348 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_cfgFile.h
+2025-12-30 03:51:35,425 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlGSock_priv.h
+2025-12-30 03:51:35,503 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Features/wld_persist.h
+2025-12-30 03:51:35,599 - Knowledge - INFO - Async storing batch of 5 embeddings
+2025-12-30 03:51:35,721 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ssid.h
+2025-12-30 03:51:35,806 - Knowledge - INFO - Worker kw15 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_api.h
+2025-12-30 03:51:35,906 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_ssid_nl80211_priv.h
+2025-12-30 03:51:35,992 - Knowledge - INFO - Worker kw16 processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_tinyRoam.h
+2025-12-30 03:51:36,070 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_scan_priv.h
+2025-12-30 03:51:36,175 - Knowledge - INFO - Worker kw10 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/VendorModule/wld_vendorModule_priv.h
+2025-12-30 03:51:36,385 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlInterface_priv.h
+2025-12-30 03:51:36,584 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaSupp_cfgManager_priv.h
+2025-12-30 03:51:36,766 - Knowledge - INFO - Worker kw14 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_core_priv.h
+2025-12-30 03:51:36,845 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_events_priv.h
+2025-12-30 03:51:37,099 - Knowledge - INFO - Worker kw11 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_parser.h
+2025-12-30 03:51:38,732 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:51:46,916 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:51:56,189 - Knowledge - INFO - [LLM_CALL] Completed: wld_monitor.h:chunk1, Duration: 53601ms, PromptTokens: 2398, CompletionTokens: 565, Cost: $0.00047
+2025-12-30 03:51:56,384 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_monitor.h
+2025-12-30 03:51:56,385 - Knowledge - INFO - [LLM_CALL] Completed: wld_radioOperatingStandards.h:chunk1, Duration: 80404ms, PromptTokens: 2738, CompletionTokens: 435, Cost: $0.00045
+2025-12-30 03:51:56,697 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_radioOperatingStandards.h
+2025-12-30 03:52:00,657 - Knowledge - INFO - [LLM_CALL] Completed: wld_rad_nl80211.h:chunk1, Duration: 59546ms, PromptTokens: 10662, CompletionTokens: 1875, Cost: $0.00182
+2025-12-30 03:52:00,869 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_nl80211.h
+2025-12-30 03:52:00,971 - Knowledge - INFO - [LLM_CALL] Completed: wld_dm_trans.h:chunk1, Duration: 36049ms, PromptTokens: 2356, CompletionTokens: 219, Cost: $0.00032
+2025-12-30 03:52:01,457 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_dm_trans.h
+2025-12-30 03:52:02,628 - Knowledge - INFO - [LLM_CALL] Completed: wld_hostapd_ap_api.h:chunk1, Duration: 48135ms, PromptTokens: 5674, CompletionTokens: 2437, Cost: $0.00154
+2025-12-30 03:52:02,802 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_ap_api.h
+2025-12-30 03:52:03,601 - Knowledge - INFO - [LLM_CALL] Completed: wld_rad_stamon.h:chunk1, Duration: 33894ms, PromptTokens: 2468, CompletionTokens: 724, Cost: $0.00054
+2025-12-30 03:52:03,829 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_stamon.h
+2025-12-30 03:52:04,913 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:52:05,131 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_radioOperatingStandards.h
+2025-12-30 03:52:05,573 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_nl80211.h
+2025-12-30 03:52:05,743 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_ap_api.h
+2025-12-30 03:52:05,820 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:05,916 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_stamon.h
+2025-12-30 03:52:06,596 - Knowledge - INFO - [kw18] Queue=19, InProgress=0, PendingWorkers=20/20, Completed=208/303 (68.6%)
+2025-12-30 03:52:06,765 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=19, active_workers=20/20
+2025-12-30 03:52:06,934 - Knowledge - INFO - Async storing batch of 4 embeddings
+2025-12-30 03:52:07,127 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlConnection_priv.h
+2025-12-30 03:52:07,382 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_hostapd_cfgManager_priv.h
+2025-12-30 03:52:07,587 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlMngr_priv.h
+2025-12-30 03:52:08,118 - Knowledge - INFO - Worker kw18 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_api_priv.h
+2025-12-30 03:52:08,849 - Knowledge - INFO - [LLM_CALL] Completed: wld_eventing.h:chunk1, Duration: 35917ms, PromptTokens: 3050, CompletionTokens: 571, Cost: $0.00053
+2025-12-30 03:52:09,231 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_eventing.h
+2025-12-30 03:52:09,454 - Knowledge - INFO - [LLM_CALL] Completed: wld_chaninfo.h:chunk1, Duration: 39470ms, PromptTokens: 2640, CompletionTokens: 317, Cost: $0.00039
+2025-12-30 03:52:09,809 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_chaninfo.h
+2025-12-30 03:52:13,842 - Knowledge - INFO - [LLM_CALL] Completed: wld_assocdev.h:chunk1, Duration: 60513ms, PromptTokens: 5406, CompletionTokens: 2249, Cost: $0.00144
+2025-12-30 03:52:14,247 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_assocdev.h
+2025-12-30 03:52:14,518 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:52:14,723 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_monitor.h
+2025-12-30 03:52:14,897 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_assocdev.h
+2025-12-30 03:52:15,078 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_dm_trans.h
+2025-12-30 03:52:15,292 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_eventing.h
+2025-12-30 03:52:15,924 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 293, Duration: 0ms
+2025-12-30 03:52:16,126 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 202ms
+2025-12-30 03:52:16,307 - Knowledge - INFO - Progress: 70.0% | Files: 212/303 | Rate: 0.93 files/sec | Queue: 15
+2025-12-30 03:52:16,501 - Knowledge - INFO - [kw20] Queue=15, InProgress=0, PendingWorkers=20/20, Completed=212/303 (70.0%)
+2025-12-30 03:52:16,688 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=15, active_workers=20/20
+2025-12-30 03:52:16,889 - Knowledge - INFO - Async storing batch of 4 embeddings
+2025-12-30 03:52:17,091 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_secDmnGrp_priv.h
+2025-12-30 03:52:17,260 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_fsm.h
+2025-12-30 03:52:17,428 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_zwdfs.h
+2025-12-30 03:52:17,842 - Knowledge - INFO - Worker kw20 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_wpaSupp.h
+2025-12-30 03:52:19,436 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:20,225 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:23,601 - Knowledge - INFO - [LLM_CALL] Completed: wld_ap_nl80211.h:chunk1, Duration: 67269ms, PromptTokens: 5640, CompletionTokens: 1174, Cost: $0.00103
+2025-12-30 03:52:23,870 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ap_nl80211.h
+2025-12-30 03:52:25,176 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211_utils.h:chunk1, Duration: 45809ms, PromptTokens: 3840, CompletionTokens: 695, Cost: $0.00066
+2025-12-30 03:52:25,326 - Knowledge - INFO - Async storage completed for 6 embeddings
+2025-12-30 03:52:25,481 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_utils.h
+2025-12-30 03:52:26,469 - Knowledge - INFO - [LLM_CALL] Completed: wld_bgdfs.h:chunk1, Duration: 79400ms, PromptTokens: 3864, CompletionTokens: 579, Cost: $0.00062
+2025-12-30 03:52:26,681 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_bgdfs.h
+2025-12-30 03:52:27,199 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:52:27,404 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_bgdfs.h
+2025-12-30 03:52:27,413 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:27,582 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ap_nl80211.h
+2025-12-30 03:52:27,774 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_chaninfo.h
+2025-12-30 03:52:28,114 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_utils.h
+2025-12-30 03:52:28,472 - Knowledge - INFO - [LLM_CALL] Completed: wld_epProfile.h:chunk1, Duration: 81280ms, PromptTokens: 2176, CompletionTokens: 298, Cost: $0.00034
+2025-12-30 03:52:28,706 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_epProfile.h
+2025-12-30 03:52:28,836 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:28,950 - Knowledge - INFO - [kw7] Queue=11, InProgress=0, PendingWorkers=20/20, Completed=216/303 (71.3%)
+2025-12-30 03:52:29,407 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=11, active_workers=20/20
+2025-12-30 03:52:29,413 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:29,579 - Knowledge - INFO - Async storing batch of 4 embeddings
+2025-12-30 03:52:29,809 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_rad.h
+2025-12-30 03:52:30,076 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_vap.h
+2025-12-30 03:52:30,407 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_ep.h
+2025-12-30 03:52:30,580 - Knowledge - INFO - Worker kw7 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_events.h
+2025-12-30 03:52:31,180 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211.h:chunk1, Duration: 65405ms, PromptTokens: 2132, CompletionTokens: 155, Cost: $0.00028
+2025-12-30 03:52:31,368 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211.h
+2025-12-30 03:52:32,817 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:33,608 - Knowledge - INFO - [LLM_CALL] Completed: wld_secDmn_types.h:chunk1, Duration: 39609ms, PromptTokens: 2100, CompletionTokens: 125, Cost: $0.00026
+2025-12-30 03:52:33,870 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmn_types.h
+2025-12-30 03:52:35,813 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:37,265 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211_attr.h:chunk1, Duration: 80491ms, PromptTokens: 4406, CompletionTokens: 589, Cost: $0.00068
+2025-12-30 03:52:37,584 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_attr.h
+2025-12-30 03:52:43,083 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:45,483 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:45,515 - Knowledge - INFO - [LLM_CALL] Completed: wld_fsm.h:chunk1, Duration: 73931ms, PromptTokens: 3456, CompletionTokens: 1014, Cost: $0.00075
+2025-12-30 03:52:45,606 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:46,057 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:46,212 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_fsm.h
+2025-12-30 03:52:48,128 - Knowledge - INFO - [LLM_CALL] Completed: wld_autoNeighAdd.h:chunk1, Duration: 59880ms, PromptTokens: 2842, CompletionTokens: 432, Cost: $0.00046
+2025-12-30 03:52:48,462 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoNeighAdd.h
+2025-12-30 03:52:48,510 - Knowledge - INFO - [LLM_CALL] Completed: wld_zwdfs.h:chunk1, Duration: 43947ms, PromptTokens: 2896, CompletionTokens: 320, Cost: $0.00042
+2025-12-30 03:52:49,054 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_zwdfs.h
+2025-12-30 03:52:49,077 - Knowledge - INFO - [LLM_CALL] Completed: wld_linuxIfUtils.h:chunk1, Duration: 105769ms, PromptTokens: 5512, CompletionTokens: 624, Cost: $0.00080
+2025-12-30 03:52:49,616 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxIfUtils.h
+2025-12-30 03:52:52,646 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaCtrl_api.h:chunk1, Duration: 66900ms, PromptTokens: 3314, CompletionTokens: 610, Cost: $0.00058
+2025-12-30 03:52:53,037 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_api.h
+2025-12-30 03:52:53,134 - Knowledge - INFO - [LLM_CALL] Completed: wld_dmnMgt.h:chunk1, Duration: 40593ms, PromptTokens: 2690, CompletionTokens: 446, Cost: $0.00045
+2025-12-30 03:52:53,599 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_dmnMgt.h
+2025-12-30 03:52:53,831 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaCtrlInterface.h:chunk1, Duration: 78840ms, PromptTokens: 3576, CompletionTokens: 445, Cost: $0.00054
+2025-12-30 03:52:54,270 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlInterface.h
+2025-12-30 03:52:55,341 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:52:55,827 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxIfUtils.h
+2025-12-30 03:52:56,207 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_attr.h
+2025-12-30 03:52:56,592 - Knowledge - INFO - [LLM_CALL] Completed: wld_autoCommitMgr.h:chunk1, Duration: 99744ms, PromptTokens: 2228, CompletionTokens: 338, Cost: $0.00036
+2025-12-30 03:52:56,669 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_fsm.h
+2025-12-30 03:52:57,172 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoCommitMgr.h
+2025-12-30 03:52:57,472 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_api.h
+2025-12-30 03:52:58,615 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:58,746 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:52:58,813 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211_core.h:chunk1, Duration: 83018ms, PromptTokens: 3950, CompletionTokens: 698, Cost: $0.00067
+2025-12-30 03:52:59,302 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_core.h
+2025-12-30 03:52:59,499 - Knowledge - INFO - [LLM_CALL] Completed: wld_autoCommitRadData.h:chunk1, Duration: 100127ms, PromptTokens: 2144, CompletionTokens: 163, Cost: $0.00028
+2025-12-30 03:52:59,794 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoCommitRadData.h
+2025-12-30 03:53:00,168 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:53:00,535 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:53:01,349 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 293, Duration: 0ms
+2025-12-30 03:53:01,846 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 497ms
+2025-12-30 03:53:02,320 - Knowledge - INFO - Progress: 73.9% | Files: 224/303 | Rate: 0.82 files/sec | Queue: 7
+2025-12-30 03:53:02,399 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:53:02,638 - Knowledge - INFO - [kw2] Queue=7, InProgress=0, PendingWorkers=20/20, Completed=224/303 (73.9%)
+2025-12-30 03:53:02,890 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_epProfile.h
+2025-12-30 03:53:03,088 - Knowledge - INFO - Batch sizing: calculated=4, max_allowed=10, queue=7, active_workers=20/20
+2025-12-30 03:53:03,157 - Knowledge - INFO - [LLM_CALL] Completed: wld_config.h:chunk1, Duration: 90226ms, PromptTokens: 2090, CompletionTokens: 192, Cost: $0.00029
+2025-12-30 03:53:03,219 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211.h
+2025-12-30 03:53:03,612 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_config.h
+2025-12-30 03:53:03,633 - Knowledge - INFO - Async storing batch of 4 embeddings
+2025-12-30 03:53:03,879 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_core.h
+2025-12-30 03:53:04,148 - Knowledge - INFO - [LLM_CALL] Completed: wld_hostapd_cfgFile.h:chunk1, Duration: 107367ms, PromptTokens: 2398, CompletionTokens: 538, Cost: $0.00046
+2025-12-30 03:53:04,352 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_hapd.h
+2025-12-30 03:53:04,558 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_zwdfs.h
+2025-12-30 03:53:04,759 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_cfgFile.h
+2025-12-30 03:53:04,991 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_mld.h
+2025-12-30 03:53:05,559 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wld_plugin.h
+2025-12-30 03:53:05,872 - Knowledge - INFO - Worker kw2 processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen.h
+2025-12-30 03:53:05,980 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:53:06,467 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoCommitMgr.h
+2025-12-30 03:53:07,353 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_config.h
+2025-12-30 03:53:07,653 - Knowledge - INFO - [LLM_CALL] Completed: wld_statsmon.h:chunk1, Duration: 82716ms, PromptTokens: 2634, CompletionTokens: 482, Cost: $0.00046
+2025-12-30 03:53:08,077 - Knowledge - INFO - Async storage completed for 5 embeddings
+2025-12-30 03:53:08,438 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_statsmon.h
+2025-12-30 03:53:08,867 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlGSock_priv.h after 90s - using fallback metadata
+2025-12-30 03:53:08,870 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoNeighAdd.h
+2025-12-30 03:53:09,150 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_ssid_nl80211_priv.h after 90s - using fallback metadata
+2025-12-30 03:53:09,648 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlInterface_priv.h after 90s - using fallback metadata
+2025-12-30 03:53:09,955 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_core_priv.h after 90s - using fallback metadata
+2025-12-30 03:53:09,978 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_dmnMgt.h
+2025-12-30 03:53:10,015 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaSupp_cfgManager_priv.h:chunk1, Duration: 70049ms, PromptTokens: 2130, CompletionTokens: 136, Cost: $0.00027
+2025-12-30 03:53:10,834 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaSupp_cfgManager_priv.h
+2025-12-30 03:53:11,229 - Knowledge - INFO - [LLM_CALL] Completed: wld_channel_lib.h:chunk1, Duration: 74532ms, PromptTokens: 2070, CompletionTokens: 164, Cost: $0.00027
+2025-12-30 03:53:11,656 - Knowledge - INFO - [kw19] Queue=3, InProgress=0, PendingWorkers=20/20, Completed=229/303 (75.6%)
+2025-12-30 03:53:11,710 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel_lib.h
+2025-12-30 03:53:12,020 - Knowledge - INFO - [LLM_CALL] Completed: wld_linuxIfStats.h:chunk1, Duration: 119474ms, PromptTokens: 2362, CompletionTokens: 513, Cost: $0.00044
+2025-12-30 03:53:12,065 - Knowledge - INFO - Batch sizing: calculated=3, max_allowed=10, queue=3, active_workers=20/20
+2025-12-30 03:53:12,609 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxIfStats.h
+2025-12-30 03:53:12,916 - Knowledge - INFO - [LLM_CALL] Completed: wld_vendorModule_priv.h:chunk1, Duration: 43302ms, PromptTokens: 2294, CompletionTokens: 276, Cost: $0.00034
+2025-12-30 03:53:13,271 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/VendorModule/wld_vendorModule_priv.h
+2025-12-30 03:53:13,291 - Knowledge - INFO - Async storing batch of 4 embeddings
+2025-12-30 03:53:14,070 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/makefile.inc
+2025-12-30 03:53:15,245 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:53:15,389 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/makefile.inc (ext=.inc, size=1732)
+2025-12-30 03:53:15,657 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlGSock_priv.h
+2025-12-30 03:53:16,013 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/baf.yml
+2025-12-30 03:53:16,215 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 292, Duration: 0ms
+2025-12-30 03:53:16,491 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_ssid_nl80211_priv.h
+2025-12-30 03:53:17,053 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/baf.yml (ext=.yml, size=7876)
+2025-12-30 03:53:17,067 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 852ms
+2025-12-30 03:53:17,438 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlInterface_priv.h
+2025-12-30 03:53:17,449 - Knowledge - INFO - Worker kw19 processing /app/data/b2c/226177/b05376m/pwhm-226177/CHANGELOG.md
+2025-12-30 03:53:17,763 - Knowledge - INFO - Progress: 76.6% | Files: 232/303 | Rate: 0.80 files/sec | Queue: 0
+2025-12-30 03:53:17,763 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaCtrl_types.h:chunk1, Duration: 90375ms, PromptTokens: 2132, CompletionTokens: 161, Cost: $0.00028
+2025-12-30 03:53:18,007 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_core_priv.h
+2025-12-30 03:53:18,181 - Knowledge - INFO - Fast-tracked /app/data/b2c/226177/b05376m/pwhm-226177/CHANGELOG.md (ext=.md, size=66601)
+2025-12-30 03:53:18,673 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_types.h
+2025-12-30 03:53:18,989 - Knowledge - INFO - Async storage completed for 4 embeddings
+2025-12-30 03:53:19,129 - Knowledge - INFO - Async storage completed for 4 embeddings
+2025-12-30 03:53:20,102 - Knowledge - INFO - Processing batch of 3 files
+2025-12-30 03:53:20,576 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/makefile.inc
+2025-12-30 03:53:21,614 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/baf.yml
+2025-12-30 03:53:22,420 - Knowledge - INFO - [LLM_CALL] Completed: wld_epMld.h:chunk1, Duration: 114172ms, PromptTokens: 2238, CompletionTokens: 211, Cost: $0.00031
+2025-12-30 03:53:22,894 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_epMld.h
+2025-12-30 03:53:22,918 - Knowledge - INFO - [LLM_CALL] Completed: wld_bStaMld.h:chunk1, Duration: 106649ms, PromptTokens: 2208, CompletionTokens: 211, Cost: $0.00031
+2025-12-30 03:53:22,938 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/CHANGELOG.md
+2025-12-30 03:53:24,155 - Knowledge - INFO - Async storage completed for 4 embeddings
+2025-12-30 03:53:24,168 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_bStaMld.h
+2025-12-30 03:53:25,970 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaCtrlMngr.h:chunk1, Duration: 112523ms, PromptTokens: 4876, CompletionTokens: 668, Cost: $0.00075
+2025-12-30 03:53:26,514 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlMngr.h
+2025-12-30 03:53:28,758 - Knowledge - INFO - [LLM_CALL] Completed: wld_linuxWExtUtils.h:chunk1, Duration: 122123ms, PromptTokens: 2444, CompletionTokens: 189, Cost: $0.00032
+2025-12-30 03:53:28,880 - Knowledge - INFO - Async storage completed for 4 embeddings
+2025-12-30 03:53:29,241 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxWExtUtils.h
+2025-12-30 03:53:29,316 - Knowledge - INFO - [LLM_CALL] Completed: wld_types.h:chunk1, Duration: 82907ms, PromptTokens: 5888, CompletionTokens: 374, Cost: $0.00074
+2025-12-30 03:53:30,100 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_types.h
+2025-12-30 03:53:30,933 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_chanmgt.h after 90s - using fallback metadata
+2025-12-30 03:53:31,828 - Knowledge - INFO - [LLM_CALL] Completed: wld_wps.h:chunk1, Duration: 123387ms, PromptTokens: 3704, CompletionTokens: 1016, Cost: $0.00078
+2025-12-30 03:53:32,199 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wps.h
+2025-12-30 03:53:32,636 - Knowledge - INFO - [LLM_CALL] Completed: wld_common.h:chunk1, Duration: 118347ms, PromptTokens: 2170, CompletionTokens: 237, Cost: $0.00031
+2025-12-30 03:53:34,041 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_common.h
+2025-12-30 03:53:34,906 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211_events.h:chunk1, Duration: 114560ms, PromptTokens: 7070, CompletionTokens: 511, Cost: $0.00091
+2025-12-30 03:53:35,425 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_events.h
+2025-12-30 03:53:35,523 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211_events_priv.h:chunk1, Duration: 77458ms, PromptTokens: 3412, CompletionTokens: 416, Cost: $0.00051
+2025-12-30 03:53:36,132 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_events_priv.h
+2025-12-30 03:53:36,160 - Knowledge - INFO - Async storage completed for 4 embeddings
+2025-12-30 03:53:36,805 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:53:37,249 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_cfgFile.h
+2025-12-30 03:53:37,985 - Knowledge - INFO - [LLM_CALL] Completed: wld_channel_types.h:chunk1, Duration: 134146ms, PromptTokens: 2940, CompletionTokens: 319, Cost: $0.00042
+2025-12-30 03:53:38,106 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_epMld.h
+2025-12-30 03:53:38,433 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel_types.h
+2025-12-30 03:53:38,765 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_chanmgt.h
+2025-12-30 03:53:39,419 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_types.h
+2025-12-30 03:53:39,939 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_cfgFile.h after 90s - using fallback metadata
+2025-12-30 03:53:40,371 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_api.h after 90s - using fallback metadata
+2025-12-30 03:53:42,282 - Knowledge - INFO - [LLM_CALL] Completed: wld_ep_nl80211.h:chunk1, Duration: 100081ms, PromptTokens: 2856, CompletionTokens: 573, Cost: $0.00051
+2025-12-30 03:53:42,744 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ep_nl80211.h
+2025-12-30 03:53:46,381 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:53:46,992 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_bStaMld.h
+2025-12-30 03:53:47,179 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:53:47,237 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 293, Duration: 0ms
+2025-12-30 03:53:47,789 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxIfStats.h
+2025-12-30 03:53:47,918 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel_lib.h
+2025-12-30 03:53:48,031 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 794ms
+2025-12-30 03:53:48,481 - Knowledge - INFO - Progress: 81.5% | Files: 247/303 | Rate: 0.77 files/sec | Queue: 0
+2025-12-30 03:53:48,528 - Knowledge - INFO - [LLM_CALL] Completed: wld_plugin.h:chunk1, Duration: 19238ms, PromptTokens: 2066, CompletionTokens: 160, Cost: $0.00027
+2025-12-30 03:53:48,590 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_cfgFile.h
+2025-12-30 03:53:48,655 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wps.h
+2025-12-30 03:53:49,411 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wld_plugin.h
+2025-12-30 03:53:49,645 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_compat.h after 90s - using fallback metadata
+2025-12-30 03:53:50,111 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_events.h
+2025-12-30 03:53:50,167 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_api.h
+2025-12-30 03:53:51,438 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ep_nl80211.h
+2025-12-30 03:53:52,421 - Knowledge - INFO - [LLM_CALL] Completed: wld_sensing.h:chunk1, Duration: 80343ms, PromptTokens: 2618, CompletionTokens: 387, Cost: $0.00042
+2025-12-30 03:53:52,921 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_sensing.h
+2025-12-30 03:53:56,425 - Knowledge - INFO - [LLM_CALL] Completed: wld_ssid.h:chunk1, Duration: 100996ms, PromptTokens: 3834, CompletionTokens: 1167, Cost: $0.00085
+2025-12-30 03:53:56,776 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ssid.h
+2025-12-30 03:54:00,903 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:01,290 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel_types.h
+2025-12-30 03:54:02,950 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_common.h
+2025-12-30 03:54:04,226 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_statsmon.h
+2025-12-30 03:54:05,788 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211_parser.h:chunk1, Duration: 84433ms, PromptTokens: 4556, CompletionTokens: 933, Cost: $0.00083
+2025-12-30 03:54:06,092 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_parser.h
+2025-12-30 03:54:06,232 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_compat.h
+2025-12-30 03:54:07,538 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_scan_priv.h after 90s - using fallback metadata
+2025-12-30 03:54:08,683 - Knowledge - INFO - [LLM_CALL] Completed: wld_hostapd_cfgManager.h:chunk1, Duration: 139379ms, PromptTokens: 2742, CompletionTokens: 877, Cost: $0.00062
+2025-12-30 03:54:09,361 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_cfgManager.h
+2025-12-30 03:54:09,397 - Knowledge - INFO - [LLM_CALL] Completed: wld_apMld.h:chunk1, Duration: 163260ms, PromptTokens: 2880, CompletionTokens: 1078, Cost: $0.00072
+2025-12-30 03:54:10,082 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_apMld.h
+2025-12-30 03:54:10,104 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_events.h after 90s - using fallback metadata
+2025-12-30 03:54:10,592 - Knowledge - INFO - [LLM_CALL] Completed: wld_rad_delayMgr.h:chunk1, Duration: 127195ms, PromptTokens: 2382, CompletionTokens: 553, Cost: $0.00046
+2025-12-30 03:54:11,010 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_macCfg.h after 90s - using fallback metadata
+2025-12-30 03:54:11,345 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_delayMgr.h
+2025-12-30 03:54:11,549 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_util.h after 90s - using fallback metadata
+2025-12-30 03:54:11,587 - Knowledge - INFO - [LLM_CALL] Completed: wld_ap_rssiMonitor.h:chunk1, Duration: 112781ms, PromptTokens: 3226, CompletionTokens: 956, Cost: $0.00070
+2025-12-30 03:54:12,368 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ap_rssiMonitor.h
+2025-12-30 03:54:12,932 - Knowledge - INFO - [LLM_CALL] Completed: wld_rad_evtHandler.h:chunk1, Duration: 141993ms, PromptTokens: 3202, CompletionTokens: 323, Cost: $0.00045
+2025-12-30 03:54:12,975 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_vendorModule_mgr.h after 90s - using fallback metadata
+2025-12-30 03:54:13,385 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_cfgManager.h after 90s - using fallback metadata
+2025-12-30 03:54:13,632 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_evtHandler.h
+2025-12-30 03:54:13,843 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel.h after 90s - using fallback metadata
+2025-12-30 03:54:13,922 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 293, Duration: 0ms
+2025-12-30 03:54:14,113 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmn.h after 90s - using fallback metadata
+2025-12-30 03:54:14,717 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 795ms
+2025-12-30 03:54:14,872 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_types.h after 90s - using fallback metadata
+2025-12-30 03:54:15,073 - Knowledge - INFO - Progress: 84.8% | Files: 258/303 | Rate: 0.75 files/sec | Queue: 0
+2025-12-30 03:54:15,267 - Knowledge - INFO - [LLM_CALL] Completed: wld_endpoint.h:chunk1, Duration: 143105ms, PromptTokens: 4168, CompletionTokens: 1876, Cost: $0.00117
+2025-12-30 03:54:15,295 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_hostapd_api.h after 90s - using fallback metadata
+2025-12-30 03:54:15,797 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_endpoint.h
+2025-12-30 03:54:15,892 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_mld.h:chunk1, Duration: 56439ms, PromptTokens: 2224, CompletionTokens: 447, Cost: $0.00040
+2025-12-30 03:54:16,167 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmnGrp.h after 90s - using fallback metadata
+2025-12-30 03:54:17,088 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_mld.h
+2025-12-30 03:54:17,423 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:17,553 - Knowledge - INFO - [LLM_CALL] Completed: wld_persist.h:chunk1, Duration: 117140ms, PromptTokens: 2156, CompletionTokens: 410, Cost: $0.00038
+2025-12-30 03:54:17,770 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_scan_priv.h
+2025-12-30 03:54:17,991 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Features/wld_persist.h
+2025-12-30 03:54:18,206 - Knowledge - INFO - [LLM_CALL] Completed: wld_nl80211_api_priv.h:chunk1, Duration: 72130ms, PromptTokens: 4098, CompletionTokens: 597, Cost: $0.00065
+2025-12-30 03:54:18,454 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaSupp_cfgManager_priv.h
+2025-12-30 03:54:18,752 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_api_priv.h
+2025-12-30 03:54:18,816 - Knowledge - INFO - [LLM_CALL] Completed: wld_secDmnGrp_priv.h:chunk1, Duration: 120759ms, PromptTokens: 2802, CompletionTokens: 678, Cost: $0.00055
+2025-12-30 03:54:19,067 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_events_priv.h
+2025-12-30 03:54:19,491 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_secDmnGrp_priv.h
+2025-12-30 03:54:19,569 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:19,634 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_vap.h:chunk1, Duration: 85970ms, PromptTokens: 3680, CompletionTokens: 723, Cost: $0.00066
+2025-12-30 03:54:19,836 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_parser.h
+2025-12-30 03:54:20,013 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_events.h
+2025-12-30 03:54:20,169 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_vap.h
+2025-12-30 03:54:20,497 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:20,684 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:20,711 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrl_types.h
+2025-12-30 03:54:21,037 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_util.h
+2025-12-30 03:54:21,109 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaSupp_ep_api.h:chunk1, Duration: 124983ms, PromptTokens: 3352, CompletionTokens: 1000, Cost: $0.00074
+2025-12-30 03:54:21,360 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_linuxWExtUtils.h
+2025-12-30 03:54:21,613 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_extMod.h after 90s - using fallback metadata
+2025-12-30 03:54:21,805 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_ep_api.h
+2025-12-30 03:54:21,829 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen.h:chunk1, Duration: 47691ms, PromptTokens: 2148, CompletionTokens: 276, Cost: $0.00033
+2025-12-30 03:54:21,948 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_apMld.h
+2025-12-30 03:54:22,633 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_vendorModule_mgr.h
+2025-12-30 03:54:22,649 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_macCfg.h
+2025-12-30 03:54:22,726 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen.h
+2025-12-30 03:54:22,743 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:22,817 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:22,977 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_mld.h after 90s - using fallback metadata
+2025-12-30 03:54:23,504 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_cfgManager.h
+2025-12-30 03:54:23,516 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_sensing.h
+2025-12-30 03:54:23,580 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_channel.h
+2025-12-30 03:54:23,640 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmnGrp.h
+2025-12-30 03:54:23,994 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_radio.h after 90s - using fallback metadata
+2025-12-30 03:54:24,595 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmn.h
+2025-12-30 03:54:24,613 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ap_rssiMonitor.h
+2025-12-30 03:54:24,917 - Knowledge - WARNING - Timeout processing /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_tinyRoam.h after 90s - using fallback metadata
+2025-12-30 03:54:25,054 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaCtrlMngr_priv.h:chunk1, Duration: 93399ms, PromptTokens: 3016, CompletionTokens: 375, Cost: $0.00045
+2025-12-30 03:54:25,204 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_nl80211_types.h
+2025-12-30 03:54:25,211 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_evtHandler.h
+2025-12-30 03:54:25,299 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlInterface.h
+2025-12-30 03:54:25,448 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlMngr_priv.h
+2025-12-30 03:54:25,864 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 273, Duration: 0ms
+2025-12-30 03:54:25,938 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_ssid.h
+2025-12-30 03:54:26,503 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 639ms
+2025-12-30 03:54:26,723 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_hostapd_api.h
+2025-12-30 03:54:26,749 - Knowledge - INFO - Progress: 92.1% | Files: 282/303 | Rate: 0.79 files/sec | Queue: 0
+2025-12-30 03:54:26,750 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_secDmn_types.h
+2025-12-30 03:54:26,803 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:26,891 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/VendorModule/wld_vendorModule_priv.h
+2025-12-30 03:54:27,455 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaCtrlMngr.h
+2025-12-30 03:54:28,214 - Knowledge - INFO - [LLM_CALL] Completed: wld_hostapd_cfgManager_priv.h:chunk1, Duration: 117429ms, PromptTokens: 2220, CompletionTokens: 163, Cost: $0.00029
+2025-12-30 03:54:28,536 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_hostapd_cfgManager_priv.h
+2025-12-30 03:54:28,740 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_wpaSupp.h:chunk1, Duration: 75370ms, PromptTokens: 2330, CompletionTokens: 691, Cost: $0.00051
+2025-12-30 03:54:29,149 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_wpaSupp.h
+2025-12-30 03:54:29,325 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_endpoint.h
+2025-12-30 03:54:29,357 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:29,896 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Utils/wld_autoCommitRadData.h
+2025-12-30 03:54:31,020 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_mld.h
+2025-12-30 03:54:31,112 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:31,477 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_extMod.h
+2025-12-30 03:54:31,551 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_radio.h
+2025-12-30 03:54:31,892 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_zwdfs.h:chunk1, Duration: 90871ms, PromptTokens: 2622, CompletionTokens: 517, Cost: $0.00047
+2025-12-30 03:54:32,175 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_hostapd_cfgManager.h
+2025-12-30 03:54:32,212 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld.h
+2025-12-30 03:54:32,214 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_zwdfs.h
+2025-12-30 03:54:33,179 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_wpaSupp_ep_api.h
+2025-12-30 03:54:33,331 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_rad_delayMgr.h
+2025-12-30 03:54:34,574 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 272, Duration: 0ms
+2025-12-30 03:54:34,926 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_events.h:chunk1, Duration: 74752ms, PromptTokens: 2278, CompletionTokens: 563, Cost: $0.00045
+2025-12-30 03:54:35,202 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/Features/wld_persist.h
+2025-12-30 03:54:35,215 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_events.h
+2025-12-30 03:54:35,230 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 656ms
+2025-12-30 03:54:35,822 - Knowledge - INFO - Progress: 94.7% | Files: 287/303 | Rate: 0.79 files/sec | Queue: 0
+2025-12-30 03:54:35,828 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_fsm.h:chunk1, Duration: 111848ms, PromptTokens: 3126, CompletionTokens: 188, Cost: $0.00039
+2025-12-30 03:54:36,195 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_fsm.h
+2025-12-30 03:54:36,197 - Knowledge - INFO - [LLM_CALL] Completed: wld_wpaCtrlConnection_priv.h:chunk1, Duration: 147667ms, PromptTokens: 3306, CompletionTokens: 1216, Cost: $0.00082
+2025-12-30 03:54:36,622 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlConnection_priv.h
+2025-12-30 03:54:37,364 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include/wld/wld_tinyRoam.h
+2025-12-30 03:54:38,453 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_hapd.h:chunk1, Duration: 92046ms, PromptTokens: 3176, CompletionTokens: 1664, Cost: $0.00098
+2025-12-30 03:54:38,699 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_hapd.h
+2025-12-30 03:54:39,644 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_ep.h:chunk1, Duration: 93084ms, PromptTokens: 3010, CompletionTokens: 1211, Cost: $0.00079
+2025-12-30 03:54:39,861 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_ep.h
+2025-12-30 03:54:40,595 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 272, Duration: 0ms
+2025-12-30 03:54:40,799 - Knowledge - INFO - [LLM_CALL] Completed: wifiGen_rad.h:chunk1, Duration: 130042ms, PromptTokens: 3662, CompletionTokens: 708, Cost: $0.00065
+2025-12-30 03:54:41,036 - Knowledge - INFO - done ingest for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_rad.h
+2025-12-30 03:54:41,039 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 444ms
+2025-12-30 03:54:41,389 - Knowledge - INFO - Progress: 97.0% | Files: 298/303 | Rate: 0.80 files/sec | Queue: 0
+2025-12-30 03:54:41,391 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:41,419 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:41,421 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:41,446 - Knowledge - INFO - Processing batch of 4 files
+2025-12-30 03:54:41,752 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_secDmnGrp_priv.h
+2025-12-30 03:54:41,908 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlConnection_priv.h
+2025-12-30 03:54:41,985 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_hapd.h
+2025-12-30 03:54:42,092 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_rad.h
+2025-12-30 03:54:42,190 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_fsm.h
+2025-12-30 03:54:42,263 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_hostapd_cfgManager_priv.h
+2025-12-30 03:54:42,370 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_mld.h
+2025-12-30 03:54:42,467 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_vap.h
+2025-12-30 03:54:42,568 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_zwdfs.h
+2025-12-30 03:54:42,649 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_wpaCtrlMngr_priv.h
+2025-12-30 03:54:42,758 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wld_plugin.h
+2025-12-30 03:54:42,872 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_ep.h
+2025-12-30 03:54:42,950 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_wpaSupp.h
+2025-12-30 03:54:43,074 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/nl80211/wld_nl80211_api_priv.h
+2025-12-30 03:54:43,180 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen.h
+2025-12-30 03:54:43,267 - Knowledge - INFO - process ingested knowledge for /app/data/b2c/226177/b05376m/pwhm-226177/include_priv/Plugin/wifiGen_events.h
+2025-12-30 03:54:44,049 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 274, Duration: 0ms
+2025-12-30 03:54:44,261 - Knowledge - INFO - [WEBSOCKET] Sent: Type=unknown, Size: ?, Duration: 210ms
+2025-12-30 03:54:44,441 - Knowledge - INFO - Progress: 100.0% | Files: 303/303 | Rate: 0.81 files/sec | Queue: 0
+2025-12-30 03:54:44,646 - Knowledge - INFO - Knowledge creation complete
+2025-12-30 03:54:44,836 - Knowledge - INFO - ==================================================
+2025-12-30 03:54:44,993 - Knowledge - INFO - KNOWLEDGE GRAPH GENERATION PERFORMANCE SUMMARY
+2025-12-30 03:54:45,162 - Knowledge - INFO - ==================================================
+2025-12-30 03:54:45,380 - Knowledge - INFO - Total processing time: 376.79 seconds (6.28 minutes)
+2025-12-30 03:54:45,571 - Knowledge - INFO - Files processed: 0
+2025-12-30 03:54:45,747 - Knowledge - INFO - Processing rate: 0.00 files/second
+2025-12-30 03:54:45,916 - Knowledge - INFO - 
+[TIME_BREAKDOWN]
+2025-12-30 03:54:46,085 - Knowledge - INFO - File Reading: 0.00s (0.0%)
+2025-12-30 03:54:46,293 - Knowledge - INFO - LLM Processing: 7064.00s (1874.8%)
+2025-12-30 03:54:46,482 - Knowledge - INFO - MongoDB Operations: 0.00s (0.0%)
+2025-12-30 03:54:46,675 - Knowledge - INFO - Redis Operations: 0.00s (0.0%)
+2025-12-30 03:54:46,882 - Knowledge - INFO - WebSocket Communication: 15.93s (4.2%)
+2025-12-30 03:54:47,082 - Knowledge - INFO - 
+[LLM_STATS]
+2025-12-30 03:54:47,292 - Knowledge - INFO - Total LLM calls: 84
+2025-12-30 03:54:47,494 - Knowledge - INFO - Average LLM response time: 84095ms
+2025-12-30 03:54:47,675 - Knowledge - INFO - Average prompt tokens: 4872.0
+2025-12-30 03:54:47,871 - Knowledge - INFO - Average completion tokens: 816.5
+2025-12-30 03:54:48,046 - Knowledge - INFO - Total prompt tokens: 409252
+2025-12-30 03:54:48,220 - Knowledge - INFO - Total completion tokens: 68590
+2025-12-30 03:54:48,439 - Knowledge - INFO - Total LLM cost: $0.0684
+2025-12-30 03:54:48,634 - Knowledge - INFO - 
+[DATABASE_STATS]
+2025-12-30 03:54:48,873 - Knowledge - INFO - MongoDB operations: 0
+2025-12-30 03:54:49,076 - Knowledge - INFO - Redis operations: 0
+2025-12-30 03:54:49,290 - Knowledge - INFO - 
+[COMMUNICATION_STATS]
+2025-12-30 03:54:49,484 - Knowledge - INFO - WebSocket messages sent: 43
+2025-12-30 03:54:49,666 - Knowledge - INFO - Average message size: 144.2 bytes
+2025-12-30 03:54:49,867 - Knowledge - INFO - 
+[WORKER_STATS]
+2025-12-30 03:54:50,068 - Knowledge - INFO - 
+[FILE_TYPE_STATS]
+2025-12-30 03:54:50,310 - Knowledge - INFO - 
+[SLOWEST_FILES]
+2025-12-30 03:54:50,484 - Knowledge - INFO - ==================================================
+2025-12-30 03:54:50,693 - Knowledge - INFO - ==================================================
+2025-12-30 03:54:50,868 - Knowledge - INFO - KNOWLEDGE GRAPH GENERATION PERFORMANCE SUMMARY
+2025-12-30 03:54:51,075 - Knowledge - INFO - ==================================================
+2025-12-30 03:54:51,280 - Knowledge - INFO - Total processing time: 382.75 seconds (6.38 minutes)
+2025-12-30 03:54:51,461 - Knowledge - INFO - Files processed: 303 of 303
+2025-12-30 03:54:51,639 - Knowledge - INFO - Processing rate: 0.79 files/second
+2025-12-30 03:54:51,858 - Knowledge - INFO - WebSocket messages sent: 21
+2025-12-30 03:54:52,062 - Knowledge - INFO - MongoDB operations: 303
+2025-12-30 03:54:52,251 - Knowledge - INFO - Average MongoDB ops per file: 1.00
+2025-12-30 03:54:52,453 - Knowledge - INFO - LLM costs: $0.0684
+2025-12-30 03:54:52,656 - Knowledge - INFO - Prompt tokens: 409252
+2025-12-30 03:54:52,817 - Knowledge - INFO - Completion tokens: 68590
+2025-12-30 03:54:53,021 - Knowledge - INFO - Updating org costs, total cost: 0.06836119999999998
+2025-12-30 03:54:55,111 - Knowledge - INFO - [WEBSOCKET] Sent: Type=progress_update, Size: 270, Duration: 0ms
+2025-12-30 03:54:55,290 - Knowledge - INFO - Saving knowledge to Redis...
+2025-12-30 03:54:55,788 - Knowledge - INFO - Knowledge saved to Redis successfully
