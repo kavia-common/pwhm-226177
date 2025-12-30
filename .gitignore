@@ -8,3 +8,4 @@ output/*
 odl/wld.odl
 *tmp.txt
 include/wld/wld_nl80211_path.h
+.file_activity_report.json
